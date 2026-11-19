@@ -1,6 +1,6 @@
 # FEBio-Warp-Python
 
-A component-by-component repository scaffold for GPU cardiovascular mechanics.
+A component-by-component repository scaffold for GPU cardiovascular mechanics built in concert with the FEBio (www.febio.org) team.
 The [architecture map](docs/ARCHITECTURE.md) shows where to add mesh types,
 materials, elements, assembly, and individual solvers. Each planned component
 has its own Python file and a short description of what belongs there.
