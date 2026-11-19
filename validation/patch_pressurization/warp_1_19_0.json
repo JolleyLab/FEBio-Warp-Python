@@ -1,0 +1,76 @@
+{
+  "mesh": {
+    "vertices": 81,
+    "triangles": 128,
+    "edges": 208,
+    "boundary_vertices": 32,
+    "boundary_loops": 1,
+    "euler_characteristic": 1,
+    "components": 1,
+    "area_mm2": 405.20339996210225,
+    "bounds_mm": [
+      [
+        -10.0,
+        -10.0,
+        0.0
+      ],
+      [
+        10.0,
+        10.0,
+        2.0
+      ]
+    ],
+    "edge_length_mm": [
+      2.5007811279678194,
+      3.6422005710833663
+    ],
+    "mean_normal": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "boundary_to_mesh_centroid_depth_mm": 0.5104166666666666,
+    "welding": "exact coordinate equality",
+    "pressure_sign": -1
+  },
+  "mesh_sha256": "e248e4ba9fc2e3a427abb34bd486d759cb7526190e9e23760b8131460858bd1c",
+  "material": {
+    "label": "SYNTHETIC BENCHMARK ONLY \u2014 not clinical ePTFE",
+    "young_Pa": 10000000.0,
+    "poisson": 0.3,
+    "thickness_m": 0.0005,
+    "density_kg_m3": 1000.0
+  },
+  "formulation": "finite-strain StVK plane-stress triangular membrane; no bending",
+  "integration": {
+    "method": "damped semi-implicit Euler",
+    "damping_per_s": 2000.0,
+    "dt_s": 2.529468305762129e-06,
+    "steps": 19767,
+    "duration_s": 0.05,
+    "ramp_s": 0.01,
+    "min_altitude_m": 0.0017677669529663686
+  },
+  "pressure_mmhg": 40.0,
+  "pressure_Pa": 5332.8954966,
+  "device": "cuda:0",
+  "device_name": "Quadro RTX 8000",
+  "warp_version": "1.19.0",
+  "precision": "float32 centered coordinates",
+  "coordinate_origin_m": [
+    4.283267841918042e-20,
+    -2.141633920959021e-20,
+    0.0008333333333333337
+  ],
+  "max_displacement_mm": 0.7103047302615065,
+  "relative_free_force_residual": 0.00015961330791469663,
+  "max_speed_m_s": 0.00011580507998587564,
+  "kinetic_energy_J": 2.5257179200736686e-13,
+  "fixed_boundary_displacement_m": 0.0,
+  "setup_wall_s": 1.8107900307513773,
+  "solve_wall_s": 1.757799088023603,
+  "cuda_event_interval_s": 1.724167453289032,
+  "timing_note": "CUDA event intervals include launch starvation; diagnostics excluded from event intervals, included in solve wall time",
+  "status": "finite-duration damped transient; not physical validation",
+  "total_wall_s": 4.1970825949683785
+}

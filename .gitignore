@@ -1,0 +1,34 @@
+# macOS metadata
+**/.DS_Store
+**/._*
+
+# Python bytecode and virtual environments
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/venv/
+
+# Package metadata and build artifacts
+**/*.egg-info/
+**/build/
+**/dist/
+
+# Warp kernel cache
+**/.warp_cache/
+
+# Test, analysis, and coverage artifacts
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.coverage
+**/.coverage.*
+**/htmlcov/
+
+# Generated example outputs and reproducible mesh
+**/outputs/
+**/synthetic_patch.stl
+
+# Local environment settings; keep example templates
+**/.env
+**/.env.*
+!**/.env.example

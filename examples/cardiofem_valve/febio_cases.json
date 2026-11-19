@@ -1,0 +1,5215 @@
+{
+  "scope": "Original CardioFEM valve comparisons. Anatomical mesh, connectivity, thickness field and trajectories require local prototype files.",
+  "reference_deck": {
+    "source": {
+      "project": "CardioFEM (NewtonValveDev)",
+      "path": "reference/valve_pressurization/mitral_p2prolapse.feb",
+      "sha256": "ba9fd22aeaa91acda23bce562e8b8473d43b4a214f0b4f6c8fbb287bc7519b39"
+    },
+    "febio_spec": {
+      "version": "4.0"
+    },
+    "mesh_summary": {
+      "nodes": 7442,
+      "element_sets": [
+        {
+          "attributes": {
+            "type": "quad4",
+            "name": "Part3"
+          },
+          "count": 7200
+        }
+      ]
+    },
+    "element_thickness_summary_in_input_units": {
+      "minimum": 0.396,
+      "maximum": 0.396,
+      "entries": 28800
+    },
+    "physical_and_solver_sections": [
+      {
+        "tag": "Module",
+        "attributes": {
+          "type": "solid"
+        },
+        "children": [
+          {
+            "tag": "units",
+            "value": "mm-kg-s"
+          }
+        ]
+      },
+      {
+        "tag": "Globals",
+        "children": [
+          {
+            "tag": "Constants",
+            "children": [
+              {
+                "tag": "T",
+                "value": "0"
+              },
+              {
+                "tag": "P",
+                "value": "0"
+              },
+              {
+                "tag": "R",
+                "value": "0.00831446"
+              },
+              {
+                "tag": "Fc",
+                "value": "0.0964853"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tag": "Material",
+        "children": [
+          {
+            "tag": "material",
+            "attributes": {
+              "id": "1",
+              "name": "Valve",
+              "type": "isotropic Lee-Sacks"
+            },
+            "children": [
+              {
+                "tag": "density",
+                "value": "1.04e-06"
+              },
+              {
+                "tag": "c0",
+                "value": "200"
+              },
+              {
+                "tag": "c1",
+                "value": "2968.4"
+              },
+              {
+                "tag": "c2",
+                "value": "0.2661"
+              },
+              {
+                "tag": "k",
+                "value": "5000"
+              },
+              {
+                "tag": "tangent_scale",
+                "value": "10"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tag": "MeshDomains",
+        "children": [
+          {
+            "tag": "ShellDomain",
+            "attributes": {
+              "name": "Part3",
+              "mat": "Valve",
+              "type": "elastic-shell"
+            },
+            "children": [
+              {
+                "tag": "shell_thickness",
+                "value": "0"
+              },
+              {
+                "tag": "shell_normal_nodal",
+                "value": "1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tag": "Boundary",
+        "children": [
+          {
+            "tag": "bc",
+            "attributes": {
+              "name": "Annulus Displacement",
+              "node_set": "AnnulusNodes",
+              "type": "zero displacement"
+            },
+            "children": [
+              {
+                "tag": "x_dof",
+                "value": "1"
+              },
+              {
+                "tag": "y_dof",
+                "value": "1"
+              },
+              {
+                "tag": "z_dof",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "tag": "bc",
+            "attributes": {
+              "name": "Papillary Muscle Displacement",
+              "node_set": "PapillaryNodes",
+              "type": "zero displacement"
+            },
+            "children": [
+              {
+                "tag": "x_dof",
+                "value": "1"
+              },
+              {
+                "tag": "y_dof",
+                "value": "1"
+              },
+              {
+                "tag": "z_dof",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "tag": "bc",
+            "attributes": {
+              "name": "Annulus Rotation",
+              "node_set": "AnnulusNodes",
+              "type": "zero shell displacement"
+            },
+            "children": [
+              {
+                "tag": "sx_dof",
+                "value": "1"
+              },
+              {
+                "tag": "sy_dof",
+                "value": "1"
+              },
+              {
+                "tag": "sz_dof",
+                "value": "1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tag": "Loads",
+        "children": [
+          {
+            "tag": "body_load",
+            "attributes": {
+              "elem_set": "Part3",
+              "type": "mass damping"
+            },
+            "children": [
+              {
+                "tag": "C",
+                "value": "3000"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tag": "Contact",
+        "children": [
+          {
+            "tag": "contact",
+            "attributes": {
+              "name": "Contact Potential (Leaflets)",
+              "surface_pair": "Contact Potential (Leaflets)",
+              "type": "contact potential"
+            },
+            "children": [
+              {
+                "tag": "laugon",
+                "value": "PENALTY"
+              },
+              {
+                "tag": "kc",
+                "value": "2"
+              },
+              {
+                "tag": "p",
+                "value": "4"
+              },
+              {
+                "tag": "R_in",
+                "value": "0.2"
+              },
+              {
+                "tag": "R_out",
+                "value": "0.5"
+              },
+              {
+                "tag": "R0_min",
+                "value": "0"
+              },
+              {
+                "tag": "w_tol",
+                "value": "0.6"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tag": "Discrete",
+        "children": [
+          {
+            "tag": "discrete_material",
+            "attributes": {
+              "id": "1",
+              "name": "A1",
+              "type": "nonlinear spring"
+            },
+            "children": [
+              {
+                "tag": "scale",
+                "value": "60"
+              },
+              {
+                "tag": "measure",
+                "value": "elongation"
+              },
+              {
+                "tag": "force",
+                "attributes": {
+                  "type": "point"
+                },
+                "children": [
+                  {
+                    "tag": "interpolate",
+                    "value": "linear"
+                  },
+                  {
+                    "tag": "extend",
+                    "value": "extrapolate"
+                  },
+                  {
+                    "tag": "points",
+                    "children": [
+                      {
+                        "tag": "pt",
+                        "value": "0,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "4,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "5,1"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "discrete_material",
+            "attributes": {
+              "id": "2",
+              "name": "A2_1",
+              "type": "nonlinear spring"
+            },
+            "children": [
+              {
+                "tag": "scale",
+                "value": "60"
+              },
+              {
+                "tag": "measure",
+                "value": "elongation"
+              },
+              {
+                "tag": "force",
+                "attributes": {
+                  "type": "point"
+                },
+                "children": [
+                  {
+                    "tag": "interpolate",
+                    "value": "linear"
+                  },
+                  {
+                    "tag": "extend",
+                    "value": "extrapolate"
+                  },
+                  {
+                    "tag": "points",
+                    "children": [
+                      {
+                        "tag": "pt",
+                        "value": "0,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "4,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "5,1"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "discrete_material",
+            "attributes": {
+              "id": "3",
+              "name": "A2_2",
+              "type": "nonlinear spring"
+            },
+            "children": [
+              {
+                "tag": "scale",
+                "value": "60"
+              },
+              {
+                "tag": "measure",
+                "value": "elongation"
+              },
+              {
+                "tag": "force",
+                "attributes": {
+                  "type": "point"
+                },
+                "children": [
+                  {
+                    "tag": "interpolate",
+                    "value": "linear"
+                  },
+                  {
+                    "tag": "extend",
+                    "value": "extrapolate"
+                  },
+                  {
+                    "tag": "points",
+                    "children": [
+                      {
+                        "tag": "pt",
+                        "value": "0,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "4,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "5,1"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "discrete_material",
+            "attributes": {
+              "id": "4",
+              "name": "A3",
+              "type": "nonlinear spring"
+            },
+            "children": [
+              {
+                "tag": "scale",
+                "value": "60"
+              },
+              {
+                "tag": "measure",
+                "value": "elongation"
+              },
+              {
+                "tag": "force",
+                "attributes": {
+                  "type": "point"
+                },
+                "children": [
+                  {
+                    "tag": "interpolate",
+                    "value": "linear"
+                  },
+                  {
+                    "tag": "extend",
+                    "value": "extrapolate"
+                  },
+                  {
+                    "tag": "points",
+                    "children": [
+                      {
+                        "tag": "pt",
+                        "value": "0,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "2,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "3,1"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "discrete_material",
+            "attributes": {
+              "id": "5",
+              "name": "P1",
+              "type": "nonlinear spring"
+            },
+            "children": [
+              {
+                "tag": "scale",
+                "value": "30"
+              },
+              {
+                "tag": "measure",
+                "value": "elongation"
+              },
+              {
+                "tag": "force",
+                "attributes": {
+                  "type": "point"
+                },
+                "children": [
+                  {
+                    "tag": "interpolate",
+                    "value": "linear"
+                  },
+                  {
+                    "tag": "extend",
+                    "value": "extrapolate"
+                  },
+                  {
+                    "tag": "points",
+                    "children": [
+                      {
+                        "tag": "pt",
+                        "value": "0,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "3,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "4,1"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "discrete_material",
+            "attributes": {
+              "id": "6",
+              "name": "P2_1",
+              "type": "nonlinear spring"
+            },
+            "children": [
+              {
+                "tag": "scale",
+                "value": "30"
+              },
+              {
+                "tag": "measure",
+                "value": "elongation"
+              },
+              {
+                "tag": "force",
+                "attributes": {
+                  "type": "point"
+                },
+                "children": [
+                  {
+                    "tag": "interpolate",
+                    "value": "linear"
+                  },
+                  {
+                    "tag": "extend",
+                    "value": "extrapolate"
+                  },
+                  {
+                    "tag": "points",
+                    "children": [
+                      {
+                        "tag": "pt",
+                        "value": "0,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "12,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "13,1"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "discrete_material",
+            "attributes": {
+              "id": "7",
+              "name": "P3",
+              "type": "nonlinear spring"
+            },
+            "children": [
+              {
+                "tag": "scale",
+                "value": "30"
+              },
+              {
+                "tag": "measure",
+                "value": "elongation"
+              },
+              {
+                "tag": "force",
+                "attributes": {
+                  "type": "point"
+                },
+                "children": [
+                  {
+                    "tag": "interpolate",
+                    "value": "linear"
+                  },
+                  {
+                    "tag": "extend",
+                    "value": "extrapolate"
+                  },
+                  {
+                    "tag": "points",
+                    "children": [
+                      {
+                        "tag": "pt",
+                        "value": "0,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "3,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "4,1"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "discrete_material",
+            "attributes": {
+              "id": "8",
+              "name": "P2_2",
+              "type": "nonlinear spring"
+            },
+            "children": [
+              {
+                "tag": "scale",
+                "value": "30"
+              },
+              {
+                "tag": "measure",
+                "value": "elongation"
+              },
+              {
+                "tag": "force",
+                "attributes": {
+                  "type": "point"
+                },
+                "children": [
+                  {
+                    "tag": "interpolate",
+                    "value": "linear"
+                  },
+                  {
+                    "tag": "extend",
+                    "value": "extrapolate"
+                  },
+                  {
+                    "tag": "points",
+                    "children": [
+                      {
+                        "tag": "pt",
+                        "value": "0,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "12,0"
+                      },
+                      {
+                        "tag": "pt",
+                        "value": "13,1"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "discrete",
+            "attributes": {
+              "dmat": "1",
+              "discrete_set": "A1"
+            }
+          },
+          {
+            "tag": "discrete",
+            "attributes": {
+              "dmat": "2",
+              "discrete_set": "A2_1"
+            }
+          },
+          {
+            "tag": "discrete",
+            "attributes": {
+              "dmat": "3",
+              "discrete_set": "A2_2"
+            }
+          },
+          {
+            "tag": "discrete",
+            "attributes": {
+              "dmat": "4",
+              "discrete_set": "A3"
+            }
+          },
+          {
+            "tag": "discrete",
+            "attributes": {
+              "dmat": "5",
+              "discrete_set": "P1"
+            }
+          },
+          {
+            "tag": "discrete",
+            "attributes": {
+              "dmat": "6",
+              "discrete_set": "P2_1"
+            }
+          },
+          {
+            "tag": "discrete",
+            "attributes": {
+              "dmat": "7",
+              "discrete_set": "P3"
+            }
+          },
+          {
+            "tag": "discrete",
+            "attributes": {
+              "dmat": "8",
+              "discrete_set": "P2_2"
+            }
+          }
+        ]
+      },
+      {
+        "tag": "Step",
+        "children": [
+          {
+            "tag": "step",
+            "attributes": {
+              "id": "1",
+              "name": "01 - Valve Close/Clip Open"
+            },
+            "children": [
+              {
+                "tag": "Control",
+                "children": [
+                  {
+                    "tag": "analysis",
+                    "value": "DYNAMIC"
+                  },
+                  {
+                    "tag": "time_steps",
+                    "value": "200"
+                  },
+                  {
+                    "tag": "step_size",
+                    "value": "0.0001"
+                  },
+                  {
+                    "tag": "plot_zero_state",
+                    "value": "0"
+                  },
+                  {
+                    "tag": "plot_range",
+                    "value": "0,-1"
+                  },
+                  {
+                    "tag": "plot_level",
+                    "value": "PLOT_MAJOR_ITRS"
+                  },
+                  {
+                    "tag": "output_level",
+                    "value": "OUTPUT_MAJOR_ITRS"
+                  },
+                  {
+                    "tag": "plot_stride",
+                    "value": "1"
+                  },
+                  {
+                    "tag": "output_stride",
+                    "value": "1"
+                  },
+                  {
+                    "tag": "adaptor_re_solve",
+                    "value": "1"
+                  },
+                  {
+                    "tag": "time_stepper",
+                    "attributes": {
+                      "type": "default"
+                    },
+                    "children": [
+                      {
+                        "tag": "max_retries",
+                        "value": "5"
+                      },
+                      {
+                        "tag": "opt_iter",
+                        "value": "10"
+                      },
+                      {
+                        "tag": "dtmin",
+                        "value": "1e-05"
+                      },
+                      {
+                        "tag": "dtmax",
+                        "value": "0.0001"
+                      },
+                      {
+                        "tag": "aggressiveness",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "cutback",
+                        "value": "0.5"
+                      },
+                      {
+                        "tag": "dtforce",
+                        "value": "0"
+                      }
+                    ]
+                  },
+                  {
+                    "tag": "solver",
+                    "attributes": {
+                      "type": "solid"
+                    },
+                    "children": [
+                      {
+                        "tag": "symmetric_stiffness",
+                        "value": "symmetric"
+                      },
+                      {
+                        "tag": "equation_scheme",
+                        "value": "staggered"
+                      },
+                      {
+                        "tag": "equation_order",
+                        "value": "default"
+                      },
+                      {
+                        "tag": "optimize_bw",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "lstol",
+                        "value": "0.9"
+                      },
+                      {
+                        "tag": "lsmin",
+                        "value": "0.01"
+                      },
+                      {
+                        "tag": "lsiter",
+                        "value": "5"
+                      },
+                      {
+                        "tag": "max_refs",
+                        "value": "15"
+                      },
+                      {
+                        "tag": "check_zero_diagonal",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "zero_diagonal_tol",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "force_partition",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "reform_each_time_step",
+                        "value": "1"
+                      },
+                      {
+                        "tag": "reform_augment",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "diverge_reform",
+                        "value": "1"
+                      },
+                      {
+                        "tag": "min_residual",
+                        "value": "1e-20"
+                      },
+                      {
+                        "tag": "max_residual",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "dtol",
+                        "value": "0.001"
+                      },
+                      {
+                        "tag": "etol",
+                        "value": "0.01"
+                      },
+                      {
+                        "tag": "rtol",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "rhoi",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "alpha",
+                        "value": "1"
+                      },
+                      {
+                        "tag": "beta",
+                        "value": "0.25"
+                      },
+                      {
+                        "tag": "gamma",
+                        "value": "0.5"
+                      },
+                      {
+                        "tag": "logSolve",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "arc_length",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "arc_length_scale",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "qn_method",
+                        "attributes": {
+                          "type": "BFGS"
+                        },
+                        "children": [
+                          {
+                            "tag": "max_ups",
+                            "value": "10"
+                          },
+                          {
+                            "tag": "max_buffer_size",
+                            "value": "0"
+                          },
+                          {
+                            "tag": "cycle_buffer",
+                            "value": "1"
+                          },
+                          {
+                            "tag": "cmax",
+                            "value": "100000"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "tag": "Loads",
+                "children": [
+                  {
+                    "tag": "surface_load",
+                    "attributes": {
+                      "name": "Pressure Load Initial - 1",
+                      "surface": "ValvePressureLoad",
+                      "type": "pressure"
+                    },
+                    "children": [
+                      {
+                        "tag": "pressure",
+                        "attributes": {
+                          "lc": "1"
+                        },
+                        "value": "-13.3"
+                      },
+                      {
+                        "tag": "symmetric_stiffness",
+                        "value": "1"
+                      },
+                      {
+                        "tag": "linear",
+                        "value": "0"
+                      },
+                      {
+                        "tag": "shell_bottom",
+                        "value": "0"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tag": "LoadData",
+        "children": [
+          {
+            "tag": "load_controller",
+            "attributes": {
+              "id": "1",
+              "name": "Pressure Close Control (Initial)",
+              "type": "loadcurve"
+            },
+            "children": [
+              {
+                "tag": "interpolate",
+                "value": "SMOOTH"
+              },
+              {
+                "tag": "extend",
+                "value": "CONSTANT"
+              },
+              {
+                "tag": "points",
+                "children": [
+                  {
+                    "tag": "pt",
+                    "value": "0,0"
+                  },
+                  {
+                    "tag": "pt",
+                    "value": "0.005,1"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "units": "mm\u2013kg\u2013s in the CardioFEM reports, force mN and stress kPa.",
+  "kinematics": "Native quad shell with top/bottom director kinematics and through-thickness quadrature. Elementwise reference shell thickness from MeshData.",
+  "cases": {
+    "cardiofem_bfgs_continuation": {
+      "comparison": {
+        "source": {
+          "project": "CardioFEM (NewtonValveDev)",
+          "path": "validation/cardiofem_bfgs_continuation/comparison.json",
+          "sha256": "d61bc93c0b3242d0c3acb4ff764b6b0d8ede814ec9c1c2ba5488b084118569d5"
+        },
+        "data": {
+          "status": "quantitative comparison only; scientific acceptance not established",
+          "full_model_agreement": false,
+          "time": {
+            "cardiofem_seconds": 0.0134945247,
+            "febio_xplt_seconds": 0.013494525104761124,
+            "febio_area_csv_seconds": 0.0134945247,
+            "absolute_difference_seconds": 4.047611239232918e-10,
+            "alignment_tolerance_seconds": 1e-09,
+            "reference_state_index": 394,
+            "interpolation": false
+          },
+          "pressure_kpa": -13.3,
+          "quantities": {
+            "displacement": {
+              "units": "mm",
+              "definition": "Global nodal top-surface displacement, aligned by explicit node IDs; includes fixed anchors",
+              "shape": [
+                7442,
+                3
+              ],
+              "max_absolute_error": 0.10991852938644264,
+              "rms_error": 0.006679757983695744,
+              "absolute_l2_error": 0.9980819185855431,
+              "reference_l2_norm": 951.8448295484361,
+              "relative_l2_error": 0.0010485762884892091,
+              "reference_minimum": -15.68996524810791,
+              "reference_maximum": 23.35248565673828,
+              "cardiofem_minimum": -15.691503033397195,
+              "cardiofem_maximum": 23.344225422884566,
+              "maximum_nodal_vector_error": 0.1354959813926593,
+              "maximum_error_node_id": 1910
+            },
+            "deformed_geometry": {
+              "units": "mm",
+              "definition": "Common double-precision FEB reference coordinates plus independent nodal displacements",
+              "shape": [
+                7442,
+                3
+              ],
+              "max_absolute_error": 0.10991852938644264,
+              "rms_error": 0.006679757983695742,
+              "absolute_l2_error": 0.9980819185855425,
+              "reference_l2_norm": 1970.6156278633562,
+              "relative_l2_error": 0.0005064822913577087,
+              "reference_minimum": -21.666430059291077,
+              "reference_maximum": 25.80433035437622,
+              "cardiofem_minimum": -21.6562902504191,
+              "cardiofem_maximum": 25.804196200396007
+            },
+            "cauchy_stress": {
+              "units": "kPa",
+              "definition": "Global spatial Cauchy tensor, arithmetic mean of all eight shell integration points; Frobenius/component errors include both symmetric off-diagonals; no nodal extrapolation or smoothing",
+              "shape": [
+                7200,
+                3,
+                3
+              ],
+              "max_absolute_error": 26.332225846653955,
+              "rms_error": 0.7397363594912546,
+              "absolute_l2_error": 188.30613459114574,
+              "reference_l2_norm": 35077.97727497757,
+              "relative_l2_error": 0.005368215308283226,
+              "reference_minimum": -680.5579833984375,
+              "reference_maximum": 2055.859375,
+              "cardiofem_minimum": -680.5050694127951,
+              "cardiofem_maximum": 2055.6019640774293
+            },
+            "green_lagrange_strain": {
+              "units": "dimensionless",
+              "definition": "Reference Cartesian Green-Lagrange tensor, arithmetic mean of all eight shell integration points; Frobenius/component errors include both symmetric off-diagonals; no nodal extrapolation or smoothing",
+              "shape": [
+                7200,
+                3,
+                3
+              ],
+              "max_absolute_error": 0.11966636163807678,
+              "rms_error": 0.003782889497115939,
+              "absolute_l2_error": 0.9629664537204177,
+              "reference_l2_norm": 24.57514142676695,
+              "relative_l2_error": 0.03918457424100787,
+              "reference_minimum": -0.3249386250972748,
+              "reference_maximum": 0.47074398398399353,
+              "cardiofem_minimum": -0.32479431959836896,
+              "cardiofem_maximum": 0.47073168978229907
+            },
+            "relative_volume": {
+              "units": "dimensionless",
+              "definition": "Arithmetic mean integration-point determinant of deformation gradient",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 0.006372361432397389,
+              "rms_error": 0.0002494677616164284,
+              "absolute_l2_error": 0.02116804151116868,
+              "reference_l2_norm": 83.118358672815,
+              "relative_l2_error": 0.0002546734782684295,
+              "reference_minimum": 0.8912164568901062,
+              "reference_maximum": 1.0000486373901367,
+              "cardiofem_minimum": 0.8912115653705871,
+              "cardiofem_maximum": 1.0000462802255594
+            },
+            "right_stretch_diagonal": {
+              "units": "dimensionless",
+              "definition": "Arithmetic mean of per-integration-point diagonal entries of right stretch U=sqrt(I+2E); CSV Ux,Uy,Uz are not displacements",
+              "shape": [
+                7200,
+                3
+              ],
+              "max_absolute_error": 0.08032945547074455,
+              "rms_error": 0.0030580363348085052,
+              "absolute_l2_error": 0.44943771811030203,
+              "reference_l2_norm": 148.3936115518368,
+              "relative_l2_error": 0.0030286864334001643,
+              "reference_minimum": 0.786258717467,
+              "reference_maximum": 1.36084168033,
+              "cardiofem_minimum": 0.7862455879654856,
+              "cardiofem_maximum": 1.3608348267300996
+            },
+            "first_principal_cauchy_stress": {
+              "units": "kPa",
+              "definition": "Arithmetic mean of per-integration-point FEBio exact_eigen first roots, including the unsorted diagonal/zero degenerate fallback; not a root of the mean tensor",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 13.862155884868109,
+              "rms_error": 0.7255802851281312,
+              "absolute_l2_error": 61.56752878912443,
+              "reference_l2_norm": 30855.17600027592,
+              "relative_l2_error": 0.001995371174955342,
+              "reference_minimum": -157.898170528,
+              "reference_maximum": 2258.13200383,
+              "cardiofem_minimum": -157.89342396261475,
+              "cardiofem_maximum": 2257.9721698526364,
+              "cardiofem_degenerate_integration_points": 0
+            },
+            "first_principal_green_strain": {
+              "units": "dimensionless",
+              "definition": "Arithmetic mean of per-integration-point FEBio exact_eigen first roots, including the unsorted diagonal/zero degenerate fallback; not a root of the mean tensor",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 0.025868867460681427,
+              "rms_error": 0.001171560837539881,
+              "absolute_l2_error": 0.09941023353564492,
+              "reference_l2_norm": 20.847559007167433,
+              "relative_l2_error": 0.0047684351679478385,
+              "reference_minimum": 0.047870687667,
+              "reference_maximum": 0.60916134913,
+              "cardiofem_minimum": 0.04780418166701524,
+              "cardiofem_maximum": 0.6091431894863995,
+              "cardiofem_degenerate_integration_points": 0
+            },
+            "chord_force_vector": {
+              "units": "mN",
+              "definition": "Ordered model chord records, global force vector from first endpoint toward second; duplicate records retained",
+              "shape": [
+                100,
+                3
+              ],
+              "max_absolute_error": 0.2364007975089777,
+              "rms_error": 0.03756520302188577,
+              "absolute_l2_error": 0.6506484023054607,
+              "reference_l2_norm": 1280.490193128964,
+              "relative_l2_error": 0.0005081244712351584,
+              "reference_minimum": -233.26535034179688,
+              "reference_maximum": 209.77352905273438,
+              "cardiofem_minimum": -233.28617880802605,
+              "cardiofem_maximum": 209.79946681972262
+            },
+            "chord_force_magnitude": {
+              "units": "mN",
+              "definition": "Magnitude per ordered chord record",
+              "shape": [
+                100
+              ],
+              "max_absolute_error": 0.2357232932490092,
+              "rms_error": 0.06083162195727565,
+              "absolute_l2_error": 0.6083162195727565,
+              "reference_l2_norm": 1280.490193128964,
+              "relative_l2_error": 0.00047506511399848745,
+              "reference_minimum": 0.0,
+              "reference_maximum": 239.18361787829105,
+              "cardiofem_minimum": 0.0,
+              "cardiofem_maximum": 239.20863677829038
+            },
+            "contact_gap": {
+              "units": "mm",
+              "definition": "Facet arithmetic mean of FEBio contact-potential m_gap, not penetration gap; CardioFEM rows follow fingerprinted model contact-facet order",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 0.24880841142173704,
+              "rms_error": 0.0148384280114334,
+              "absolute_l2_error": 1.259082368283957,
+              "reference_l2_norm": 6.985447758328056,
+              "relative_l2_error": 0.18024361670773043,
+              "reference_minimum": 0.0,
+              "reference_maximum": 0.49083343148231506,
+              "cardiofem_minimum": 0.0,
+              "cardiofem_maximum": 0.4906889338773045
+            },
+            "contact_pressure": {
+              "units": "kPa",
+              "definition": "Facet arithmetic mean of quadrature traction magnitude, not signed normal traction; CardioFEM rows follow fingerprinted model contact-facet order",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 26.814990997314453,
+              "rms_error": 0.5485566544907748,
+              "absolute_l2_error": 46.54657563065195,
+              "reference_l2_norm": 297.5304291979586,
+              "relative_l2_error": 0.156443076280049,
+              "reference_minimum": 0.0,
+              "reference_maximum": 66.69605255126953,
+              "cardiofem_minimum": 0.0,
+              "cardiofem_maximum": 66.77432730513036
+            },
+            "contact_area": {
+              "units": "mm^2",
+              "definition": "Sum of current quadrature area where primary contact traction norm is nonzero",
+              "shape": [
+                1
+              ],
+              "max_absolute_error": 0.20954501774723155,
+              "rms_error": 0.20954501774723155,
+              "absolute_l2_error": 0.20954501774723155,
+              "reference_l2_norm": 89.6454289849,
+              "relative_l2_error": 0.0023374869206385035,
+              "reference_minimum": 89.6454289849,
+              "reference_maximum": 89.6454289849,
+              "cardiofem_minimum": 89.43588396715276,
+              "cardiofem_maximum": 89.43588396715276
+            }
+          },
+          "contact_support": {
+            "definition": "Facet support where arithmetic mean traction magnitude is strictly positive; no threshold tuning",
+            "cardiofem_facets": 625,
+            "reference_facets": 630,
+            "intersection_facets": 618,
+            "union_facets": 637,
+            "intersection_over_union": 0.9701726844583988,
+            "false_positive_facets": 7,
+            "false_negative_facets": 12
+          },
+          "limitations": [
+            "XPLT time and field values are float32; time tolerance covers storage rounding only.",
+            "Reference provenance is checked against audited units/mesh/connectivity; XPLT does not embed the FEB model SHA256.",
+            "Matching tensor means does not compare through-thickness distributions; raw FEBio integration-point tensors are unavailable.",
+            "CSV principal averages reproduce FEBio exact_eigen branching but not bitwise arithmetic; near-degenerate root sensitivity remains a numerical caveat.",
+            "Contact gap depends on FEBio search/first-qualifying-pair traversal; differences may include search ordering.",
+            "Scientific acceptance tolerances and full-target convergence must be assessed separately."
+          ]
+        }
+      },
+      "run": {
+        "source": {
+          "project": "CardioFEM (NewtonValveDev)",
+          "path": "validation/cardiofem_bfgs_continuation/run.json",
+          "sha256": "138b869e5159a464215eec0c8780ca8f2639f1879238101e4ff9d62325390b95"
+        },
+        "data": {
+          "status": "reached_target",
+          "settings": {
+            "model": "reference/valve_pressurization/mitral_p2prolapse.feb",
+            "output": "validation/cardiofem_bfgs_continuation",
+            "device": "cuda:0",
+            "end_time": 0.0134945247,
+            "dt": 0.0001,
+            "min_dt": 1e-05,
+            "max_steps": 10000,
+            "max_newton": 100,
+            "max_linear": 600,
+            "restart": 50,
+            "max_linesearch": 14,
+            "relative_tolerance": 1e-06,
+            "absolute_tolerance": 1e-07,
+            "linear_tolerance": 1e-06,
+            "cuda_graph": true,
+            "line_search": "reference",
+            "convergence": "reference",
+            "shell_iteration": "reference",
+            "energy_baseline": "reference",
+            "resume": "validation/cardiofem_reference_tangent",
+            "iteration": "bfgs"
+          },
+          "model": {
+            "source_sha256": "ba9fd22aeaa91acda23bce562e8b8473d43b4a214f0b4f6c8fbb287bc7519b39",
+            "units": "mm-kg-s",
+            "node_count": 7442,
+            "element_count": 7200,
+            "chord_count": 100,
+            "global_constants": {
+              "T": 0.0,
+              "P": 0.0,
+              "R": 0.00831446,
+              "Fc": 0.0964853
+            },
+            "shell_domain": {
+              "thickness_mode": 0,
+              "normal_nodal": 1
+            },
+            "material": {
+              "material_id": 1,
+              "name": "Valve",
+              "density_kg_per_mm3": 1.04e-06,
+              "c0": 200.0,
+              "c1": 2968.4,
+              "c2": 0.2661,
+              "k": 5000.0,
+              "tangent_scale": 10.0
+            },
+            "boundaries": [
+              {
+                "name": "Annulus Displacement",
+                "node_set": "AnnulusNodes",
+                "kind": "zero displacement",
+                "dofs": [
+                  true,
+                  true,
+                  true
+                ],
+                "node_count": 240
+              },
+              {
+                "name": "Papillary Muscle Displacement",
+                "node_set": "PapillaryNodes",
+                "kind": "zero displacement",
+                "dofs": [
+                  true,
+                  true,
+                  true
+                ],
+                "node_count": 2
+              },
+              {
+                "name": "Annulus Rotation",
+                "node_set": "AnnulusNodes",
+                "kind": "zero shell displacement",
+                "dofs": [
+                  true,
+                  true,
+                  true
+                ],
+                "node_count": 240
+              }
+            ],
+            "chord_materials": [
+              {
+                "id": 1,
+                "name": "A1",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      5.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 2,
+                "name": "A2_1",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      5.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 3,
+                "name": "A2_2",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      5.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 4,
+                "name": "A3",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      2.0,
+                      0.0
+                    ],
+                    [
+                      3.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 5,
+                "name": "P1",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      3.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 6,
+                "name": "P2_1",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      12.0,
+                      0.0
+                    ],
+                    [
+                      13.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 7,
+                "name": "P3",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      3.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 8,
+                "name": "P2_2",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      12.0,
+                      0.0
+                    ],
+                    [
+                      13.0,
+                      1.0
+                    ]
+                  ]
+                }
+              }
+            ],
+            "step": {
+              "id": 1,
+              "name": "01 - Valve Close/Clip Open",
+              "control": {
+                "tag": "Control",
+                "attributes": {},
+                "value": "",
+                "children": [
+                  {
+                    "tag": "analysis",
+                    "attributes": {},
+                    "value": "DYNAMIC",
+                    "children": []
+                  },
+                  {
+                    "tag": "time_steps",
+                    "attributes": {},
+                    "value": "200",
+                    "children": []
+                  },
+                  {
+                    "tag": "step_size",
+                    "attributes": {},
+                    "value": "0.0001",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_zero_state",
+                    "attributes": {},
+                    "value": "0",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_range",
+                    "attributes": {},
+                    "value": "0,-1",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_level",
+                    "attributes": {},
+                    "value": "PLOT_MAJOR_ITRS",
+                    "children": []
+                  },
+                  {
+                    "tag": "output_level",
+                    "attributes": {},
+                    "value": "OUTPUT_MAJOR_ITRS",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_stride",
+                    "attributes": {},
+                    "value": "1",
+                    "children": []
+                  },
+                  {
+                    "tag": "output_stride",
+                    "attributes": {},
+                    "value": "1",
+                    "children": []
+                  },
+                  {
+                    "tag": "adaptor_re_solve",
+                    "attributes": {},
+                    "value": "1",
+                    "children": []
+                  },
+                  {
+                    "tag": "time_stepper",
+                    "attributes": {
+                      "type": "default"
+                    },
+                    "value": "",
+                    "children": [
+                      {
+                        "tag": "max_retries",
+                        "attributes": {},
+                        "value": "5",
+                        "children": []
+                      },
+                      {
+                        "tag": "opt_iter",
+                        "attributes": {},
+                        "value": "10",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtmin",
+                        "attributes": {},
+                        "value": "1e-05",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtmax",
+                        "attributes": {},
+                        "value": "0.0001",
+                        "children": []
+                      },
+                      {
+                        "tag": "aggressiveness",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "cutback",
+                        "attributes": {},
+                        "value": "0.5",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtforce",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "tag": "solver",
+                    "attributes": {
+                      "type": "solid"
+                    },
+                    "value": "",
+                    "children": [
+                      {
+                        "tag": "symmetric_stiffness",
+                        "attributes": {},
+                        "value": "symmetric",
+                        "children": []
+                      },
+                      {
+                        "tag": "equation_scheme",
+                        "attributes": {},
+                        "value": "staggered",
+                        "children": []
+                      },
+                      {
+                        "tag": "equation_order",
+                        "attributes": {},
+                        "value": "default",
+                        "children": []
+                      },
+                      {
+                        "tag": "optimize_bw",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "lstol",
+                        "attributes": {},
+                        "value": "0.9",
+                        "children": []
+                      },
+                      {
+                        "tag": "lsmin",
+                        "attributes": {},
+                        "value": "0.01",
+                        "children": []
+                      },
+                      {
+                        "tag": "lsiter",
+                        "attributes": {},
+                        "value": "5",
+                        "children": []
+                      },
+                      {
+                        "tag": "max_refs",
+                        "attributes": {},
+                        "value": "15",
+                        "children": []
+                      },
+                      {
+                        "tag": "check_zero_diagonal",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "zero_diagonal_tol",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "force_partition",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "reform_each_time_step",
+                        "attributes": {},
+                        "value": "1",
+                        "children": []
+                      },
+                      {
+                        "tag": "reform_augment",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "diverge_reform",
+                        "attributes": {},
+                        "value": "1",
+                        "children": []
+                      },
+                      {
+                        "tag": "min_residual",
+                        "attributes": {},
+                        "value": "1e-20",
+                        "children": []
+                      },
+                      {
+                        "tag": "max_residual",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtol",
+                        "attributes": {},
+                        "value": "0.001",
+                        "children": []
+                      },
+                      {
+                        "tag": "etol",
+                        "attributes": {},
+                        "value": "0.01",
+                        "children": []
+                      },
+                      {
+                        "tag": "rtol",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "rhoi",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "alpha",
+                        "attributes": {},
+                        "value": "1",
+                        "children": []
+                      },
+                      {
+                        "tag": "beta",
+                        "attributes": {},
+                        "value": "0.25",
+                        "children": []
+                      },
+                      {
+                        "tag": "gamma",
+                        "attributes": {},
+                        "value": "0.5",
+                        "children": []
+                      },
+                      {
+                        "tag": "logSolve",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "arc_length",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "arc_length_scale",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "qn_method",
+                        "attributes": {
+                          "type": "BFGS"
+                        },
+                        "value": "",
+                        "children": [
+                          {
+                            "tag": "max_ups",
+                            "attributes": {},
+                            "value": "10",
+                            "children": []
+                          },
+                          {
+                            "tag": "max_buffer_size",
+                            "attributes": {},
+                            "value": "0",
+                            "children": []
+                          },
+                          {
+                            "tag": "cycle_buffer",
+                            "attributes": {},
+                            "value": "1",
+                            "children": []
+                          },
+                          {
+                            "tag": "cmax",
+                            "attributes": {},
+                            "value": "100000",
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "pressure": {
+              "surface": "ValvePressureLoad",
+              "value": -13.3,
+              "curve_id": 1,
+              "symmetric_stiffness": 1,
+              "linear": 0,
+              "shell_bottom": 0
+            },
+            "pressure_curve": {
+              "interpolation": "SMOOTH",
+              "extension": "CONSTANT",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.005,
+                  1.0
+                ]
+              ]
+            },
+            "contact": {
+              "name": "Contact Potential (Leaflets)",
+              "surface_pair": "Contact Potential (Leaflets)",
+              "primary": "ContactLeaflet",
+              "secondary": "ContactLeaflet",
+              "laugon": "PENALTY",
+              "kc": 2.0,
+              "p": 4.0,
+              "r_in": 0.2,
+              "r_out": 0.5,
+              "r0_min": 0.0,
+              "w_tol": 0.6
+            },
+            "damping_c": 3000.0,
+            "output": {
+              "tag": "Output",
+              "attributes": {},
+              "value": "",
+              "children": [
+                {
+                  "tag": "plotfile",
+                  "attributes": {
+                    "type": "febio"
+                  },
+                  "value": "",
+                  "children": [
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "displacement"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "stress"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "relative volume"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "contact gap"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "discrete element force"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "shell thickness"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "Lagrange strain"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "contact pressure"
+                      },
+                      "value": "",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "tag": "logfile",
+                  "attributes": {},
+                  "value": "",
+                  "children": [
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "mitral",
+                        "file": "mitral_p2Prolapse_output.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "A1",
+                        "file": "A1_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "A2",
+                        "file": "A2_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "A3",
+                        "file": "A3_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "P1",
+                        "file": "P1_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "P2",
+                        "file": "P2_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "P3",
+                        "file": "P3_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "face_data",
+                      "attributes": {
+                        "data": "contact gap",
+                        "file": "mitral_p2Prolapse_contact.csv",
+                        "surface": "ContactLeaflet"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "surface_data",
+                      "attributes": {
+                        "data": "contact area",
+                        "file": "contactarea_p2Prolapse_sev.csv",
+                        "surface": "ContactLeaflet"
+                      },
+                      "value": "",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "material": {
+            "material_id": 1,
+            "name": "Valve",
+            "density_kg_per_mm3": 1.04e-06,
+            "c0": 200.0,
+            "c1": 2968.4,
+            "c2": 0.2661,
+            "k": 5000.0,
+            "tangent_scale": 10.0
+          },
+          "shell_iteration_tangent_scale": 10.0,
+          "method": {
+            "alpha_f": 1.0,
+            "alpha_m": 2.0,
+            "beta": 1.0,
+            "gamma": 1.5
+          },
+          "numerical_differences": [
+            "Shell iteration operator selected explicitly; residual and output stress always unchanged",
+            "Exact follower-pressure derivative rather than symmetric approximation",
+            "Contact derivative includes current-area variation with frozen candidate pairs per Krylov solve",
+            "Newton/backtracking plus GPU GMRES rather than FEBio BFGS/Pardiso",
+            "Residual-based tolerances and adaptive cutbacks are explicit run settings"
+          ],
+          "final_time": 0.0134945247,
+          "full_model_agreement": false
+        }
+      }
+    },
+    "cardiofem_valve_bfgs": {
+      "comparison": {
+        "source": {
+          "project": "CardioFEM (NewtonValveDev)",
+          "path": "validation/cardiofem_valve_bfgs/comparison.json",
+          "sha256": "13d2f353485eec95907d4685b81bf8c70363fcce150bc457f22ce13cb60aa36e"
+        },
+        "data": {
+          "status": "quantitative comparison only; scientific acceptance not established",
+          "full_model_agreement": false,
+          "time": {
+            "cardiofem_seconds": 0.0134945247,
+            "febio_xplt_seconds": 0.013494525104761124,
+            "febio_area_csv_seconds": 0.0134945247,
+            "absolute_difference_seconds": 4.047611239232918e-10,
+            "alignment_tolerance_seconds": 1e-09,
+            "reference_state_index": 394,
+            "interpolation": false
+          },
+          "pressure_kpa": -13.3,
+          "quantities": {
+            "displacement": {
+              "units": "mm",
+              "definition": "Global nodal top-surface displacement, aligned by explicit node IDs; includes fixed anchors",
+              "shape": [
+                7442,
+                3
+              ],
+              "max_absolute_error": 0.10987458846382925,
+              "rms_error": 0.0038709264931246195,
+              "absolute_l2_error": 0.5783894791385613,
+              "reference_l2_norm": 951.8448295484361,
+              "relative_l2_error": 0.0006076510174593842,
+              "reference_minimum": -15.68996524810791,
+              "reference_maximum": 23.35248565673828,
+              "cardiofem_minimum": -15.689898198158735,
+              "cardiofem_maximum": 23.350929166945345,
+              "maximum_nodal_vector_error": 0.13568192954306404,
+              "maximum_error_node_id": 1910
+            },
+            "deformed_geometry": {
+              "units": "mm",
+              "definition": "Common double-precision FEB reference coordinates plus independent nodal displacements",
+              "shape": [
+                7442,
+                3
+              ],
+              "max_absolute_error": 0.10987458846382836,
+              "rms_error": 0.003870926493124619,
+              "absolute_l2_error": 0.5783894791385612,
+              "reference_l2_norm": 1970.6156278633562,
+              "relative_l2_error": 0.00029350699901110655,
+              "reference_minimum": -21.666430059291077,
+              "reference_maximum": 25.80433035437622,
+              "cardiofem_minimum": -21.66520978942343,
+              "cardiofem_maximum": 25.804264914895995
+            },
+            "cauchy_stress": {
+              "units": "kPa",
+              "definition": "Global spatial Cauchy tensor, arithmetic mean of all eight shell integration points; Frobenius/component errors include both symmetric off-diagonals; no nodal extrapolation or smoothing",
+              "shape": [
+                7200,
+                3,
+                3
+              ],
+              "max_absolute_error": 26.326387790100796,
+              "rms_error": 0.6111690008754194,
+              "absolute_l2_error": 155.5782281892058,
+              "reference_l2_norm": 35077.97727497757,
+              "relative_l2_error": 0.004435210929342426,
+              "reference_minimum": -680.5579833984375,
+              "reference_maximum": 2055.859375,
+              "cardiofem_minimum": -680.6045143323411,
+              "cardiofem_maximum": 2055.6885973503317
+            },
+            "green_lagrange_strain": {
+              "units": "dimensionless",
+              "definition": "Reference Cartesian Green-Lagrange tensor, arithmetic mean of all eight shell integration points; Frobenius/component errors include both symmetric off-diagonals; no nodal extrapolation or smoothing",
+              "shape": [
+                7200,
+                3,
+                3
+              ],
+              "max_absolute_error": 0.11967109224296059,
+              "rms_error": 0.00377014119958407,
+              "absolute_l2_error": 0.959721266972405,
+              "reference_l2_norm": 24.57514142676695,
+              "relative_l2_error": 0.03905252264091095,
+              "reference_minimum": -0.3249386250972748,
+              "reference_maximum": 0.47074398398399353,
+              "cardiofem_minimum": -0.32493495399229805,
+              "cardiofem_maximum": 0.47073878900099037
+            },
+            "relative_volume": {
+              "units": "dimensionless",
+              "definition": "Arithmetic mean integration-point determinant of deformation gradient",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 0.0063689944050659975,
+              "rms_error": 0.0002446748984626305,
+              "absolute_l2_error": 0.02076135358668672,
+              "reference_l2_norm": 83.118358672815,
+              "relative_l2_error": 0.0002497806010391902,
+              "reference_minimum": 0.8912164568901062,
+              "reference_maximum": 1.0000486373901367,
+              "cardiofem_minimum": 0.8912109248570024,
+              "cardiofem_maximum": 1.000047142022305
+            },
+            "shell_thickness": {
+              "units": "mm",
+              "definition": "Norm of current top-to-bottom director at each ordered element corner; FEBio MULT output, no averaging",
+              "shape": [
+                7200,
+                4
+              ],
+              "max_absolute_error": 0.01728277002497569,
+              "rms_error": 0.0006899379767010472,
+              "absolute_l2_error": 0.11708635726162481,
+              "reference_l2_norm": 59.93713304819202,
+              "relative_l2_error": 0.0019534861163192836,
+              "reference_minimum": 0.2818879187107086,
+              "reference_maximum": 0.4492266774177551,
+              "cardiofem_minimum": 0.28188538794506496,
+              "cardiofem_maximum": 0.4493003288722828
+            },
+            "right_stretch_diagonal": {
+              "units": "dimensionless",
+              "definition": "Arithmetic mean of per-integration-point diagonal entries of right stretch U=sqrt(I+2E); CSV Ux,Uy,Uz are not displacements",
+              "shape": [
+                7200,
+                3
+              ],
+              "max_absolute_error": 0.08035531599382406,
+              "rms_error": 0.00303850883349049,
+              "absolute_l2_error": 0.446567773259462,
+              "reference_l2_norm": 148.3936115518368,
+              "relative_l2_error": 0.003009346349815518,
+              "reference_minimum": 0.786258717467,
+              "reference_maximum": 1.36084168033,
+              "cardiofem_minimum": 0.7862571925144795,
+              "cardiofem_maximum": 1.3608422191107932
+            },
+            "first_principal_cauchy_stress": {
+              "units": "kPa",
+              "definition": "Arithmetic mean of per-integration-point FEBio exact_eigen first roots, including the unsorted diagonal/zero degenerate fallback; not a root of the mean tensor",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 13.884400706942976,
+              "rms_error": 0.49484199758722264,
+              "absolute_l2_error": 41.98873585317867,
+              "reference_l2_norm": 30855.17600027592,
+              "relative_l2_error": 0.0013608328097951276,
+              "reference_minimum": -157.898170528,
+              "reference_maximum": 2258.13200383,
+              "cardiofem_minimum": -157.86066018348964,
+              "cardiofem_maximum": 2257.9245972935023,
+              "cardiofem_degenerate_integration_points": 0
+            },
+            "first_principal_green_strain": {
+              "units": "dimensionless",
+              "definition": "Arithmetic mean of per-integration-point FEBio exact_eigen first roots, including the unsorted diagonal/zero degenerate fallback; not a root of the mean tensor",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 0.025867134792366103,
+              "rms_error": 0.0011261170787569697,
+              "absolute_l2_error": 0.09555420273588465,
+              "reference_l2_norm": 20.847559007167433,
+              "relative_l2_error": 0.0045834719884007965,
+              "reference_minimum": 0.047870687667,
+              "reference_maximum": 0.60916134913,
+              "cardiofem_minimum": 0.04783639854940347,
+              "cardiofem_maximum": 0.6091326698764422,
+              "cardiofem_degenerate_integration_points": 0
+            },
+            "chord_force_vector": {
+              "units": "mN",
+              "definition": "Ordered model chord records, global force vector from first endpoint toward second; duplicate records retained",
+              "shape": [
+                100,
+                3
+              ],
+              "max_absolute_error": 0.06405240814579827,
+              "rms_error": 0.009167506308982089,
+              "absolute_l2_error": 0.15878586705865205,
+              "reference_l2_norm": 1280.490193128964,
+              "relative_l2_error": 0.00012400396965996913,
+              "reference_minimum": -233.26535034179688,
+              "reference_maximum": 209.77352905273438,
+              "cardiofem_minimum": -233.26827460287407,
+              "cardiofem_maximum": 209.77923044443594
+            },
+            "chord_force_magnitude": {
+              "units": "mN",
+              "definition": "Magnitude per ordered chord record",
+              "shape": [
+                100
+              ],
+              "max_absolute_error": 0.0657419184693282,
+              "rms_error": 0.01408007103978045,
+              "absolute_l2_error": 0.14080071039780448,
+              "reference_l2_norm": 1280.490193128964,
+              "relative_l2_error": 0.0001099584449403306,
+              "reference_minimum": 0.0,
+              "reference_maximum": 239.18361787829105,
+              "cardiofem_minimum": 0.0,
+              "cardiofem_maximum": 239.18664521510445
+            },
+            "contact_gap": {
+              "units": "mm",
+              "definition": "Facet arithmetic mean of FEBio contact-potential m_gap, not penetration gap; CardioFEM rows follow fingerprinted model contact-facet order",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 0.22957906126976013,
+              "rms_error": 0.008509631306431285,
+              "absolute_l2_error": 0.7220661602609881,
+              "reference_l2_norm": 6.985447758328056,
+              "relative_l2_error": 0.10336719781493467,
+              "reference_minimum": 0.0,
+              "reference_maximum": 0.49083343148231506,
+              "cardiofem_minimum": 0.0,
+              "cardiofem_maximum": 0.4908964382623064
+            },
+            "contact_pressure": {
+              "units": "kPa",
+              "definition": "Facet arithmetic mean of quadrature traction magnitude, not signed normal traction; CardioFEM rows follow fingerprinted model contact-facet order",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 14.21708602538191,
+              "rms_error": 0.34924433015882705,
+              "absolute_l2_error": 29.63436409755121,
+              "reference_l2_norm": 297.5304291979586,
+              "relative_l2_error": 0.09960112038770431,
+              "reference_minimum": 0.0,
+              "reference_maximum": 66.69605255126953,
+              "cardiofem_minimum": 0.0,
+              "cardiofem_maximum": 66.82021342069639
+            },
+            "contact_area": {
+              "units": "mm^2",
+              "definition": "Sum of current quadrature area where primary contact traction norm is nonzero",
+              "shape": [
+                1
+              ],
+              "max_absolute_error": 0.41797225401855087,
+              "rms_error": 0.41797225401855087,
+              "absolute_l2_error": 0.41797225401855087,
+              "reference_l2_norm": 89.6454289849,
+              "relative_l2_error": 0.0046625049235801495,
+              "reference_minimum": 89.6454289849,
+              "reference_maximum": 89.6454289849,
+              "cardiofem_minimum": 89.22745673088144,
+              "cardiofem_maximum": 89.22745673088144
+            }
+          },
+          "contact_support": {
+            "definition": "Facet support where arithmetic mean traction magnitude is strictly positive; no threshold tuning",
+            "cardiofem_facets": 624,
+            "reference_facets": 630,
+            "intersection_facets": 620,
+            "union_facets": 634,
+            "intersection_over_union": 0.9779179810725552,
+            "false_positive_facets": 4,
+            "false_negative_facets": 10
+          },
+          "limitations": [
+            "XPLT time and field values are float32; time tolerance covers storage rounding only.",
+            "Reference provenance is checked against audited units/mesh/connectivity; XPLT does not embed the FEB model SHA256.",
+            "Matching tensor means does not compare through-thickness distributions; raw FEBio integration-point tensors are unavailable.",
+            "CSV principal averages reproduce FEBio exact_eigen branching but not bitwise arithmetic; near-degenerate root sensitivity remains a numerical caveat.",
+            "Contact gap depends on FEBio search/first-qualifying-pair traversal; differences may include search ordering.",
+            "Scientific acceptance tolerances and full-target convergence must be assessed separately."
+          ]
+        }
+      },
+      "run": {
+        "source": {
+          "project": "CardioFEM (NewtonValveDev)",
+          "path": "validation/cardiofem_valve_bfgs/run.json",
+          "sha256": "0660956c13d1a4f09697daf8cabfa2008b087457a96746f0ca138294c375ae4f"
+        },
+        "data": {
+          "status": "reached_target",
+          "settings": {
+            "model": "reference/valve_pressurization/mitral_p2prolapse.feb",
+            "output": "validation/cardiofem_valve_bfgs",
+            "device": "cuda:1",
+            "end_time": 0.0134945247,
+            "dt": 0.0001,
+            "min_dt": 1e-05,
+            "max_steps": 10000,
+            "max_newton": 100,
+            "max_linear": 600,
+            "restart": 50,
+            "max_linesearch": 14,
+            "relative_tolerance": 1e-06,
+            "absolute_tolerance": 1e-07,
+            "linear_tolerance": 1e-06,
+            "cuda_graph": true,
+            "line_search": "reference",
+            "convergence": "reference",
+            "shell_iteration": "reference",
+            "energy_baseline": "reference",
+            "resume": null,
+            "iteration": "bfgs"
+          },
+          "model": {
+            "source_sha256": "ba9fd22aeaa91acda23bce562e8b8473d43b4a214f0b4f6c8fbb287bc7519b39",
+            "units": "mm-kg-s",
+            "node_count": 7442,
+            "element_count": 7200,
+            "chord_count": 100,
+            "global_constants": {
+              "T": 0.0,
+              "P": 0.0,
+              "R": 0.00831446,
+              "Fc": 0.0964853
+            },
+            "shell_domain": {
+              "thickness_mode": 0,
+              "normal_nodal": 1
+            },
+            "material": {
+              "material_id": 1,
+              "name": "Valve",
+              "density_kg_per_mm3": 1.04e-06,
+              "c0": 200.0,
+              "c1": 2968.4,
+              "c2": 0.2661,
+              "k": 5000.0,
+              "tangent_scale": 10.0
+            },
+            "boundaries": [
+              {
+                "name": "Annulus Displacement",
+                "node_set": "AnnulusNodes",
+                "kind": "zero displacement",
+                "dofs": [
+                  true,
+                  true,
+                  true
+                ],
+                "node_count": 240
+              },
+              {
+                "name": "Papillary Muscle Displacement",
+                "node_set": "PapillaryNodes",
+                "kind": "zero displacement",
+                "dofs": [
+                  true,
+                  true,
+                  true
+                ],
+                "node_count": 2
+              },
+              {
+                "name": "Annulus Rotation",
+                "node_set": "AnnulusNodes",
+                "kind": "zero shell displacement",
+                "dofs": [
+                  true,
+                  true,
+                  true
+                ],
+                "node_count": 240
+              }
+            ],
+            "chord_materials": [
+              {
+                "id": 1,
+                "name": "A1",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      5.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 2,
+                "name": "A2_1",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      5.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 3,
+                "name": "A2_2",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      5.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 4,
+                "name": "A3",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      2.0,
+                      0.0
+                    ],
+                    [
+                      3.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 5,
+                "name": "P1",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      3.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 6,
+                "name": "P2_1",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      12.0,
+                      0.0
+                    ],
+                    [
+                      13.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 7,
+                "name": "P3",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      3.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 8,
+                "name": "P2_2",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      12.0,
+                      0.0
+                    ],
+                    [
+                      13.0,
+                      1.0
+                    ]
+                  ]
+                }
+              }
+            ],
+            "step": {
+              "id": 1,
+              "name": "01 - Valve Close/Clip Open",
+              "control": {
+                "tag": "Control",
+                "attributes": {},
+                "value": "",
+                "children": [
+                  {
+                    "tag": "analysis",
+                    "attributes": {},
+                    "value": "DYNAMIC",
+                    "children": []
+                  },
+                  {
+                    "tag": "time_steps",
+                    "attributes": {},
+                    "value": "200",
+                    "children": []
+                  },
+                  {
+                    "tag": "step_size",
+                    "attributes": {},
+                    "value": "0.0001",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_zero_state",
+                    "attributes": {},
+                    "value": "0",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_range",
+                    "attributes": {},
+                    "value": "0,-1",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_level",
+                    "attributes": {},
+                    "value": "PLOT_MAJOR_ITRS",
+                    "children": []
+                  },
+                  {
+                    "tag": "output_level",
+                    "attributes": {},
+                    "value": "OUTPUT_MAJOR_ITRS",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_stride",
+                    "attributes": {},
+                    "value": "1",
+                    "children": []
+                  },
+                  {
+                    "tag": "output_stride",
+                    "attributes": {},
+                    "value": "1",
+                    "children": []
+                  },
+                  {
+                    "tag": "adaptor_re_solve",
+                    "attributes": {},
+                    "value": "1",
+                    "children": []
+                  },
+                  {
+                    "tag": "time_stepper",
+                    "attributes": {
+                      "type": "default"
+                    },
+                    "value": "",
+                    "children": [
+                      {
+                        "tag": "max_retries",
+                        "attributes": {},
+                        "value": "5",
+                        "children": []
+                      },
+                      {
+                        "tag": "opt_iter",
+                        "attributes": {},
+                        "value": "10",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtmin",
+                        "attributes": {},
+                        "value": "1e-05",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtmax",
+                        "attributes": {},
+                        "value": "0.0001",
+                        "children": []
+                      },
+                      {
+                        "tag": "aggressiveness",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "cutback",
+                        "attributes": {},
+                        "value": "0.5",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtforce",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "tag": "solver",
+                    "attributes": {
+                      "type": "solid"
+                    },
+                    "value": "",
+                    "children": [
+                      {
+                        "tag": "symmetric_stiffness",
+                        "attributes": {},
+                        "value": "symmetric",
+                        "children": []
+                      },
+                      {
+                        "tag": "equation_scheme",
+                        "attributes": {},
+                        "value": "staggered",
+                        "children": []
+                      },
+                      {
+                        "tag": "equation_order",
+                        "attributes": {},
+                        "value": "default",
+                        "children": []
+                      },
+                      {
+                        "tag": "optimize_bw",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "lstol",
+                        "attributes": {},
+                        "value": "0.9",
+                        "children": []
+                      },
+                      {
+                        "tag": "lsmin",
+                        "attributes": {},
+                        "value": "0.01",
+                        "children": []
+                      },
+                      {
+                        "tag": "lsiter",
+                        "attributes": {},
+                        "value": "5",
+                        "children": []
+                      },
+                      {
+                        "tag": "max_refs",
+                        "attributes": {},
+                        "value": "15",
+                        "children": []
+                      },
+                      {
+                        "tag": "check_zero_diagonal",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "zero_diagonal_tol",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "force_partition",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "reform_each_time_step",
+                        "attributes": {},
+                        "value": "1",
+                        "children": []
+                      },
+                      {
+                        "tag": "reform_augment",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "diverge_reform",
+                        "attributes": {},
+                        "value": "1",
+                        "children": []
+                      },
+                      {
+                        "tag": "min_residual",
+                        "attributes": {},
+                        "value": "1e-20",
+                        "children": []
+                      },
+                      {
+                        "tag": "max_residual",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtol",
+                        "attributes": {},
+                        "value": "0.001",
+                        "children": []
+                      },
+                      {
+                        "tag": "etol",
+                        "attributes": {},
+                        "value": "0.01",
+                        "children": []
+                      },
+                      {
+                        "tag": "rtol",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "rhoi",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "alpha",
+                        "attributes": {},
+                        "value": "1",
+                        "children": []
+                      },
+                      {
+                        "tag": "beta",
+                        "attributes": {},
+                        "value": "0.25",
+                        "children": []
+                      },
+                      {
+                        "tag": "gamma",
+                        "attributes": {},
+                        "value": "0.5",
+                        "children": []
+                      },
+                      {
+                        "tag": "logSolve",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "arc_length",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "arc_length_scale",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "qn_method",
+                        "attributes": {
+                          "type": "BFGS"
+                        },
+                        "value": "",
+                        "children": [
+                          {
+                            "tag": "max_ups",
+                            "attributes": {},
+                            "value": "10",
+                            "children": []
+                          },
+                          {
+                            "tag": "max_buffer_size",
+                            "attributes": {},
+                            "value": "0",
+                            "children": []
+                          },
+                          {
+                            "tag": "cycle_buffer",
+                            "attributes": {},
+                            "value": "1",
+                            "children": []
+                          },
+                          {
+                            "tag": "cmax",
+                            "attributes": {},
+                            "value": "100000",
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "pressure": {
+              "surface": "ValvePressureLoad",
+              "value": -13.3,
+              "curve_id": 1,
+              "symmetric_stiffness": 1,
+              "linear": 0,
+              "shell_bottom": 0
+            },
+            "pressure_curve": {
+              "interpolation": "SMOOTH",
+              "extension": "CONSTANT",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.005,
+                  1.0
+                ]
+              ]
+            },
+            "contact": {
+              "name": "Contact Potential (Leaflets)",
+              "surface_pair": "Contact Potential (Leaflets)",
+              "primary": "ContactLeaflet",
+              "secondary": "ContactLeaflet",
+              "laugon": "PENALTY",
+              "kc": 2.0,
+              "p": 4.0,
+              "r_in": 0.2,
+              "r_out": 0.5,
+              "r0_min": 0.0,
+              "w_tol": 0.6
+            },
+            "damping_c": 3000.0,
+            "output": {
+              "tag": "Output",
+              "attributes": {},
+              "value": "",
+              "children": [
+                {
+                  "tag": "plotfile",
+                  "attributes": {
+                    "type": "febio"
+                  },
+                  "value": "",
+                  "children": [
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "displacement"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "stress"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "relative volume"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "contact gap"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "discrete element force"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "shell thickness"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "Lagrange strain"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "contact pressure"
+                      },
+                      "value": "",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "tag": "logfile",
+                  "attributes": {},
+                  "value": "",
+                  "children": [
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "mitral",
+                        "file": "mitral_p2Prolapse_output.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "A1",
+                        "file": "A1_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "A2",
+                        "file": "A2_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "A3",
+                        "file": "A3_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "P1",
+                        "file": "P1_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "P2",
+                        "file": "P2_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "P3",
+                        "file": "P3_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "face_data",
+                      "attributes": {
+                        "data": "contact gap",
+                        "file": "mitral_p2Prolapse_contact.csv",
+                        "surface": "ContactLeaflet"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "surface_data",
+                      "attributes": {
+                        "data": "contact area",
+                        "file": "contactarea_p2Prolapse_sev.csv",
+                        "surface": "ContactLeaflet"
+                      },
+                      "value": "",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "material": {
+            "material_id": 1,
+            "name": "Valve",
+            "density_kg_per_mm3": 1.04e-06,
+            "c0": 200.0,
+            "c1": 2968.4,
+            "c2": 0.2661,
+            "k": 5000.0,
+            "tangent_scale": 10.0
+          },
+          "shell_iteration_tangent_scale": 10.0,
+          "method": {
+            "alpha_f": 1.0,
+            "alpha_m": 2.0,
+            "beta": 1.0,
+            "gamma": 1.5
+          },
+          "numerical_differences": [
+            "Shell iteration operator selected explicitly; residual and output stress always unchanged",
+            "Exact follower-pressure derivative rather than symmetric approximation",
+            "Contact derivative includes current-area variation with frozen candidate pairs per Krylov solve",
+            "Iteration=bfgs, line_search=reference; GPU GMRES rather than Pardiso",
+            "Convergence=reference, energy_baseline=reference; adaptive grid differs from FEBio"
+          ],
+          "final_time": 0.0134945247,
+          "full_model_agreement": false
+        }
+      }
+    },
+    "cardiofem_valve_first_step": {
+      "comparison": {
+        "source": {
+          "project": "CardioFEM (NewtonValveDev)",
+          "path": "validation/cardiofem_valve_first_step/comparison.json",
+          "sha256": "13c846df6064e8d53abc50221adf729914945ae594847639601d2b37962f751a"
+        },
+        "data": {
+          "status": "quantitative comparison only; scientific acceptance not established",
+          "full_model_agreement": false,
+          "time": {
+            "cardiofem_seconds": 0.0001,
+            "febio_xplt_seconds": 9.999999747378752e-05,
+            "febio_area_csv_seconds": 0.0001,
+            "absolute_difference_seconds": 2.526212488436659e-12,
+            "alignment_tolerance_seconds": 1e-09,
+            "reference_state_index": 1,
+            "interpolation": false
+          },
+          "pressure_kpa": -0.266,
+          "quantities": {
+            "displacement": {
+              "units": "mm",
+              "definition": "Global nodal top-surface displacement, aligned by explicit node IDs; includes fixed anchors",
+              "shape": [
+                7442,
+                3
+              ],
+              "max_absolute_error": 8.763802069515578e-06,
+              "rms_error": 1.642291893671852e-06,
+              "absolute_l2_error": 0.000245389406040515,
+              "reference_l2_norm": 0.217393134976002,
+              "relative_l2_error": 0.0011287817624397547,
+              "reference_minimum": -0.0026650307700037956,
+              "reference_maximum": 0.002664983505383134,
+              "cardiofem_minimum": -0.0026654698781797955,
+              "cardiofem_maximum": 0.00266444873462087
+            },
+            "deformed_geometry": {
+              "units": "mm",
+              "definition": "Common double-precision FEB reference coordinates plus independent nodal displacements",
+              "shape": [
+                7442,
+                3
+              ],
+              "max_absolute_error": 8.763802068045834e-06,
+              "rms_error": 1.6422918936727873e-06,
+              "absolute_l2_error": 0.0002453894060406547,
+              "reference_l2_norm": 1758.3311152559606,
+              "relative_l2_error": 1.3955813208988985e-07,
+              "reference_minimum": -21.1560719,
+              "reference_maximum": 25.7584933,
+              "cardiofem_minimum": -21.1560719,
+              "cardiofem_maximum": 25.7584933
+            },
+            "cauchy_stress": {
+              "units": "kPa",
+              "definition": "Global spatial Cauchy tensor, arithmetic mean of all eight shell integration points; Frobenius/component errors include both symmetric off-diagonals; no nodal extrapolation or smoothing",
+              "shape": [
+                7200,
+                3,
+                3
+              ],
+              "max_absolute_error": 0.0059217709212125436,
+              "rms_error": 0.0008062242452224458,
+              "absolute_l2_error": 0.20523118714336705,
+              "reference_l2_norm": 18.298088704120975,
+              "relative_l2_error": 0.011215990394512966,
+              "reference_minimum": -0.3662824332714081,
+              "reference_maximum": 0.4330191910266876,
+              "cardiofem_minimum": -0.3721626710762054,
+              "cardiofem_maximum": 0.4345692254178422
+            },
+            "green_lagrange_strain": {
+              "units": "dimensionless",
+              "definition": "Reference Cartesian Green-Lagrange tensor, arithmetic mean of all eight shell integration points; Frobenius/component errors include both symmetric off-diagonals; no nodal extrapolation or smoothing",
+              "shape": [
+                7200,
+                3,
+                3
+              ],
+              "max_absolute_error": 1.4813545380015693e-05,
+              "rms_error": 1.4490909594871273e-06,
+              "absolute_l2_error": 0.00036887833584340853,
+              "reference_l2_norm": 0.029624977360718195,
+              "relative_l2_error": 0.012451598911009797,
+              "reference_minimum": -0.0009164813091047108,
+              "reference_maximum": 0.0007321416051127017,
+              "cardiofem_minimum": -0.0009311909764054148,
+              "cardiofem_maximum": 0.0007420755253025687
+            },
+            "relative_volume": {
+              "units": "dimensionless",
+              "definition": "Arithmetic mean integration-point determinant of deformation gradient",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 4.15191871994125e-07,
+              "rms_error": 1.217344539904489e-07,
+              "absolute_l2_error": 1.0329510950482584e-05,
+              "reference_l2_norm": 84.85357023201558,
+              "relative_l2_error": 1.2173336869902522e-07,
+              "reference_minimum": 0.9999831318855286,
+              "reference_maximum": 1.0000392198562622,
+              "cardiofem_minimum": 0.9999834130916085,
+              "cardiofem_maximum": 1.0000391800371735
+            },
+            "chord_force_vector": {
+              "units": "mN",
+              "definition": "Ordered model chord records, global force vector from first endpoint toward second; duplicate records retained",
+              "shape": [
+                100,
+                3
+              ],
+              "max_absolute_error": 0.0,
+              "rms_error": 0.0,
+              "absolute_l2_error": 0.0,
+              "reference_l2_norm": 0.0,
+              "relative_l2_error": null,
+              "reference_minimum": 0.0,
+              "reference_maximum": 0.0,
+              "cardiofem_minimum": 0.0,
+              "cardiofem_maximum": 0.0
+            },
+            "chord_force_magnitude": {
+              "units": "mN",
+              "definition": "Magnitude per ordered chord record",
+              "shape": [
+                100
+              ],
+              "max_absolute_error": 0.0,
+              "rms_error": 0.0,
+              "absolute_l2_error": 0.0,
+              "reference_l2_norm": 0.0,
+              "relative_l2_error": null,
+              "reference_minimum": 0.0,
+              "reference_maximum": 0.0,
+              "cardiofem_minimum": 0.0,
+              "cardiofem_maximum": 0.0
+            },
+            "contact_gap": {
+              "units": "mm",
+              "definition": "Facet arithmetic mean of FEBio contact-potential m_gap, not penetration gap; CardioFEM rows follow fingerprinted model contact-facet order",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 0.0,
+              "rms_error": 0.0,
+              "absolute_l2_error": 0.0,
+              "reference_l2_norm": 0.0,
+              "relative_l2_error": null,
+              "reference_minimum": 0.0,
+              "reference_maximum": 0.0,
+              "cardiofem_minimum": 0.0,
+              "cardiofem_maximum": 0.0
+            },
+            "contact_pressure": {
+              "units": "kPa",
+              "definition": "Facet arithmetic mean of quadrature traction magnitude, not signed normal traction; CardioFEM rows follow fingerprinted model contact-facet order",
+              "shape": [
+                7200
+              ],
+              "max_absolute_error": 0.0,
+              "rms_error": 0.0,
+              "absolute_l2_error": 0.0,
+              "reference_l2_norm": 0.0,
+              "relative_l2_error": null,
+              "reference_minimum": 0.0,
+              "reference_maximum": 0.0,
+              "cardiofem_minimum": 0.0,
+              "cardiofem_maximum": 0.0
+            },
+            "contact_area": {
+              "units": "mm^2",
+              "definition": "Sum of current quadrature area where primary contact traction norm is nonzero",
+              "shape": [
+                1
+              ],
+              "max_absolute_error": 0.0,
+              "rms_error": 0.0,
+              "absolute_l2_error": 0.0,
+              "reference_l2_norm": 0.0,
+              "relative_l2_error": null,
+              "reference_minimum": 0.0,
+              "reference_maximum": 0.0,
+              "cardiofem_minimum": 0.0,
+              "cardiofem_maximum": 0.0
+            }
+          },
+          "limitations": [
+            "XPLT time and field values are float32; time tolerance covers storage rounding only.",
+            "Reference provenance is checked against audited units/mesh/connectivity; XPLT does not embed the FEB model SHA256.",
+            "Matching tensor means does not compare through-thickness distributions; raw FEBio integration-point tensors are unavailable.",
+            "CSV principal averages and stretch are not replaced with eigenvalues of averaged tensors.",
+            "Contact gap depends on FEBio search/first-qualifying-pair traversal; differences may include search ordering.",
+            "Scientific acceptance tolerances and full-target convergence must be assessed separately."
+          ]
+        }
+      },
+      "run": {
+        "source": {
+          "project": "CardioFEM (NewtonValveDev)",
+          "path": "validation/cardiofem_valve_first_step/run.json",
+          "sha256": "0b7245641b9db32e76803f1de5697521bd9fcf452b8db1f9304fd1c78b6bdf3f"
+        },
+        "data": {
+          "status": "reached_target",
+          "settings": {
+            "model": "reference/valve_pressurization/mitral_p2prolapse.feb",
+            "output": "validation/cardiofem_valve_first_step",
+            "device": "cuda:0",
+            "end_time": 0.0001,
+            "dt": 0.0001,
+            "min_dt": 1e-05,
+            "max_steps": 10000,
+            "max_newton": 25,
+            "max_linear": 600,
+            "restart": 50,
+            "max_linesearch": 14,
+            "relative_tolerance": 1e-06,
+            "absolute_tolerance": 1e-07,
+            "linear_tolerance": 1e-06,
+            "cuda_graph": true
+          },
+          "model": {
+            "source_sha256": "ba9fd22aeaa91acda23bce562e8b8473d43b4a214f0b4f6c8fbb287bc7519b39",
+            "units": "mm-kg-s",
+            "node_count": 7442,
+            "element_count": 7200,
+            "chord_count": 100,
+            "global_constants": {
+              "T": 0.0,
+              "P": 0.0,
+              "R": 0.00831446,
+              "Fc": 0.0964853
+            },
+            "shell_domain": {
+              "thickness_mode": 0,
+              "normal_nodal": 1
+            },
+            "material": {
+              "material_id": 1,
+              "name": "Valve",
+              "density_kg_per_mm3": 1.04e-06,
+              "c0": 200.0,
+              "c1": 2968.4,
+              "c2": 0.2661,
+              "k": 5000.0,
+              "tangent_scale": 10.0
+            },
+            "boundaries": [
+              {
+                "name": "Annulus Displacement",
+                "node_set": "AnnulusNodes",
+                "kind": "zero displacement",
+                "dofs": [
+                  true,
+                  true,
+                  true
+                ],
+                "node_count": 240
+              },
+              {
+                "name": "Papillary Muscle Displacement",
+                "node_set": "PapillaryNodes",
+                "kind": "zero displacement",
+                "dofs": [
+                  true,
+                  true,
+                  true
+                ],
+                "node_count": 2
+              },
+              {
+                "name": "Annulus Rotation",
+                "node_set": "AnnulusNodes",
+                "kind": "zero shell displacement",
+                "dofs": [
+                  true,
+                  true,
+                  true
+                ],
+                "node_count": 240
+              }
+            ],
+            "chord_materials": [
+              {
+                "id": 1,
+                "name": "A1",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      5.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 2,
+                "name": "A2_1",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      5.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 3,
+                "name": "A2_2",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      5.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 4,
+                "name": "A3",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      2.0,
+                      0.0
+                    ],
+                    [
+                      3.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 5,
+                "name": "P1",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      3.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 6,
+                "name": "P2_1",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      12.0,
+                      0.0
+                    ],
+                    [
+                      13.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 7,
+                "name": "P3",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      3.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 8,
+                "name": "P2_2",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      12.0,
+                      0.0
+                    ],
+                    [
+                      13.0,
+                      1.0
+                    ]
+                  ]
+                }
+              }
+            ],
+            "step": {
+              "id": 1,
+              "name": "01 - Valve Close/Clip Open",
+              "control": {
+                "tag": "Control",
+                "attributes": {},
+                "value": "",
+                "children": [
+                  {
+                    "tag": "analysis",
+                    "attributes": {},
+                    "value": "DYNAMIC",
+                    "children": []
+                  },
+                  {
+                    "tag": "time_steps",
+                    "attributes": {},
+                    "value": "200",
+                    "children": []
+                  },
+                  {
+                    "tag": "step_size",
+                    "attributes": {},
+                    "value": "0.0001",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_zero_state",
+                    "attributes": {},
+                    "value": "0",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_range",
+                    "attributes": {},
+                    "value": "0,-1",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_level",
+                    "attributes": {},
+                    "value": "PLOT_MAJOR_ITRS",
+                    "children": []
+                  },
+                  {
+                    "tag": "output_level",
+                    "attributes": {},
+                    "value": "OUTPUT_MAJOR_ITRS",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_stride",
+                    "attributes": {},
+                    "value": "1",
+                    "children": []
+                  },
+                  {
+                    "tag": "output_stride",
+                    "attributes": {},
+                    "value": "1",
+                    "children": []
+                  },
+                  {
+                    "tag": "adaptor_re_solve",
+                    "attributes": {},
+                    "value": "1",
+                    "children": []
+                  },
+                  {
+                    "tag": "time_stepper",
+                    "attributes": {
+                      "type": "default"
+                    },
+                    "value": "",
+                    "children": [
+                      {
+                        "tag": "max_retries",
+                        "attributes": {},
+                        "value": "5",
+                        "children": []
+                      },
+                      {
+                        "tag": "opt_iter",
+                        "attributes": {},
+                        "value": "10",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtmin",
+                        "attributes": {},
+                        "value": "1e-05",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtmax",
+                        "attributes": {},
+                        "value": "0.0001",
+                        "children": []
+                      },
+                      {
+                        "tag": "aggressiveness",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "cutback",
+                        "attributes": {},
+                        "value": "0.5",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtforce",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "tag": "solver",
+                    "attributes": {
+                      "type": "solid"
+                    },
+                    "value": "",
+                    "children": [
+                      {
+                        "tag": "symmetric_stiffness",
+                        "attributes": {},
+                        "value": "symmetric",
+                        "children": []
+                      },
+                      {
+                        "tag": "equation_scheme",
+                        "attributes": {},
+                        "value": "staggered",
+                        "children": []
+                      },
+                      {
+                        "tag": "equation_order",
+                        "attributes": {},
+                        "value": "default",
+                        "children": []
+                      },
+                      {
+                        "tag": "optimize_bw",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "lstol",
+                        "attributes": {},
+                        "value": "0.9",
+                        "children": []
+                      },
+                      {
+                        "tag": "lsmin",
+                        "attributes": {},
+                        "value": "0.01",
+                        "children": []
+                      },
+                      {
+                        "tag": "lsiter",
+                        "attributes": {},
+                        "value": "5",
+                        "children": []
+                      },
+                      {
+                        "tag": "max_refs",
+                        "attributes": {},
+                        "value": "15",
+                        "children": []
+                      },
+                      {
+                        "tag": "check_zero_diagonal",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "zero_diagonal_tol",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "force_partition",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "reform_each_time_step",
+                        "attributes": {},
+                        "value": "1",
+                        "children": []
+                      },
+                      {
+                        "tag": "reform_augment",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "diverge_reform",
+                        "attributes": {},
+                        "value": "1",
+                        "children": []
+                      },
+                      {
+                        "tag": "min_residual",
+                        "attributes": {},
+                        "value": "1e-20",
+                        "children": []
+                      },
+                      {
+                        "tag": "max_residual",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtol",
+                        "attributes": {},
+                        "value": "0.001",
+                        "children": []
+                      },
+                      {
+                        "tag": "etol",
+                        "attributes": {},
+                        "value": "0.01",
+                        "children": []
+                      },
+                      {
+                        "tag": "rtol",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "rhoi",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "alpha",
+                        "attributes": {},
+                        "value": "1",
+                        "children": []
+                      },
+                      {
+                        "tag": "beta",
+                        "attributes": {},
+                        "value": "0.25",
+                        "children": []
+                      },
+                      {
+                        "tag": "gamma",
+                        "attributes": {},
+                        "value": "0.5",
+                        "children": []
+                      },
+                      {
+                        "tag": "logSolve",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "arc_length",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "arc_length_scale",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "qn_method",
+                        "attributes": {
+                          "type": "BFGS"
+                        },
+                        "value": "",
+                        "children": [
+                          {
+                            "tag": "max_ups",
+                            "attributes": {},
+                            "value": "10",
+                            "children": []
+                          },
+                          {
+                            "tag": "max_buffer_size",
+                            "attributes": {},
+                            "value": "0",
+                            "children": []
+                          },
+                          {
+                            "tag": "cycle_buffer",
+                            "attributes": {},
+                            "value": "1",
+                            "children": []
+                          },
+                          {
+                            "tag": "cmax",
+                            "attributes": {},
+                            "value": "100000",
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "pressure": {
+              "surface": "ValvePressureLoad",
+              "value": -13.3,
+              "curve_id": 1,
+              "symmetric_stiffness": 1,
+              "linear": 0,
+              "shell_bottom": 0
+            },
+            "pressure_curve": {
+              "interpolation": "SMOOTH",
+              "extension": "CONSTANT",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.005,
+                  1.0
+                ]
+              ]
+            },
+            "contact": {
+              "name": "Contact Potential (Leaflets)",
+              "surface_pair": "Contact Potential (Leaflets)",
+              "primary": "ContactLeaflet",
+              "secondary": "ContactLeaflet",
+              "laugon": "PENALTY",
+              "kc": 2.0,
+              "p": 4.0,
+              "r_in": 0.2,
+              "r_out": 0.5,
+              "r0_min": 0.0,
+              "w_tol": 0.6
+            },
+            "damping_c": 3000.0,
+            "output": {
+              "tag": "Output",
+              "attributes": {},
+              "value": "",
+              "children": [
+                {
+                  "tag": "plotfile",
+                  "attributes": {
+                    "type": "febio"
+                  },
+                  "value": "",
+                  "children": [
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "displacement"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "stress"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "relative volume"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "contact gap"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "discrete element force"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "shell thickness"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "Lagrange strain"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "contact pressure"
+                      },
+                      "value": "",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "tag": "logfile",
+                  "attributes": {},
+                  "value": "",
+                  "children": [
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "mitral",
+                        "file": "mitral_p2Prolapse_output.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "A1",
+                        "file": "A1_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "A2",
+                        "file": "A2_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "A3",
+                        "file": "A3_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "P1",
+                        "file": "P1_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "P2",
+                        "file": "P2_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "P3",
+                        "file": "P3_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "face_data",
+                      "attributes": {
+                        "data": "contact gap",
+                        "file": "mitral_p2Prolapse_contact.csv",
+                        "surface": "ContactLeaflet"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "surface_data",
+                      "attributes": {
+                        "data": "contact area",
+                        "file": "contactarea_p2Prolapse_sev.csv",
+                        "surface": "ContactLeaflet"
+                      },
+                      "value": "",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "material": {
+            "material_id": 1,
+            "name": "Valve",
+            "density_kg_per_mm3": 1.04e-06,
+            "c0": 200.0,
+            "c1": 2968.4,
+            "c2": 0.2661,
+            "k": 5000.0,
+            "tangent_scale": 10.0
+          },
+          "method": {
+            "alpha_f": 1.0,
+            "alpha_m": 2.0,
+            "beta": 1.0,
+            "gamma": 1.5
+          },
+          "numerical_differences": [
+            "Exact shell material derivative rather than tangent_scale-modified FEBio tangent",
+            "Exact follower-pressure derivative rather than symmetric approximation",
+            "Contact derivative includes current-area variation with frozen candidate pairs per Krylov solve",
+            "Newton/Armijo plus GPU GMRES rather than FEBio BFGS/Pardiso",
+            "Residual-based tolerances and adaptive cutbacks are explicit run settings"
+          ],
+          "final_time": 0.0001,
+          "full_model_agreement": false
+        }
+      }
+    },
+    "cardiofem_valve_reference_time": {
+      "comparison": {
+        "source": {
+          "project": "CardioFEM (NewtonValveDev)",
+          "path": "validation/cardiofem_valve_reference_time/comparison.json",
+          "sha256": "b048089d85f684002291d21633d942259271dcb9fafe6f46fa200d6afca4ea7c"
+        },
+        "data": {
+          "status": "blocked: no unique time-matched reference state",
+          "full_model_agreement": false,
+          "time": {
+            "cardiofem_seconds": 0.003499999999999998,
+            "alignment_tolerance_seconds": 1e-09,
+            "nearby_reference_times_for_diagnosis_only": [
+              0.003465455723926425,
+              0.0035330629907548428
+            ],
+            "interpolation": false
+          },
+          "quantities": {}
+        }
+      },
+      "run": {
+        "source": {
+          "project": "CardioFEM (NewtonValveDev)",
+          "path": "validation/cardiofem_valve_reference_time/run.json",
+          "sha256": "650b587e3d3787bd1ca7790b90eaadfb31617f9e998c4a98c024b3adb71538d7"
+        },
+        "data": {
+          "status": "failed",
+          "settings": {
+            "model": "reference/valve_pressurization/mitral_p2prolapse.feb",
+            "output": "validation/cardiofem_valve_reference_time",
+            "device": "cuda:0",
+            "end_time": 0.0134945247,
+            "dt": 0.0001,
+            "min_dt": 1e-05,
+            "max_steps": 10000,
+            "max_newton": 25,
+            "max_linear": 600,
+            "restart": 50,
+            "max_linesearch": 14,
+            "relative_tolerance": 1e-06,
+            "absolute_tolerance": 1e-07,
+            "linear_tolerance": 1e-06,
+            "cuda_graph": true
+          },
+          "model": {
+            "source_sha256": "ba9fd22aeaa91acda23bce562e8b8473d43b4a214f0b4f6c8fbb287bc7519b39",
+            "units": "mm-kg-s",
+            "node_count": 7442,
+            "element_count": 7200,
+            "chord_count": 100,
+            "global_constants": {
+              "T": 0.0,
+              "P": 0.0,
+              "R": 0.00831446,
+              "Fc": 0.0964853
+            },
+            "shell_domain": {
+              "thickness_mode": 0,
+              "normal_nodal": 1
+            },
+            "material": {
+              "material_id": 1,
+              "name": "Valve",
+              "density_kg_per_mm3": 1.04e-06,
+              "c0": 200.0,
+              "c1": 2968.4,
+              "c2": 0.2661,
+              "k": 5000.0,
+              "tangent_scale": 10.0
+            },
+            "boundaries": [
+              {
+                "name": "Annulus Displacement",
+                "node_set": "AnnulusNodes",
+                "kind": "zero displacement",
+                "dofs": [
+                  true,
+                  true,
+                  true
+                ],
+                "node_count": 240
+              },
+              {
+                "name": "Papillary Muscle Displacement",
+                "node_set": "PapillaryNodes",
+                "kind": "zero displacement",
+                "dofs": [
+                  true,
+                  true,
+                  true
+                ],
+                "node_count": 2
+              },
+              {
+                "name": "Annulus Rotation",
+                "node_set": "AnnulusNodes",
+                "kind": "zero shell displacement",
+                "dofs": [
+                  true,
+                  true,
+                  true
+                ],
+                "node_count": 240
+              }
+            ],
+            "chord_materials": [
+              {
+                "id": 1,
+                "name": "A1",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      5.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 2,
+                "name": "A2_1",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      5.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 3,
+                "name": "A2_2",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      5.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 4,
+                "name": "A3",
+                "scale": 60.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      2.0,
+                      0.0
+                    ],
+                    [
+                      3.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 5,
+                "name": "P1",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      3.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 6,
+                "name": "P2_1",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      12.0,
+                      0.0
+                    ],
+                    [
+                      13.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 7,
+                "name": "P3",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      3.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      1.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 8,
+                "name": "P2_2",
+                "scale": 30.0,
+                "measure": "elongation",
+                "force": {
+                  "interpolation": "linear",
+                  "extension": "extrapolate",
+                  "points": [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      12.0,
+                      0.0
+                    ],
+                    [
+                      13.0,
+                      1.0
+                    ]
+                  ]
+                }
+              }
+            ],
+            "step": {
+              "id": 1,
+              "name": "01 - Valve Close/Clip Open",
+              "control": {
+                "tag": "Control",
+                "attributes": {},
+                "value": "",
+                "children": [
+                  {
+                    "tag": "analysis",
+                    "attributes": {},
+                    "value": "DYNAMIC",
+                    "children": []
+                  },
+                  {
+                    "tag": "time_steps",
+                    "attributes": {},
+                    "value": "200",
+                    "children": []
+                  },
+                  {
+                    "tag": "step_size",
+                    "attributes": {},
+                    "value": "0.0001",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_zero_state",
+                    "attributes": {},
+                    "value": "0",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_range",
+                    "attributes": {},
+                    "value": "0,-1",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_level",
+                    "attributes": {},
+                    "value": "PLOT_MAJOR_ITRS",
+                    "children": []
+                  },
+                  {
+                    "tag": "output_level",
+                    "attributes": {},
+                    "value": "OUTPUT_MAJOR_ITRS",
+                    "children": []
+                  },
+                  {
+                    "tag": "plot_stride",
+                    "attributes": {},
+                    "value": "1",
+                    "children": []
+                  },
+                  {
+                    "tag": "output_stride",
+                    "attributes": {},
+                    "value": "1",
+                    "children": []
+                  },
+                  {
+                    "tag": "adaptor_re_solve",
+                    "attributes": {},
+                    "value": "1",
+                    "children": []
+                  },
+                  {
+                    "tag": "time_stepper",
+                    "attributes": {
+                      "type": "default"
+                    },
+                    "value": "",
+                    "children": [
+                      {
+                        "tag": "max_retries",
+                        "attributes": {},
+                        "value": "5",
+                        "children": []
+                      },
+                      {
+                        "tag": "opt_iter",
+                        "attributes": {},
+                        "value": "10",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtmin",
+                        "attributes": {},
+                        "value": "1e-05",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtmax",
+                        "attributes": {},
+                        "value": "0.0001",
+                        "children": []
+                      },
+                      {
+                        "tag": "aggressiveness",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "cutback",
+                        "attributes": {},
+                        "value": "0.5",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtforce",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "tag": "solver",
+                    "attributes": {
+                      "type": "solid"
+                    },
+                    "value": "",
+                    "children": [
+                      {
+                        "tag": "symmetric_stiffness",
+                        "attributes": {},
+                        "value": "symmetric",
+                        "children": []
+                      },
+                      {
+                        "tag": "equation_scheme",
+                        "attributes": {},
+                        "value": "staggered",
+                        "children": []
+                      },
+                      {
+                        "tag": "equation_order",
+                        "attributes": {},
+                        "value": "default",
+                        "children": []
+                      },
+                      {
+                        "tag": "optimize_bw",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "lstol",
+                        "attributes": {},
+                        "value": "0.9",
+                        "children": []
+                      },
+                      {
+                        "tag": "lsmin",
+                        "attributes": {},
+                        "value": "0.01",
+                        "children": []
+                      },
+                      {
+                        "tag": "lsiter",
+                        "attributes": {},
+                        "value": "5",
+                        "children": []
+                      },
+                      {
+                        "tag": "max_refs",
+                        "attributes": {},
+                        "value": "15",
+                        "children": []
+                      },
+                      {
+                        "tag": "check_zero_diagonal",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "zero_diagonal_tol",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "force_partition",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "reform_each_time_step",
+                        "attributes": {},
+                        "value": "1",
+                        "children": []
+                      },
+                      {
+                        "tag": "reform_augment",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "diverge_reform",
+                        "attributes": {},
+                        "value": "1",
+                        "children": []
+                      },
+                      {
+                        "tag": "min_residual",
+                        "attributes": {},
+                        "value": "1e-20",
+                        "children": []
+                      },
+                      {
+                        "tag": "max_residual",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "dtol",
+                        "attributes": {},
+                        "value": "0.001",
+                        "children": []
+                      },
+                      {
+                        "tag": "etol",
+                        "attributes": {},
+                        "value": "0.01",
+                        "children": []
+                      },
+                      {
+                        "tag": "rtol",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "rhoi",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "alpha",
+                        "attributes": {},
+                        "value": "1",
+                        "children": []
+                      },
+                      {
+                        "tag": "beta",
+                        "attributes": {},
+                        "value": "0.25",
+                        "children": []
+                      },
+                      {
+                        "tag": "gamma",
+                        "attributes": {},
+                        "value": "0.5",
+                        "children": []
+                      },
+                      {
+                        "tag": "logSolve",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "arc_length",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "arc_length_scale",
+                        "attributes": {},
+                        "value": "0",
+                        "children": []
+                      },
+                      {
+                        "tag": "qn_method",
+                        "attributes": {
+                          "type": "BFGS"
+                        },
+                        "value": "",
+                        "children": [
+                          {
+                            "tag": "max_ups",
+                            "attributes": {},
+                            "value": "10",
+                            "children": []
+                          },
+                          {
+                            "tag": "max_buffer_size",
+                            "attributes": {},
+                            "value": "0",
+                            "children": []
+                          },
+                          {
+                            "tag": "cycle_buffer",
+                            "attributes": {},
+                            "value": "1",
+                            "children": []
+                          },
+                          {
+                            "tag": "cmax",
+                            "attributes": {},
+                            "value": "100000",
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "pressure": {
+              "surface": "ValvePressureLoad",
+              "value": -13.3,
+              "curve_id": 1,
+              "symmetric_stiffness": 1,
+              "linear": 0,
+              "shell_bottom": 0
+            },
+            "pressure_curve": {
+              "interpolation": "SMOOTH",
+              "extension": "CONSTANT",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.005,
+                  1.0
+                ]
+              ]
+            },
+            "contact": {
+              "name": "Contact Potential (Leaflets)",
+              "surface_pair": "Contact Potential (Leaflets)",
+              "primary": "ContactLeaflet",
+              "secondary": "ContactLeaflet",
+              "laugon": "PENALTY",
+              "kc": 2.0,
+              "p": 4.0,
+              "r_in": 0.2,
+              "r_out": 0.5,
+              "r0_min": 0.0,
+              "w_tol": 0.6
+            },
+            "damping_c": 3000.0,
+            "output": {
+              "tag": "Output",
+              "attributes": {},
+              "value": "",
+              "children": [
+                {
+                  "tag": "plotfile",
+                  "attributes": {
+                    "type": "febio"
+                  },
+                  "value": "",
+                  "children": [
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "displacement"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "stress"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "relative volume"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "contact gap"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "discrete element force"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "shell thickness"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "Lagrange strain"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "var",
+                      "attributes": {
+                        "type": "contact pressure"
+                      },
+                      "value": "",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "tag": "logfile",
+                  "attributes": {},
+                  "value": "",
+                  "children": [
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "mitral",
+                        "file": "mitral_p2Prolapse_output.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "A1",
+                        "file": "A1_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "A2",
+                        "file": "A2_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "A3",
+                        "file": "A3_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "P1",
+                        "file": "P1_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "P2",
+                        "file": "P2_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "element_data",
+                      "attributes": {
+                        "data": "Ux;Uy;Uz;s1;E1",
+                        "elem_set": "P3",
+                        "file": "P3_p2Prolapse.csv"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "face_data",
+                      "attributes": {
+                        "data": "contact gap",
+                        "file": "mitral_p2Prolapse_contact.csv",
+                        "surface": "ContactLeaflet"
+                      },
+                      "value": "",
+                      "children": []
+                    },
+                    {
+                      "tag": "surface_data",
+                      "attributes": {
+                        "data": "contact area",
+                        "file": "contactarea_p2Prolapse_sev.csv",
+                        "surface": "ContactLeaflet"
+                      },
+                      "value": "",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "material": {
+            "material_id": 1,
+            "name": "Valve",
+            "density_kg_per_mm3": 1.04e-06,
+            "c0": 200.0,
+            "c1": 2968.4,
+            "c2": 0.2661,
+            "k": 5000.0,
+            "tangent_scale": 10.0
+          },
+          "method": {
+            "alpha_f": 1.0,
+            "alpha_m": 2.0,
+            "beta": 1.0,
+            "gamma": 1.5
+          },
+          "numerical_differences": [
+            "Exact shell material derivative rather than tangent_scale-modified FEBio tangent",
+            "Exact follower-pressure derivative rather than symmetric approximation",
+            "Contact derivative includes current-area variation with frozen candidate pairs per Krylov solve",
+            "Newton/Armijo plus GPU GMRES rather than FEBio BFGS/Pardiso",
+            "Residual-based tolerances and adaptive cutbacks are explicit run settings"
+          ],
+          "final_time": 0.003499999999999998,
+          "full_model_agreement": false
+        }
+      }
+    }
+  },
+  "verification": {
+    "source": {
+      "project": "CardioFEM (NewtonValveDev)",
+      "path": "validation/cardiofem_verification.json",
+      "sha256": "e8f9ea1b0f0af26887b45e3f007aade1828ba045183619380a0268b0ec88005b"
+    },
+    "data": {
+      "command": ".venv-newton/bin/python -m unittest discover -s tests -p 'test_cardio_*.py'",
+      "tests": 52,
+      "passed": 52,
+      "skipped": 0,
+      "seconds": 5.152,
+      "devices": [
+        "CPU",
+        "CUDA Quadro RTX 8000"
+      ],
+      "includes": [
+        "Lee-Sacks constitutive derivatives",
+        "shell residual and block assembly",
+        "consistent mass",
+        "source iteration-tangent transformation",
+        "nonlinear chords",
+        "follower pressure",
+        "contact force and frozen-pair derivative",
+        "generalized-alpha dynamics",
+        "GPU nonsymmetric GMRES",
+        "reference convergence regression",
+        "inverse BFGS against independent dense oracle",
+        "output alignment and principal averaging"
+      ],
+      "scientific_full_model_acceptance": false
+    }
+  }
+}

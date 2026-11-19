@@ -1,0 +1,13 @@
+{
+  "warp_version": "1.19.0",
+  "python": "3.11",
+  "tests": 6,
+  "passed": 6,
+  "skipped": 0,
+  "devices": [
+    "cpu",
+    "cuda:0"
+  ],
+  "gpu": "Quadro RTX8000",
+  "scope": "constitutive equations only; not global solid/valve"
+}

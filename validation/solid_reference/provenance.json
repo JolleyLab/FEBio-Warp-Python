@@ -1,0 +1,12 @@
+{
+  "origin": "benchmark_001_neo_hookean_tension/febio/jobs/displacement.csv",
+  "source_sha256": "942ba18a48ba28b9cdbdb2dc6365d4252bc25c5fa0d3f66bf150731dfb53f804",
+  "quantity": "ux;uy;uz as declared by node_data in included FEBio input",
+  "sampling": "nodal IDs in first column",
+  "frame": "global Cartesian",
+  "units": "interpreted mm; input has no explicit unit declaration",
+  "subset": "final saved displacement block only; no averaging applied by extraction",
+  "status": "archived FEBio reference only; not CardioFEM solid solver output",
+  "log_normal_termination": true,
+  "full_history_included": false
+}

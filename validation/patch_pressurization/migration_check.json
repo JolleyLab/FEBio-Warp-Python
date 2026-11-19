@@ -1,0 +1,6 @@
+{
+  "comparison": "identical synthetic fixture; Warp1.12.1 to cleaned Warp1.19 implementation",
+  "relative_nodal_L2": 2.228783610568007e-06,
+  "maximum_vector_difference_mm": 2.3173668416427734e-06,
+  "max_displacement_mm": 0.7103047302615065
+}

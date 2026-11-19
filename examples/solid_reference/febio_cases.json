@@ -1,0 +1,990 @@
+{
+  "solid_tension": {
+    "status": "FEBio-only reference. The matching warp_febio material law is verified at material points. No corresponding CardioFEM global solid comparison was found.",
+    "settings": {
+      "source": {
+        "project": "CardioFEM (NewtonValveDev)",
+        "path": "benchmarks/benchmark_001_neo_hookean_tension/febio/jobs/benchmark_001_neo_hookean_tension.feb",
+        "sha256": "d4f88207047f0700e7d622d15e2db5a9eb32e184d8fd89a51b231e9f1d11c2f8"
+      },
+      "febio_spec": {
+        "version": "4.0"
+      },
+      "mesh_summary": {
+        "nodes": 30,
+        "element_sets": [
+          {
+            "attributes": {
+              "type": "hex8",
+              "name": "Block"
+            },
+            "count": 8
+          }
+        ]
+      },
+      "physical_and_solver_sections": [
+        {
+          "tag": "Module",
+          "attributes": {
+            "type": "solid"
+          }
+        },
+        {
+          "tag": "Control",
+          "children": [
+            {
+              "tag": "analysis",
+              "value": "STATIC"
+            },
+            {
+              "tag": "time_steps",
+              "value": "10"
+            },
+            {
+              "tag": "step_size",
+              "value": "0.1"
+            },
+            {
+              "tag": "plot_zero_state",
+              "value": "0"
+            },
+            {
+              "tag": "plot_range",
+              "value": "0,-1"
+            },
+            {
+              "tag": "plot_level",
+              "value": "PLOT_MAJOR_ITRS"
+            },
+            {
+              "tag": "output_level",
+              "value": "OUTPUT_MAJOR_ITRS"
+            },
+            {
+              "tag": "plot_stride",
+              "value": "1"
+            },
+            {
+              "tag": "output_stride",
+              "value": "1"
+            },
+            {
+              "tag": "adaptor_re_solve",
+              "value": "1"
+            },
+            {
+              "tag": "time_stepper",
+              "attributes": {
+                "type": "default"
+              },
+              "children": [
+                {
+                  "tag": "max_retries",
+                  "value": "10"
+                },
+                {
+                  "tag": "opt_iter",
+                  "value": "10"
+                },
+                {
+                  "tag": "dtmin",
+                  "value": "0.01"
+                },
+                {
+                  "tag": "dtmax",
+                  "value": "0.1"
+                },
+                {
+                  "tag": "aggressiveness",
+                  "value": "0"
+                },
+                {
+                  "tag": "cutback",
+                  "value": "0.5"
+                },
+                {
+                  "tag": "dtforce",
+                  "value": "0"
+                }
+              ]
+            },
+            {
+              "tag": "solver",
+              "attributes": {
+                "type": "solid"
+              },
+              "children": [
+                {
+                  "tag": "symmetric_stiffness",
+                  "value": "symmetric"
+                },
+                {
+                  "tag": "equation_scheme",
+                  "value": "staggered"
+                },
+                {
+                  "tag": "equation_order",
+                  "value": "default"
+                },
+                {
+                  "tag": "optimize_bw",
+                  "value": "0"
+                },
+                {
+                  "tag": "lstol",
+                  "value": "0.9"
+                },
+                {
+                  "tag": "lsmin",
+                  "value": "0.01"
+                },
+                {
+                  "tag": "lsiter",
+                  "value": "5"
+                },
+                {
+                  "tag": "ls_check_jacobians",
+                  "value": "0"
+                },
+                {
+                  "tag": "max_refs",
+                  "value": "25"
+                },
+                {
+                  "tag": "check_zero_diagonal",
+                  "value": "0"
+                },
+                {
+                  "tag": "zero_diagonal_tol",
+                  "value": "0"
+                },
+                {
+                  "tag": "force_partition",
+                  "value": "0"
+                },
+                {
+                  "tag": "reform_each_time_step",
+                  "value": "1"
+                },
+                {
+                  "tag": "reform_augment",
+                  "value": "0"
+                },
+                {
+                  "tag": "diverge_reform",
+                  "value": "1"
+                },
+                {
+                  "tag": "min_residual",
+                  "value": "1e-20"
+                },
+                {
+                  "tag": "max_residual",
+                  "value": "0"
+                },
+                {
+                  "tag": "dtol",
+                  "value": "0.001"
+                },
+                {
+                  "tag": "etol",
+                  "value": "0.01"
+                },
+                {
+                  "tag": "rtol",
+                  "value": "0"
+                },
+                {
+                  "tag": "rhoi",
+                  "value": "-2"
+                },
+                {
+                  "tag": "alpha",
+                  "value": "1"
+                },
+                {
+                  "tag": "beta",
+                  "value": "0.25"
+                },
+                {
+                  "tag": "gamma",
+                  "value": "0.5"
+                },
+                {
+                  "tag": "logSolve",
+                  "value": "0"
+                },
+                {
+                  "tag": "arc_length",
+                  "value": "0"
+                },
+                {
+                  "tag": "arc_length_scale",
+                  "value": "0"
+                },
+                {
+                  "tag": "qn_method",
+                  "attributes": {
+                    "type": "BFGS"
+                  },
+                  "children": [
+                    {
+                      "tag": "max_ups",
+                      "value": "0"
+                    },
+                    {
+                      "tag": "max_buffer_size",
+                      "value": "0"
+                    },
+                    {
+                      "tag": "cycle_buffer",
+                      "value": "1"
+                    },
+                    {
+                      "tag": "cmax",
+                      "value": "100000"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Globals",
+          "children": [
+            {
+              "tag": "Constants",
+              "children": [
+                {
+                  "tag": "T",
+                  "value": "0"
+                },
+                {
+                  "tag": "P",
+                  "value": "0"
+                },
+                {
+                  "tag": "R",
+                  "value": "0"
+                },
+                {
+                  "tag": "Fc",
+                  "value": "0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Material",
+          "children": [
+            {
+              "tag": "material",
+              "attributes": {
+                "id": "1",
+                "name": "NeoHookean_E1MPa_nu045",
+                "type": "neo-Hookean"
+              },
+              "children": [
+                {
+                  "tag": "density",
+                  "value": "1"
+                },
+                {
+                  "tag": "E",
+                  "value": "1"
+                },
+                {
+                  "tag": "v",
+                  "value": "0.45"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "MeshDomains",
+          "children": [
+            {
+              "tag": "SolidDomain",
+              "attributes": {
+                "name": "Block",
+                "mat": "NeoHookean_E1MPa_nu045"
+              }
+            }
+          ]
+        },
+        {
+          "tag": "Boundary",
+          "children": [
+            {
+              "tag": "bc",
+              "attributes": {
+                "name": "fix_left_x",
+                "node_set": "left_x0",
+                "type": "zero displacement"
+              },
+              "children": [
+                {
+                  "tag": "x_dof",
+                  "value": "1"
+                },
+                {
+                  "tag": "y_dof",
+                  "value": "0"
+                },
+                {
+                  "tag": "z_dof",
+                  "value": "0"
+                }
+              ]
+            },
+            {
+              "tag": "bc",
+              "attributes": {
+                "name": "anchor_y",
+                "node_set": "anchor_yz",
+                "type": "zero displacement"
+              },
+              "children": [
+                {
+                  "tag": "x_dof",
+                  "value": "0"
+                },
+                {
+                  "tag": "y_dof",
+                  "value": "1"
+                },
+                {
+                  "tag": "z_dof",
+                  "value": "1"
+                }
+              ]
+            },
+            {
+              "tag": "bc",
+              "attributes": {
+                "name": "anchor_z",
+                "node_set": "anchor_z",
+                "type": "zero displacement"
+              },
+              "children": [
+                {
+                  "tag": "x_dof",
+                  "value": "0"
+                },
+                {
+                  "tag": "y_dof",
+                  "value": "0"
+                },
+                {
+                  "tag": "z_dof",
+                  "value": "1"
+                }
+              ]
+            },
+            {
+              "tag": "bc",
+              "attributes": {
+                "name": "pull_right_x",
+                "node_set": "right_x20",
+                "type": "prescribed displacement"
+              },
+              "children": [
+                {
+                  "tag": "dof",
+                  "value": "x"
+                },
+                {
+                  "tag": "value",
+                  "attributes": {
+                    "lc": "1"
+                  },
+                  "value": "2"
+                },
+                {
+                  "tag": "relative",
+                  "value": "0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "LoadData",
+          "children": [
+            {
+              "tag": "load_controller",
+              "attributes": {
+                "id": "1",
+                "name": "LC_1",
+                "type": "loadcurve"
+              },
+              "children": [
+                {
+                  "tag": "interpolate",
+                  "value": "LINEAR"
+                },
+                {
+                  "tag": "extend",
+                  "value": "CONSTANT"
+                },
+                {
+                  "tag": "points",
+                  "children": [
+                    {
+                      "tag": "pt",
+                      "value": "0,0"
+                    },
+                    {
+                      "tag": "pt",
+                      "value": "1,1"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "single_leaflet_pressurization": {
+    "status": "Historical Newton/Warp comparison from the CardioFEM workspace. The native Newton constitutive law differs from the FEBio law.",
+    "settings": {
+      "source": {
+        "project": "CardioFEM (NewtonValveDev)",
+        "path": "benchmarks/benchmark_003_single_leaflet_pressurization/jobs/benchmark_003_single_leaflet_pressurization.feb",
+        "sha256": "165ebb28d2f8ab2e47f6c5303ef9c886a51fdecb2dd1a065143a8e7b23c68251"
+      },
+      "febio_spec": {
+        "version": "4.0"
+      },
+      "mesh_summary": {
+        "nodes": 126,
+        "element_sets": [
+          {
+            "attributes": {
+              "type": "tet4",
+              "name": "Leaflet"
+            },
+            "count": 288
+          }
+        ]
+      },
+      "physical_and_solver_sections": [
+        {
+          "tag": "Module",
+          "attributes": {
+            "type": "solid"
+          }
+        },
+        {
+          "tag": "Control",
+          "children": [
+            {
+              "tag": "analysis",
+              "value": "STATIC"
+            },
+            {
+              "tag": "time_steps",
+              "value": "20"
+            },
+            {
+              "tag": "step_size",
+              "value": "0.05"
+            },
+            {
+              "tag": "plot_zero_state",
+              "value": "0"
+            },
+            {
+              "tag": "plot_range",
+              "value": "0,-1"
+            },
+            {
+              "tag": "plot_level",
+              "value": "PLOT_MAJOR_ITRS"
+            },
+            {
+              "tag": "output_level",
+              "value": "OUTPUT_MAJOR_ITRS"
+            },
+            {
+              "tag": "plot_stride",
+              "value": "1"
+            },
+            {
+              "tag": "output_stride",
+              "value": "1"
+            },
+            {
+              "tag": "adaptor_re_solve",
+              "value": "1"
+            },
+            {
+              "tag": "time_stepper"
+            },
+            {
+              "tag": "solver",
+              "attributes": {
+                "type": "solid"
+              },
+              "children": [
+                {
+                  "tag": "symmetric_stiffness",
+                  "value": "symmetric"
+                },
+                {
+                  "tag": "equation_scheme",
+                  "value": "staggered"
+                },
+                {
+                  "tag": "equation_order",
+                  "value": "default"
+                },
+                {
+                  "tag": "optimize_bw",
+                  "value": "0"
+                },
+                {
+                  "tag": "lstol",
+                  "value": "0.9"
+                },
+                {
+                  "tag": "lsmin",
+                  "value": "0.01"
+                },
+                {
+                  "tag": "lsiter",
+                  "value": "5"
+                },
+                {
+                  "tag": "ls_check_jacobians",
+                  "value": "0"
+                },
+                {
+                  "tag": "max_refs",
+                  "value": "30"
+                },
+                {
+                  "tag": "check_zero_diagonal",
+                  "value": "0"
+                },
+                {
+                  "tag": "zero_diagonal_tol",
+                  "value": "0"
+                },
+                {
+                  "tag": "force_partition",
+                  "value": "0"
+                },
+                {
+                  "tag": "reform_each_time_step",
+                  "value": "1"
+                },
+                {
+                  "tag": "reform_augment",
+                  "value": "0"
+                },
+                {
+                  "tag": "diverge_reform",
+                  "value": "1"
+                },
+                {
+                  "tag": "min_residual",
+                  "value": "1e-20"
+                },
+                {
+                  "tag": "max_residual",
+                  "value": "0"
+                },
+                {
+                  "tag": "dtol",
+                  "value": "0.001"
+                },
+                {
+                  "tag": "etol",
+                  "value": "0.01"
+                },
+                {
+                  "tag": "rtol",
+                  "value": "0"
+                },
+                {
+                  "tag": "rhoi",
+                  "value": "-2"
+                },
+                {
+                  "tag": "alpha",
+                  "value": "1"
+                },
+                {
+                  "tag": "beta",
+                  "value": "0.25"
+                },
+                {
+                  "tag": "gamma",
+                  "value": "0.5"
+                },
+                {
+                  "tag": "logSolve",
+                  "value": "0"
+                },
+                {
+                  "tag": "arc_length",
+                  "value": "0"
+                },
+                {
+                  "tag": "arc_length_scale",
+                  "value": "0"
+                },
+                {
+                  "tag": "qn_method",
+                  "attributes": {
+                    "type": "BFGS"
+                  },
+                  "children": [
+                    {
+                      "tag": "max_ups",
+                      "value": "10"
+                    },
+                    {
+                      "tag": "max_buffer_size",
+                      "value": "0"
+                    },
+                    {
+                      "tag": "cycle_buffer",
+                      "value": "1"
+                    },
+                    {
+                      "tag": "cmax",
+                      "value": "100000"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Globals",
+          "children": [
+            {
+              "tag": "Constants",
+              "children": [
+                {
+                  "tag": "T",
+                  "value": "0"
+                },
+                {
+                  "tag": "P",
+                  "value": "0"
+                },
+                {
+                  "tag": "R",
+                  "value": "0"
+                },
+                {
+                  "tag": "Fc",
+                  "value": "0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Material",
+          "children": [
+            {
+              "tag": "material",
+              "attributes": {
+                "id": "1",
+                "name": "Leaflet_NeoHookean",
+                "type": "neo-Hookean"
+              },
+              "children": [
+                {
+                  "tag": "density",
+                  "value": "1"
+                },
+                {
+                  "tag": "E",
+                  "value": "1"
+                },
+                {
+                  "tag": "v",
+                  "value": "0.45"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "MeshDomains",
+          "children": [
+            {
+              "tag": "SolidDomain",
+              "attributes": {
+                "name": "Leaflet",
+                "mat": "Leaflet_NeoHookean"
+              }
+            }
+          ]
+        },
+        {
+          "tag": "Boundary",
+          "children": [
+            {
+              "tag": "bc",
+              "attributes": {
+                "name": "fix_attachment",
+                "node_set": "fixed_attachment",
+                "type": "zero displacement"
+              },
+              "children": [
+                {
+                  "tag": "x_dof",
+                  "value": "1"
+                },
+                {
+                  "tag": "y_dof",
+                  "value": "1"
+                },
+                {
+                  "tag": "z_dof",
+                  "value": "1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Loads",
+          "children": [
+            {
+              "tag": "surface_load",
+              "attributes": {
+                "name": "transvalvular_pressure",
+                "surface": "pressure_surface",
+                "type": "pressure"
+              },
+              "children": [
+                {
+                  "tag": "pressure",
+                  "attributes": {
+                    "lc": "1"
+                  },
+                  "value": "0.01"
+                },
+                {
+                  "tag": "symmetric_stiffness",
+                  "value": "1"
+                },
+                {
+                  "tag": "linear",
+                  "value": "0"
+                },
+                {
+                  "tag": "shell_bottom",
+                  "value": "0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "LoadData",
+          "children": [
+            {
+              "tag": "load_controller",
+              "attributes": {
+                "id": "1",
+                "name": "pressure_ramp",
+                "type": "loadcurve"
+              },
+              "children": [
+                {
+                  "tag": "interpolate",
+                  "value": "LINEAR"
+                },
+                {
+                  "tag": "extend",
+                  "value": "CONSTANT"
+                },
+                {
+                  "tag": "points",
+                  "children": [
+                    {
+                      "tag": "pt",
+                      "value": "0,0"
+                    },
+                    {
+                      "tag": "pt",
+                      "value": "1,1"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "comparison": {
+      "source": {
+        "project": "CardioFEM (NewtonValveDev)",
+        "path": "benchmarks/benchmark_003_single_leaflet_pressurization/comparison.json",
+        "sha256": "402db89e4ab281bc43a53d7e1bcad0ea95552a10ad98971e49123e96f6e78c8c"
+      },
+      "data": {
+        "cauchy_stress": {
+          "component_rms_error": [
+            0.016302704620013427,
+            0.015985135802105577,
+            0.015022420735087904,
+            0.0047887983491268086,
+            0.008805543428747785,
+            0.007410379517654393
+          ],
+          "components": [
+            "sx",
+            "sy",
+            "sz",
+            "sxy",
+            "syz",
+            "sxz"
+          ],
+          "entity_count": 288,
+          "max_absolute_component_error": 0.056926040190539554,
+          "max_vector_error": 0.07655360714103358,
+          "max_vector_error_element_id": 140,
+          "rms_vector_error": 0.03003930389641208,
+          "shear_convention": "FEBio sxy/syz/sxz compared with the symmetric average of the corresponding Newton tensor entries",
+          "vector_relative_l2_error": 0.11931601003708452,
+          "vector_relative_l2_error_note": null
+        },
+        "comparison": "Newton versus FEBio",
+        "criteria": "No pass/fail thresholds were supplied; all values are reported as measurements.",
+        "displacement": {
+          "component_rms_error": [
+            0.05300197056830699,
+            0.26899610884694447,
+            0.33731375278473663
+          ],
+          "entity_count": 126,
+          "max_absolute_component_error": 0.6995921622171837,
+          "max_vector_error": 0.9636684135880416,
+          "max_vector_error_node_id": 122,
+          "maximum_displacement": {
+            "definition": "maximum nodal displacement norm across the field; no separate tip-node set was supplied",
+            "febio_components_at_newton_max": [
+              0.071391637184,
+              -2.51209497116,
+              5.34470133349
+            ],
+            "febio_entity_id": 122,
+            "febio_max_norm": 5.906060468213727,
+            "newton_components_at_newton_max": [
+              0.08970179643284243,
+              -3.1879228305855065,
+              6.031416888752812
+            ],
+            "newton_entity_id": 122,
+            "newton_max_norm": 6.822674554160138
+          },
+          "rms_vector_error": 0.4346822785399047,
+          "vector_relative_l2_error": 0.1733255597481873,
+          "vector_relative_l2_error_note": null
+        },
+        "febio_displacement_block": {
+          "step": "13",
+          "time": "1"
+        },
+        "febio_stress_block": {
+          "step": "13",
+          "time": "1"
+        }
+      }
+    },
+    "verification": {
+      "source": {
+        "project": "CardioFEM (NewtonValveDev)",
+        "path": "benchmarks/benchmark_003_single_leaflet_pressurization/verification.json",
+        "sha256": "fe465a20cb5de579097694ee995f5df39fb010a63bf71e74e8079034ef21dd77"
+      },
+      "data": {
+        "scope": "Newton numerical verification plus supplied FEBio full-field comparison; substantial discrepancy, agreement not established",
+        "cpu20": {
+          "equilibrium": true,
+          "residual_N": 9.299954659814749e-05,
+          "min_J": 0.8887556425483322,
+          "max_displacement_mm": 6.822674554160138,
+          "force_balance_N": [
+            1.2953532859683037e-06,
+            8.132774382829666e-07,
+            -2.2940803319215775e-06
+          ],
+          "native_numpy_force_difference_N": 6.627760326893549e-05,
+          "runtime_seconds": 31.557248882949352,
+          "febio_validation": "pending_reference_outputs"
+        },
+        "cpu40": {
+          "equilibrium": true,
+          "residual_N": 8.255439803495719e-05,
+          "min_J": 0.88875563120278,
+          "max_displacement_mm": 6.822675567742181,
+          "force_balance_N": [
+            -4.829198587685823e-07,
+            -1.1175870895385742e-08,
+            -1.0342337191104889e-06
+          ],
+          "native_numpy_force_difference_N": 5.089778170227941e-05,
+          "runtime_seconds": 37.392911477945745,
+          "febio_validation": "pending_reference_outputs"
+        },
+        "continuation_sensitivity": {
+          "relative_displacement_L2": 1.4102843516173885e-07,
+          "max_vector_difference_mm": 1.1151262655272162e-06,
+          "relative_cauchy_stress_L2": 1.0262332023531486e-05
+        },
+        "environment": {
+          "feb": "NewtonValveDev/benchmarks/benchmark_003_single_leaflet_pressurization/benchmark_003_single_leaflet_pressurization.feb",
+          "output": "benchmarks/benchmark_003_single_leaflet_pressurization/runs/cpu20-final",
+          "device": "cpu",
+          "steps": 20,
+          "tolerance": 0.0001,
+          "max_iterations": 60,
+          "units": {
+            "length": "mm",
+            "stress": "MPa",
+            "force": "N"
+          },
+          "input_sha256": "c0366df0970aed56d94b1b2b51f489f81b48948aa4a05509ef654218b0accb02",
+          "newton_version": "1.7.0.dev0",
+          "warp_version": "1.17.0",
+          "constitutive_kernel": "semi_implicit.eval_tetrahedra",
+          "contact": false,
+          "native_kernel_source_sha256": "18cb66506d2bc0fb6479e9daddc778ce1535aa9bff873a6acc91b17506ed8b65",
+          "newton_commit": "f1c4f7ca9d1b6aa9b8db66bb69f0b57cbc76fafb"
+        },
+        "checks": {
+          "mechanics_tests": 2,
+          "comparison_parser_tests": 5,
+          "febio_reference_available": true,
+          "gpu_run": false
+        },
+        "febio_comparison": {
+          "status": "compared; agreement not established",
+          "report": "comparison.json",
+          "analysis": "validation_report.md",
+          "diagnostics": "reference_diagnostics.json",
+          "displacement_relative_L2": 0.1733255597481873,
+          "stress_six_component_relative_L2": 0.11931601003708452,
+          "note": "Original CPU run summaries below retain their historical pending_reference_outputs status; current comparison status is recorded here."
+        }
+      }
+    }
+  }
+}

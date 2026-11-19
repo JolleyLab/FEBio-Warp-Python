@@ -1,0 +1,17 @@
+{
+  "case": "affine linear-elastic solid verification",
+  "warp_version": "1.19.0",
+  "device": "cuda:0",
+  "nodes": 27,
+  "elements": 8,
+  "young_Pa": 1000000.0,
+  "poisson": 0.3,
+  "maximum_error_m": 4.23685880216601e-18,
+  "cg_iterations": 2,
+  "cg_reported_residual": 4.380291055185249e-14,
+  "true_projected_residual": 4.3799869115358985e-14,
+  "cg_tolerance": 4.997078335183368e-12,
+  "setup_and_solve_wall_s": 18.72050075326115,
+  "timing_includes_first_compile": true,
+  "status": "manufactured-solution verification only; not FEBio comparison"
+}
