@@ -1,4 +1,4 @@
-# warp_febio
+# FEBio-Warp-Python
 
 A component-by-component repository scaffold for GPU cardiovascular mechanics.
 The [architecture map](docs/ARCHITECTURE.md) shows where to add mesh types,
