@@ -17,7 +17,7 @@ src/warp_febio/
   materials/         lee_sacks, stvk, neo_hookean, hgo, nitinol
   loads/             follower_pressure, nodal_force
   constraints/       dirichlet, multipoint
-  contact/           search, enforcement
+  contact/           points, search, potential, enforcement, interface
   assembly/          residual, tangent
   solvers/linear/    cg, gmres, preconditioners
   solvers/nonlinear/ newton, line_search
@@ -53,6 +53,7 @@ and preconditioners under `solvers/linear/`, and its load stepping under
 | A pressure continuation strategy | `loads/follower_pressure.py` for the force and its derivative, `analysis/static.py` for load increments |
 | A nonlinear solve | `solvers/nonlinear/newton.py` for iteration and convergence, `solvers/linear/` for each linear method |
 | A deployment procedure | `analysis/procedure.py` for stages, `contact/` for interactions, and `materials/nitinol.py` for state |
+| A contact law | `contact/interface.py` for the protocol, `contact/points.py` for the point set, `contact/search.py` for pairing; see [docs/CONTACT.md](CONTACT.md) |
 | An adjoint | `sensitivity/` using the constrained tangent and transpose actions |
 
 Use `contracts.py` as the starting point for residual and tangent interfaces.
