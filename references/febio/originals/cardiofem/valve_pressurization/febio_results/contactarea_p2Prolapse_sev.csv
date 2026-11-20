@@ -1,0 +1,1580 @@
+*Step  = 0
+*Time  = 0
+*Data  = contact area
+1 0
+*Step  = 1
+*Time  = 0.0001
+*Data  = contact area
+1 0
+*Step  = 2
+*Time  = 0.000195811633
+*Data  = contact area
+1 0
+*Step  = 3
+*Time  = 0.000291623266
+*Data  = contact area
+1 0
+*Step  = 4
+*Time  = 0.000387434899
+*Data  = contact area
+1 0
+*Step  = 5
+*Time  = 0.000483246532
+*Data  = contact area
+1 0
+*Step  = 6
+*Time  = 0.000579284725
+*Data  = contact area
+1 0
+*Step  = 7
+*Time  = 0.000675537221
+*Data  = contact area
+1 0
+*Step  = 8
+*Time  = 0.00077199243
+*Data  = contact area
+1 0
+*Step  = 9
+*Time  = 0.000868639386
+*Data  = contact area
+1 0
+*Step  = 10
+*Time  = 0.000965467716
+*Data  = contact area
+1 0
+*Step  = 11
+*Time  = 0.00106246761
+*Data  = contact area
+1 0
+*Step  = 12
+*Time  = 0.00115962979
+*Data  = contact area
+1 0
+*Step  = 13
+*Time  = 0.00125694547
+*Data  = contact area
+1 0
+*Step  = 14
+*Time  = 0.00135440635
+*Data  = contact area
+1 0
+*Step  = 15
+*Time  = 0.00145200459
+*Data  = contact area
+1 0
+*Step  = 16
+*Time  = 0.00154960282
+*Data  = contact area
+1 0
+*Step  = 17
+*Time  = 0.00164720105
+*Data  = contact area
+1 0
+*Step  = 18
+*Time  = 0.00174479928
+*Data  = contact area
+1 0
+*Step  = 19
+*Time  = 0.00184239751
+*Data  = contact area
+1 0
+*Step  = 20
+*Time  = 0.00193999574
+*Data  = contact area
+1 0
+*Step  = 21
+*Time  = 0.00203759397
+*Data  = contact area
+1 0
+*Step  = 22
+*Time  = 0.00213532212
+*Data  = contact area
+1 0
+*Step  = 23
+*Time  = 0.00223305027
+*Data  = contact area
+1 0
+*Step  = 24
+*Time  = 0.00233077842
+*Data  = contact area
+1 0
+*Step  = 25
+*Time  = 0.00242850657
+*Data  = contact area
+1 0
+*Step  = 26
+*Time  = 0.00252623472
+*Data  = contact area
+1 0
+*Step  = 27
+*Time  = 0.00262396287
+*Data  = contact area
+1 0
+*Step  = 28
+*Time  = 0.00271760838
+*Data  = contact area
+1 0
+*Step  = 29
+*Time  = 0.00280736124
+*Data  = contact area
+1 0
+*Step  = 30
+*Time  = 0.00289016531
+*Data  = contact area
+1 0
+*Step  = 31
+*Time  = 0.00296662603
+*Data  = contact area
+1 0
+*Step  = 32
+*Time  = 0.00303999384
+*Data  = contact area
+1 0.515038774471
+*Step  = 33
+*Time  = 0.00311336165
+*Data  = contact area
+1 1.36031328402
+*Step  = 34
+*Time  = 0.00318378048
+*Data  = contact area
+1 1.69050485923
+*Step  = 35
+*Time  = 0.00325419932
+*Data  = contact area
+1 2.03313600164
+*Step  = 36
+*Time  = 0.00332461815
+*Data  = contact area
+1 2.35681857033
+*Step  = 37
+*Time  = 0.00339503699
+*Data  = contact area
+1 2.57675876888
+*Step  = 38
+*Time  = 0.00346545582
+*Data  = contact area
+1 5.44968138457
+*Step  = 39
+*Time  = 0.00353306292
+*Data  = contact area
+1 10.2486702019
+*Step  = 40
+*Time  = 0.00359798914
+*Data  = contact area
+1 16.9182415145
+*Step  = 41
+*Time  = 0.00366291535
+*Data  = contact area
+1 22.417391914
+*Step  = 42
+*Time  = 0.00372784157
+*Data  = contact area
+1 27.3964247662
+*Step  = 43
+*Time  = 0.00379276778
+*Data  = contact area
+1 33.4152893044
+*Step  = 44
+*Time  = 0.00384761485
+*Data  = contact area
+1 36.8428424128
+*Step  = 45
+*Time  = 0.00390037485
+*Data  = contact area
+1 40.0157899964
+*Step  = 46
+*Time  = 0.00394528824
+*Data  = contact area
+1 41.8187060455
+*Step  = 47
+*Time  = 0.00399318141
+*Data  = contact area
+1 44.4301298641
+*Step  = 48
+*Time  = 0.00404107458
+*Data  = contact area
+1 47.1188107752
+*Step  = 49
+*Time  = 0.00409178634
+*Data  = contact area
+1 49.7197964016
+*Step  = 50
+*Time  = 0.0041424981
+*Data  = contact area
+1 51.0781490806
+*Step  = 51
+*Time  = 0.00419320986
+*Data  = contact area
+1 54.7819885222
+*Step  = 52
+*Time  = 0.00424392162
+*Data  = contact area
+1 58.7420453882
+*Step  = 53
+*Time  = 0.00429463338
+*Data  = contact area
+1 64.8033644527
+*Step  = 54
+*Time  = 0.00434534514
+*Data  = contact area
+1 68.4183373858
+*Step  = 55
+*Time  = 0.00439416228
+*Data  = contact area
+1 73.1066882692
+*Step  = 56
+*Time  = 0.00444297942
+*Data  = contact area
+1 77.542516384
+*Step  = 57
+*Time  = 0.00448999011
+*Data  = contact area
+1 83.1870553208
+*Step  = 58
+*Time  = 0.0045370008
+*Data  = contact area
+1 88.6882789148
+*Step  = 59
+*Time  = 0.00458401149
+*Data  = contact area
+1 96.5687552312
+*Step  = 60
+*Time  = 0.0046292998
+*Data  = contact area
+1 102.139462244
+*Step  = 61
+*Time  = 0.00466811259
+*Data  = contact area
+1 111.910526972
+*Step  = 62
+*Time  = 0.00470246383
+*Data  = contact area
+1 115.992067373
+*Step  = 63
+*Time  = 0.00473568184
+*Data  = contact area
+1 126.35720864
+*Step  = 64
+*Time  = 0.00476604537
+*Data  = contact area
+1 128.955526548
+*Step  = 65
+*Time  = 0.00479640891
+*Data  = contact area
+1 127.504477265
+*Step  = 66
+*Time  = 0.00482499819
+*Data  = contact area
+1 127.281990905
+*Step  = 67
+*Time  = 0.00485272237
+*Data  = contact area
+1 131.238503116
+*Step  = 68
+*Time  = 0.00488044655
+*Data  = contact area
+1 131.701572645
+*Step  = 69
+*Time  = 0.00490817074
+*Data  = contact area
+1 129.972814059
+*Step  = 70
+*Time  = 0.00493507008
+*Data  = contact area
+1 131.560514869
+*Step  = 71
+*Time  = 0.00496118298
+*Data  = contact area
+1 131.073594138
+*Step  = 72
+*Time  = 0.00498654602
+*Data  = contact area
+1 132.279699736
+*Step  = 73
+*Time  = 0.00501190906
+*Data  = contact area
+1 133.716402596
+*Step  = 74
+*Time  = 0.00503655714
+*Data  = contact area
+1 135.7585576
+*Step  = 75
+*Time  = 0.00506120523
+*Data  = contact area
+1 137.874700061
+*Step  = 76
+*Time  = 0.00508585331
+*Data  = contact area
+1 139.076845866
+*Step  = 77
+*Time  = 0.00510981971
+*Data  = contact area
+1 139.120713506
+*Step  = 78
+*Time  = 0.00513313615
+*Data  = contact area
+1 141.48408227
+*Step  = 79
+*Time  = 0.0051564526
+*Data  = contact area
+1 139.953757174
+*Step  = 80
+*Time  = 0.00517976904
+*Data  = contact area
+1 141.111546451
+*Step  = 81
+*Time  = 0.00520723349
+*Data  = contact area
+1 142.896585944
+*Step  = 82
+*Time  = 0.00523469794
+*Data  = contact area
+1 142.036102734
+*Step  = 83
+*Time  = 0.00526216239
+*Data  = contact area
+1 141.072639788
+*Step  = 84
+*Time  = 0.00528962684
+*Data  = contact area
+1 140.854541053
+*Step  = 85
+*Time  = 0.00531709129
+*Data  = contact area
+1 140.489127142
+*Step  = 86
+*Time  = 0.00534847937
+*Data  = contact area
+1 139.548423492
+*Step  = 87
+*Time  = 0.00537986746
+*Data  = contact area
+1 137.094591578
+*Step  = 88
+*Time  = 0.00541125554
+*Data  = contact area
+1 136.206626667
+*Step  = 89
+*Time  = 0.00544264362
+*Data  = contact area
+1 134.251075923
+*Step  = 90
+*Time  = 0.0054777431
+*Data  = contact area
+1 131.172299441
+*Step  = 91
+*Time  = 0.00551284258
+*Data  = contact area
+1 130.076604724
+*Step  = 92
+*Time  = 0.00554794205
+*Data  = contact area
+1 126.392201523
+*Step  = 93
+*Time  = 0.00558304153
+*Data  = contact area
+1 124.954450068
+*Step  = 94
+*Time  = 0.00561814101
+*Data  = contact area
+1 122.390953505
+*Step  = 95
+*Time  = 0.00565675112
+*Data  = contact area
+1 122.198759212
+*Step  = 96
+*Time  = 0.00569536123
+*Data  = contact area
+1 121.546886346
+*Step  = 97
+*Time  = 0.00573729208
+*Data  = contact area
+1 119.688068793
+*Step  = 98
+*Time  = 0.00577922293
+*Data  = contact area
+1 119.088911569
+*Step  = 99
+*Time  = 0.00582115378
+*Data  = contact area
+1 119.339218481
+*Step  = 100
+*Time  = 0.00586308463
+*Data  = contact area
+1 118.348005239
+*Step  = 101
+*Time  = 0.00590815658
+*Data  = contact area
+1 119.935831981
+*Step  = 102
+*Time  = 0.00595159638
+*Data  = contact area
+1 116.975303318
+*Step  = 103
+*Time  = 0.00599347998
+*Data  = contact area
+1 115.128028743
+*Step  = 104
+*Time  = 0.00603387979
+*Data  = contact area
+1 112.363946345
+*Step  = 105
+*Time  = 0.00607427961
+*Data  = contact area
+1 110.697216091
+*Step  = 106
+*Time  = 0.00611467943
+*Data  = contact area
+1 109.047391197
+*Step  = 107
+*Time  = 0.00615830317
+*Data  = contact area
+1 108.783939668
+*Step  = 108
+*Time  = 0.00620192691
+*Data  = contact area
+1 107.240151386
+*Step  = 109
+*Time  = 0.0062439859
+*Data  = contact area
+1 107.446486295
+*Step  = 110
+*Time  = 0.00628455294
+*Data  = contact area
+1 106.929558002
+*Step  = 111
+*Time  = 0.00632369746
+*Data  = contact area
+1 106.13116842
+*Step  = 112
+*Time  = 0.00636613382
+*Data  = contact area
+1 105.648839283
+*Step  = 113
+*Time  = 0.00640706067
+*Data  = contact area
+1 104.327543578
+*Step  = 114
+*Time  = 0.00645118294
+*Data  = contact area
+1 102.944638262
+*Step  = 115
+*Time  = 0.00649832778
+*Data  = contact area
+1 101.415377206
+*Step  = 116
+*Time  = 0.00654547262
+*Data  = contact area
+1 100.538734098
+*Step  = 117
+*Time  = 0.00659088883
+*Data  = contact area
+1 99.9573342094
+*Step  = 118
+*Time  = 0.00663465687
+*Data  = contact area
+1 98.7202849168
+*Step  = 119
+*Time  = 0.00668146663
+*Data  = contact area
+1 97.596976067
+*Step  = 120
+*Time  = 0.00672375093
+*Data  = contact area
+1 96.7454753699
+*Step  = 121
+*Time  = 0.00676103615
+*Data  = contact area
+1 96.3030771298
+*Step  = 122
+*Time  = 0.00679594403
+*Data  = contact area
+1 94.9472716682
+*Step  = 123
+*Time  = 0.0068308519
+*Data  = contact area
+1 94.6519411993
+*Step  = 124
+*Time  = 0.00686460063
+*Data  = contact area
+1 94.5455998077
+*Step  = 125
+*Time  = 0.00689724416
+*Data  = contact area
+1 94.1276859787
+*Step  = 126
+*Time  = 0.00693353117
+*Data  = contact area
+1 93.3011621319
+*Step  = 127
+*Time  = 0.00697326458
+*Data  = contact area
+1 93.0381461242
+*Step  = 128
+*Time  = 0.00702011149
+*Data  = contact area
+1 92.744857797
+*Step  = 129
+*Time  = 0.00706524365
+*Data  = contact area
+1 91.7758306842
+*Step  = 130
+*Time  = 0.0071103758
+*Data  = contact area
+1 91.148426822
+*Step  = 131
+*Time  = 0.0071584759
+*Data  = contact area
+1 91.1278924788
+*Step  = 132
+*Time  = 0.00720480291
+*Data  = contact area
+1 90.1706857842
+*Step  = 133
+*Time  = 0.00724943936
+*Data  = contact area
+1 89.8462278691
+*Step  = 134
+*Time  = 0.00729105797
+*Data  = contact area
+1 89.9190432266
+*Step  = 135
+*Time  = 0.00733956757
+*Data  = contact area
+1 90.0970239153
+*Step  = 136
+*Time  = 0.00738628503
+*Data  = contact area
+1 89.9008202042
+*Step  = 137
+*Time  = 0.00743300249
+*Data  = contact area
+1 89.1600596517
+*Step  = 138
+*Time  = 0.00748260214
+*Data  = contact area
+1 89.8120327478
+*Step  = 139
+*Time  = 0.00753035892
+*Data  = contact area
+1 89.3192470685
+*Step  = 140
+*Time  = 0.00758094168
+*Data  = contact area
+1 89.0561302348
+*Step  = 141
+*Time  = 0.00762963581
+*Data  = contact area
+1 88.7948596409
+*Step  = 142
+*Time  = 0.00767652922
+*Data  = contact area
+1 88.7392993492
+*Step  = 143
+*Time  = 0.00772170571
+*Data  = contact area
+1 88.6247840991
+*Step  = 144
+*Time  = 0.00776143527
+*Data  = contact area
+1 88.6135203713
+*Step  = 145
+*Time  = 0.00780116483
+*Data  = contact area
+1 88.5478418053
+*Step  = 146
+*Time  = 0.00784089439
+*Data  = contact area
+1 88.3600677032
+*Step  = 147
+*Time  = 0.00788388413
+*Data  = contact area
+1 88.4581610688
+*Step  = 148
+*Time  = 0.00792687387
+*Data  = contact area
+1 88.6762585463
+*Step  = 149
+*Time  = 0.00797294744
+*Data  = contact area
+1 89.0442726759
+*Step  = 150
+*Time  = 0.00802193803
+*Data  = contact area
+1 89.1195376395
+*Step  = 151
+*Time  = 0.00807092862
+*Data  = contact area
+1 89.2410658557
+*Step  = 152
+*Time  = 0.00812267844
+*Data  = contact area
+1 88.9439707224
+*Step  = 153
+*Time  = 0.00817248533
+*Data  = contact area
+1 89.260180808
+*Step  = 154
+*Time  = 0.00822229222
+*Data  = contact area
+1 89.7695646193
+*Step  = 155
+*Time  = 0.0082702466
+*Data  = contact area
+1 89.9413669155
+*Step  = 156
+*Time  = 0.00831643468
+*Data  = contact area
+1 89.6627241886
+*Step  = 157
+*Time  = 0.00836093866
+*Data  = contact area
+1 89.5114244924
+*Step  = 158
+*Time  = 0.00840383692
+*Data  = contact area
+1 89.4754822264
+*Step  = 159
+*Time  = 0.00844520418
+*Data  = contact area
+1 89.5659217337
+*Step  = 160
+*Time  = 0.00848657143
+*Data  = contact area
+1 89.613519453
+*Step  = 161
+*Time  = 0.00853111028
+*Data  = contact area
+1 89.6034488866
+*Step  = 162
+*Time  = 0.0085726398
+*Data  = contact area
+1 89.5354000953
+*Step  = 163
+*Time  = 0.00861270201
+*Data  = contact area
+1 89.3307643381
+*Step  = 164
+*Time  = 0.00865014493
+*Data  = contact area
+1 89.3383023987
+*Step  = 165
+*Time  = 0.00868631072
+*Data  = contact area
+1 89.4951139588
+*Step  = 166
+*Time  = 0.00872125883
+*Data  = contact area
+1 89.4587769825
+*Step  = 167
+*Time  = 0.00875972576
+*Data  = contact area
+1 89.2019996668
+*Step  = 168
+*Time  = 0.0087957124
+*Data  = contact area
+1 89.3944947352
+*Step  = 169
+*Time  = 0.00882767511
+*Data  = contact area
+1 89.3509701028
+*Step  = 170
+*Time  = 0.00885623699
+*Data  = contact area
+1 88.8014524198
+*Step  = 171
+*Time  = 0.00888393505
+*Data  = contact area
+1 88.7970565218
+*Step  = 172
+*Time  = 0.00890889264
+*Data  = contact area
+1 88.9378643138
+*Step  = 173
+*Time  = 0.00893254699
+*Data  = contact area
+1 88.944801415
+*Step  = 174
+*Time  = 0.0089555659
+*Data  = contact area
+1 88.8653088435
+*Step  = 175
+*Time  = 0.00897797895
+*Data  = contact area
+1 88.4236376856
+*Step  = 176
+*Time  = 0.00899981432
+*Data  = contact area
+1 88.2417437037
+*Step  = 177
+*Time  = 0.00902109891
+*Data  = contact area
+1 88.3315359444
+*Step  = 178
+*Time  = 0.00904185834
+*Data  = contact area
+1 88.3914629148
+*Step  = 179
+*Time  = 0.00906211705
+*Data  = contact area
+1 88.3452851741
+*Step  = 180
+*Time  = 0.00908189835
+*Data  = contact area
+1 88.4129002393
+*Step  = 181
+*Time  = 0.00910082742
+*Data  = contact area
+1 88.0337797978
+*Step  = 182
+*Time  = 0.00911934095
+*Data  = contact area
+1 88.094148197
+*Step  = 183
+*Time  = 0.00913785448
+*Data  = contact area
+1 87.8162181698
+*Step  = 184
+*Time  = 0.00915636801
+*Data  = contact area
+1 87.7876776609
+*Step  = 185
+*Time  = 0.00917413976
+*Data  = contact area
+1 87.6986210615
+*Step  = 186
+*Time  = 0.00919635945
+*Data  = contact area
+1 87.9488749732
+*Step  = 187
+*Time  = 0.00922278647
+*Data  = contact area
+1 87.7796029941
+*Step  = 188
+*Time  = 0.0092492135
+*Data  = contact area
+1 87.4257757434
+*Step  = 189
+*Time  = 0.00927309687
+*Data  = contact area
+1 87.2571512143
+*Step  = 190
+*Time  = 0.00929577059
+*Data  = contact area
+1 87.3522485244
+*Step  = 191
+*Time  = 0.00931688619
+*Data  = contact area
+1 87.4595246876
+*Step  = 192
+*Time  = 0.00933748449
+*Data  = contact area
+1 87.5046368105
+*Step  = 193
+*Time  = 0.00936237783
+*Data  = contact area
+1 87.5021359398
+*Step  = 194
+*Time  = 0.00938453819
+*Data  = contact area
+1 87.5144944792
+*Step  = 195
+*Time  = 0.0094109091
+*Data  = contact area
+1 87.7556836758
+*Step  = 196
+*Time  = 0.00943585362
+*Data  = contact area
+1 87.9051441534
+*Step  = 197
+*Time  = 0.00945949605
+*Data  = contact area
+1 88.0600247405
+*Step  = 198
+*Time  = 0.00948194982
+*Data  = contact area
+1 88.2658481156
+*Step  = 199
+*Time  = 0.00950440359
+*Data  = contact area
+1 88.2018801669
+*Step  = 200
+*Time  = 0.00953601045
+*Data  = contact area
+1 88.3572061335
+*Step  = 201
+*Time  = 0.00956427158
+*Data  = contact area
+1 88.4346681767
+*Step  = 202
+*Time  = 0.00959253271
+*Data  = contact area
+1 88.6158624484
+*Step  = 203
+*Time  = 0.00961796619
+*Data  = contact area
+1 88.5492725705
+*Step  = 204
+*Time  = 0.00964100985
+*Data  = contact area
+1 88.5296128802
+*Step  = 205
+*Time  = 0.00966821628
+*Data  = contact area
+1 88.6049452962
+*Step  = 206
+*Time  = 0.0096993603
+*Data  = contact area
+1 88.788623724
+*Step  = 207
+*Time  = 0.00973050432
+*Data  = contact area
+1 89.2717263786
+*Step  = 208
+*Time  = 0.00975980608
+*Data  = contact area
+1 89.3334481923
+*Step  = 209
+*Time  = 0.00978820959
+*Data  = contact area
+1 89.104076808
+*Step  = 210
+*Time  = 0.00983059078
+*Data  = contact area
+1 89.2988636386
+*Step  = 211
+*Time  = 0.00987146504
+*Data  = contact area
+1 89.1272199498
+*Step  = 212
+*Time  = 0.00991090248
+*Data  = contact area
+1 89.0776219562
+*Step  = 213
+*Time  = 0.00994896999
+*Data  = contact area
+1 89.2619017883
+*Step  = 214
+*Time  = 0.00999038758
+*Data  = contact area
+1 89.5429476679
+*Step  = 215
+*Time  = 0.0100269403
+*Data  = contact area
+1 89.3627317802
+*Step  = 216
+*Time  = 0.0100602286
+*Data  = contact area
+1 88.989302471
+*Step  = 217
+*Time  = 0.010092433
+*Data  = contact area
+1 89.3361939855
+*Step  = 218
+*Time  = 0.0101227029
+*Data  = contact area
+1 89.53035311
+*Step  = 219
+*Time  = 0.010149834
+*Data  = contact area
+1 89.4483812753
+*Step  = 220
+*Time  = 0.0101754725
+*Data  = contact area
+1 89.4554345443
+*Step  = 221
+*Time  = 0.0102051335
+*Data  = contact area
+1 89.5126637614
+*Step  = 222
+*Time  = 0.0102347944
+*Data  = contact area
+1 89.7069292064
+*Step  = 223
+*Time  = 0.0102635403
+*Data  = contact area
+1 89.6260401085
+*Step  = 224
+*Time  = 0.0102888463
+*Data  = contact area
+1 89.7294258876
+*Step  = 225
+*Time  = 0.0103117823
+*Data  = contact area
+1 89.8015419324
+*Step  = 226
+*Time  = 0.0103327151
+*Data  = contact area
+1 89.8555803647
+*Step  = 227
+*Time  = 0.0103629806
+*Data  = contact area
+1 89.7183609547
+*Step  = 228
+*Time  = 0.0103970182
+*Data  = contact area
+1 89.6246179284
+*Step  = 229
+*Time  = 0.0104289614
+*Data  = contact area
+1 89.5381337242
+*Step  = 230
+*Time  = 0.0104598834
+*Data  = contact area
+1 89.335763039
+*Step  = 231
+*Time  = 0.0104869662
+*Data  = contact area
+1 89.2197743869
+*Step  = 232
+*Time  = 0.0105114038
+*Data  = contact area
+1 89.0515707802
+*Step  = 233
+*Time  = 0.0105345834
+*Data  = contact area
+1 89.104887301
+*Step  = 234
+*Time  = 0.0105553446
+*Data  = contact area
+1 89.1869814437
+*Step  = 235
+*Time  = 0.0105803919
+*Data  = contact area
+1 89.4024027789
+*Step  = 236
+*Time  = 0.0106026781
+*Data  = contact area
+1 89.3914342411
+*Step  = 237
+*Time  = 0.0106341371
+*Data  = contact area
+1 89.2967539202
+*Step  = 238
+*Time  = 0.0106605954
+*Data  = contact area
+1 88.9814374222
+*Step  = 239
+*Time  = 0.0106850303
+*Data  = contact area
+1 88.9296535559
+*Step  = 240
+*Time  = 0.0107061013
+*Data  = contact area
+1 89.2713054399
+*Step  = 241
+*Time  = 0.0107271724
+*Data  = contact area
+1 89.1253484944
+*Step  = 242
+*Time  = 0.0107459248
+*Data  = contact area
+1 89.3197362037
+*Step  = 243
+*Time  = 0.010763322
+*Data  = contact area
+1 88.9508859187
+*Step  = 244
+*Time  = 0.0107793617
+*Data  = contact area
+1 89.0724330779
+*Step  = 245
+*Time  = 0.0107951204
+*Data  = contact area
+1 89.1445222476
+*Step  = 246
+*Time  = 0.0108273254
+*Data  = contact area
+1 89.1163891667
+*Step  = 247
+*Time  = 0.0108631976
+*Data  = contact area
+1 89.1943959372
+*Step  = 248
+*Time  = 0.0108943221
+*Data  = contact area
+1 89.0815501788
+*Step  = 249
+*Time  = 0.0109291724
+*Data  = contact area
+1 88.9218224029
+*Step  = 250
+*Time  = 0.0109628661
+*Data  = contact area
+1 88.8444319855
+*Step  = 251
+*Time  = 0.010992891
+*Data  = contact area
+1 88.7722431169
+*Step  = 252
+*Time  = 0.0110198151
+*Data  = contact area
+1 88.7149742874
+*Step  = 253
+*Time  = 0.0110436336
+*Data  = contact area
+1 88.9811331282
+*Step  = 254
+*Time  = 0.011066809
+*Data  = contact area
+1 88.541728561
+*Step  = 255
+*Time  = 0.0110866293
+*Data  = contact area
+1 88.4761834267
+*Step  = 256
+*Time  = 0.011104393
+*Data  = contact area
+1 88.6841725697
+*Step  = 257
+*Time  = 0.0111205307
+*Data  = contact area
+1 88.6503940317
+*Step  = 258
+*Time  = 0.0111349835
+*Data  = contact area
+1 88.4176634451
+*Step  = 259
+*Time  = 0.0111485037
+*Data  = contact area
+1 88.6967782677
+*Step  = 260
+*Time  = 0.0111793199
+*Data  = contact area
+1 88.3946104438
+*Step  = 261
+*Time  = 0.0112044215
+*Data  = contact area
+1 88.7339776896
+*Step  = 262
+*Time  = 0.011226752
+*Data  = contact area
+1 88.4129998796
+*Step  = 263
+*Time  = 0.0112454709
+*Data  = contact area
+1 88.1707709255
+*Step  = 264
+*Time  = 0.0112637841
+*Data  = contact area
+1 88.2170288705
+*Step  = 265
+*Time  = 0.0112917391
+*Data  = contact area
+1 88.7790046902
+*Step  = 266
+*Time  = 0.0113281979
+*Data  = contact area
+1 88.6018855511
+*Step  = 267
+*Time  = 0.011356907
+*Data  = contact area
+1 88.8119163263
+*Step  = 268
+*Time  = 0.011380852
+*Data  = contact area
+1 88.7187506868
+*Step  = 269
+*Time  = 0.0114018765
+*Data  = contact area
+1 88.8087777365
+*Step  = 270
+*Time  = 0.011420878
+*Data  = contact area
+1 88.7787090371
+*Step  = 271
+*Time  = 0.0114398794
+*Data  = contact area
+1 88.7758678476
+*Step  = 272
+*Time  = 0.0114577742
+*Data  = contact area
+1 88.7009754521
+*Step  = 273
+*Time  = 0.0114744465
+*Data  = contact area
+1 88.7297553308
+*Step  = 274
+*Time  = 0.0114894198
+*Data  = contact area
+1 88.7802681823
+*Step  = 275
+*Time  = 0.0115030278
+*Data  = contact area
+1 88.4601771581
+*Step  = 276
+*Time  = 0.0115164679
+*Data  = contact area
+1 88.5023161255
+*Step  = 277
+*Time  = 0.0115345902
+*Data  = contact area
+1 88.6131552859
+*Step  = 278
+*Time  = 0.0115504827
+*Data  = contact area
+1 88.8824462167
+*Step  = 279
+*Time  = 0.0115663753
+*Data  = contact area
+1 89.03128476
+*Step  = 280
+*Time  = 0.0115811865
+*Data  = contact area
+1 88.9878085083
+*Step  = 281
+*Time  = 0.0115959978
+*Data  = contact area
+1 89.0774393858
+*Step  = 282
+*Time  = 0.0116103898
+*Data  = contact area
+1 89.2147389636
+*Step  = 283
+*Time  = 0.0116242419
+*Data  = contact area
+1 89.0481090012
+*Step  = 284
+*Time  = 0.0116427539
+*Data  = contact area
+1 89.1236304958
+*Step  = 285
+*Time  = 0.011661266
+*Data  = contact area
+1 89.124633212
+*Step  = 286
+*Time  = 0.0116893964
+*Data  = contact area
+1 89.216847412
+*Step  = 287
+*Time  = 0.0117137297
+*Data  = contact area
+1 89.4486227664
+*Step  = 288
+*Time  = 0.011742156
+*Data  = contact area
+1 89.1986300631
+*Step  = 289
+*Time  = 0.011768317
+*Data  = contact area
+1 89.165658191
+*Step  = 290
+*Time  = 0.0117930699
+*Data  = contact area
+1 89.385102102
+*Step  = 291
+*Time  = 0.011814733
+*Data  = contact area
+1 89.2212779531
+*Step  = 292
+*Time  = 0.011829949
+*Data  = contact area
+1 89.3874973486
+*Step  = 293
+*Time  = 0.0118451649
+*Data  = contact area
+1 89.2226129288
+*Step  = 294
+*Time  = 0.0118769331
+*Data  = contact area
+1 89.3267973724
+*Step  = 295
+*Time  = 0.0119031582
+*Data  = contact area
+1 89.5644809967
+*Step  = 296
+*Time  = 0.0119222283
+*Data  = contact area
+1 89.5239344351
+*Step  = 297
+*Time  = 0.0119386418
+*Data  = contact area
+1 89.4431584317
+*Step  = 298
+*Time  = 0.0119534221
+*Data  = contact area
+1 89.5115129204
+*Step  = 299
+*Time  = 0.0119728122
+*Data  = contact area
+1 89.3081642346
+*Step  = 300
+*Time  = 0.0119870542
+*Data  = contact area
+1 89.2726065962
+*Step  = 301
+*Time  = 0.0120012963
+*Data  = contact area
+1 89.3260438263
+*Step  = 302
+*Time  = 0.0120150168
+*Data  = contact area
+1 89.439082922
+*Step  = 303
+*Time  = 0.0120285641
+*Data  = contact area
+1 89.4394379315
+*Step  = 304
+*Time  = 0.0120409032
+*Data  = contact area
+1 89.2472473204
+*Step  = 305
+*Time  = 0.0120703561
+*Data  = contact area
+1 89.1272527693
+*Step  = 306
+*Time  = 0.0120967969
+*Data  = contact area
+1 89.1348554752
+*Step  = 307
+*Time  = 0.0121206919
+*Data  = contact area
+1 89.432499186
+*Step  = 308
+*Time  = 0.0121487036
+*Data  = contact area
+1 89.4907580329
+*Step  = 309
+*Time  = 0.0121758771
+*Data  = contact area
+1 89.6458034153
+*Step  = 310
+*Time  = 0.0122022514
+*Data  = contact area
+1 89.6462065621
+*Step  = 311
+*Time  = 0.0122256209
+*Data  = contact area
+1 89.6247636133
+*Step  = 312
+*Time  = 0.0122465371
+*Data  = contact area
+1 89.7364262847
+*Step  = 313
+*Time  = 0.0122651671
+*Data  = contact area
+1 89.5822847095
+*Step  = 314
+*Time  = 0.0122814279
+*Data  = contact area
+1 89.5152369998
+*Step  = 315
+*Time  = 0.0122953876
+*Data  = contact area
+1 89.4574662192
+*Step  = 316
+*Time  = 0.0123085181
+*Data  = contact area
+1 89.737577514
+*Step  = 317
+*Time  = 0.0123201455
+*Data  = contact area
+1 89.5148139682
+*Step  = 318
+*Time  = 0.0123307742
+*Data  = contact area
+1 89.5603539766
+*Step  = 319
+*Time  = 0.0123519518
+*Data  = contact area
+1 89.5610022904
+*Step  = 320
+*Time  = 0.0123705246
+*Data  = contact area
+1 89.7305234583
+*Step  = 321
+*Time  = 0.0123855588
+*Data  = contact area
+1 89.4034915654
+*Step  = 322
+*Time  = 0.012399311
+*Data  = contact area
+1 89.7125052351
+*Step  = 323
+*Time  = 0.0124127363
+*Data  = contact area
+1 89.8194082273
+*Step  = 324
+*Time  = 0.0124250456
+*Data  = contact area
+1 89.7995617544
+*Step  = 325
+*Time  = 0.0124373549
+*Data  = contact area
+1 89.8417871399
+*Step  = 326
+*Time  = 0.0124490762
+*Data  = contact area
+1 89.6605740725
+*Step  = 327
+*Time  = 0.0124607975
+*Data  = contact area
+1 89.6101116394
+*Step  = 328
+*Time  = 0.0124718082
+*Data  = contact area
+1 89.9073075609
+*Step  = 329
+*Time  = 0.0124821509
+*Data  = contact area
+1 90.1722734443
+*Step  = 330
+*Time  = 0.0124923932
+*Data  = contact area
+1 89.9363305686
+*Step  = 331
+*Time  = 0.0125026058
+*Data  = contact area
+1 89.1813521644
+*Step  = 332
+*Time  = 0.012512756
+*Data  = contact area
+1 89.5284391061
+*Step  = 333
+*Time  = 0.0125228623
+*Data  = contact area
+1 89.4737042211
+*Step  = 334
+*Time  = 0.0125329236
+*Data  = contact area
+1 89.1463562612
+*Step  = 335
+*Time  = 0.0125429491
+*Data  = contact area
+1 89.2886350414
+*Step  = 336
+*Time  = 0.012552961
+*Data  = contact area
+1 89.3177842072
+*Step  = 337
+*Time  = 0.0125629642
+*Data  = contact area
+1 89.5409637152
+*Step  = 338
+*Time  = 0.0125729666
+*Data  = contact area
+1 89.8882874451
+*Step  = 339
+*Time  = 0.0125829683
+*Data  = contact area
+1 89.3182278173
+*Step  = 340
+*Time  = 0.01259297
+*Data  = contact area
+1 89.5842865816
+*Step  = 341
+*Time  = 0.0126029715
+*Data  = contact area
+1 89.9716708005
+*Step  = 342
+*Time  = 0.0126178413
+*Data  = contact area
+1 89.9459160939
+*Step  = 343
+*Time  = 0.012649331
+*Data  = contact area
+1 89.9606447078
+*Step  = 344
+*Time  = 0.0126763201
+*Data  = contact area
+1 89.9997790933
+*Step  = 345
+*Time  = 0.0127072585
+*Data  = contact area
+1 89.9663478117
+*Step  = 346
+*Time  = 0.0127419326
+*Data  = contact area
+1 89.8621777742
+*Step  = 347
+*Time  = 0.0127801404
+*Data  = contact area
+1 89.844321296
+*Step  = 348
+*Time  = 0.0128216907
+*Data  = contact area
+1 89.6562779118
+*Step  = 349
+*Time  = 0.0128664026
+*Data  = contact area
+1 89.6869873456
+*Step  = 350
+*Time  = 0.0129141053
+*Data  = contact area
+1 89.9395415894
+*Step  = 351
+*Time  = 0.0129646368
+*Data  = contact area
+1 89.9096975139
+*Step  = 352
+*Time  = 0.0130132821
+*Data  = contact area
+1 89.6823446246
+*Step  = 353
+*Time  = 0.0130559434
+*Data  = contact area
+1 89.4989000507
+*Step  = 354
+*Time  = 0.013082274
+*Data  = contact area
+1 89.7860017982
+*Step  = 355
+*Time  = 0.0131028154
+*Data  = contact area
+1 89.6268683863
+*Step  = 356
+*Time  = 0.0131167996
+*Data  = contact area
+1 89.9626879781
+*Step  = 357
+*Time  = 0.0131297693
+*Data  = contact area
+1 89.7464412218
+*Step  = 358
+*Time  = 0.0131419238
+*Data  = contact area
+1 89.4892892662
+*Step  = 359
+*Time  = 0.0131528183
+*Data  = contact area
+1 89.7472774863
+*Step  = 360
+*Time  = 0.0131632713
+*Data  = contact area
+1 89.662016808
+*Step  = 361
+*Time  = 0.0131785681
+*Data  = contact area
+1 89.3998420973
+*Step  = 362
+*Time  = 0.0131913218
+*Data  = contact area
+1 89.4593102195
+*Step  = 363
+*Time  = 0.0132020631
+*Data  = contact area
+1 89.2462479822
+*Step  = 364
+*Time  = 0.0132125142
+*Data  = contact area
+1 89.4298835601
+*Step  = 365
+*Time  = 0.0132226999
+*Data  = contact area
+1 89.3251458144
+*Step  = 366
+*Time  = 0.013232783
+*Data  = contact area
+1 89.3805051636
+*Step  = 367
+*Time  = 0.0132428213
+*Data  = contact area
+1 89.677051129
+*Step  = 368
+*Time  = 0.0132528407
+*Data  = contact area
+1 89.6471638831
+*Step  = 369
+*Time  = 0.0132628525
+*Data  = contact area
+1 89.6110415839
+*Step  = 370
+*Time  = 0.0132728565
+*Data  = contact area
+1 89.6094559736
+*Step  = 371
+*Time  = 0.0132828577
+*Data  = contact area
+1 89.7151262957
+*Step  = 372
+*Time  = 0.0132911914
+*Data  = contact area
+1 89.3397428564
+*Step  = 373
+*Time  = 0.0133011914
+*Data  = contact area
+1 89.7366860709
+*Step  = 374
+*Time  = 0.0133111914
+*Data  = contact area
+1 89.6344508047
+*Step  = 375
+*Time  = 0.0133211914
+*Data  = contact area
+1 89.3736855172
+*Step  = 376
+*Time  = 0.0133295247
+*Data  = contact area
+1 89.4768058323
+*Step  = 377
+*Time  = 0.0133395247
+*Data  = contact area
+1 89.8324408427
+*Step  = 378
+*Time  = 0.0133495247
+*Data  = contact area
+1 89.5417097605
+*Step  = 379
+*Time  = 0.0133595247
+*Data  = contact area
+1 89.3762216928
+*Step  = 380
+*Time  = 0.0133695247
+*Data  = contact area
+1 89.3763713145
+*Step  = 381
+*Time  = 0.0133795247
+*Data  = contact area
+1 89.5387487376
+*Step  = 382
+*Time  = 0.0133861914
+*Data  = contact area
+1 89.5369258002
+*Step  = 383
+*Time  = 0.0133961914
+*Data  = contact area
+1 89.9186839751
+*Step  = 384
+*Time  = 0.0134045247
+*Data  = contact area
+1 89.731689054
+*Step  = 385
+*Time  = 0.0134145247
+*Data  = contact area
+1 89.445524883
+*Step  = 386
+*Time  = 0.0134245247
+*Data  = contact area
+1 89.5385513945
+*Step  = 387
+*Time  = 0.0134345247
+*Data  = contact area
+1 89.8555314781
+*Step  = 388
+*Time  = 0.0134428581
+*Data  = contact area
+1 89.5644886373
+*Step  = 389
+*Time  = 0.0134495247
+*Data  = contact area
+1 89.4916839893
+*Step  = 390
+*Time  = 0.0134595247
+*Data  = contact area
+1 89.3565389052
+*Step  = 391
+*Time  = 0.0134678581
+*Data  = contact area
+1 89.570205143
+*Step  = 392
+*Time  = 0.0134778581
+*Data  = contact area
+1 89.6331986951
+*Step  = 393
+*Time  = 0.0134878581
+*Data  = contact area
+1 89.7805773505
+*Step  = 394
+*Time  = 0.0134945247
+*Data  = contact area
+1 89.6454289849
