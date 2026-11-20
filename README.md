@@ -71,6 +71,7 @@ Each example keeps its settings beside the code or reference deck.
 3. [Warp FEM inventory and public imports](docs/WARP_FEM.md)
 4. [Development and prototype provenance](docs/DEVELOPMENT.md)
 5. [Validation scope](validation/README.md)
+6. [Contact module](docs/CONTACT.md)
 
 The examples run from this repository and use synthetic inputs. See [merge/upload instructions](MERGE_NOTES.md).
 No repository-wide license is assigned by this handoff; retain or select a license
