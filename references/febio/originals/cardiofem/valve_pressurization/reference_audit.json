@@ -1,0 +1,612 @@
+{
+  "status": "reference audit only; independent CardioFEM full-valve solve unavailable",
+  "model_sha256": "ba9fd22aeaa91acda23bce562e8b8473d43b4a214f0b4f6c8fbb287bc7519b39",
+  "sources": {
+    "A1_p2Prolapse.csv": {
+      "bytes": 6706744,
+      "sha256": "3dbfdef6413015c2c2e360c5c3927cf1047810b12dead491a6ffc7c06df08236"
+    },
+    "A2_p2Prolapse.csv": {
+      "bytes": 8074712,
+      "sha256": "673c3c8b8670bce1e46145d640b0b86d79e48503f7494dd41c1c76af0389bf53"
+    },
+    "A3_p2Prolapse.csv": {
+      "bytes": 6736599,
+      "sha256": "2a4d06a23c712705e7b7f357cfab940044389ff4820f0d8e7c19aef481192a0b"
+    },
+    "P1_p2Prolapse.csv": {
+      "bytes": 6696549,
+      "sha256": "74917eb6e50274db6bd7fe6f4c4c1d8653bbeebb7cba98036b05970d02abaccb"
+    },
+    "P2_p2Prolapse.csv": {
+      "bytes": 8210462,
+      "sha256": "3a456c9a62d1a39779fef09168683bddef78fc324613facef98d768707d8e72f"
+    },
+    "P3_p2Prolapse.csv": {
+      "bytes": 6695070,
+      "sha256": "d2d4cbb1a15faa4c4161ca9a98492faa1f05e709ea8c925e73eeffbda3ab3aa3"
+    },
+    "contactarea_p2Prolapse_sev.csv": {
+      "bytes": 28470,
+      "sha256": "ec360d0254751fe354a65225f7c0d24958efdbe1c1527f2f11d3a0bc4accb9c3"
+    },
+    "mitral_p2Prolapse_contact.csv": {
+      "bytes": 22366518,
+      "sha256": "a2430db42342fe3735a0e5a1b245a54474b24254284715eb266c071f0dedc4ff"
+    },
+    "mitral_p2Prolapse_output.csv": {
+      "bytes": 218514627,
+      "sha256": "2dd00883ac5380fdc15acd821bdf38b72ad11c4ea9e238bc1d93e2796506a600"
+    },
+    "mitral_p2prolapse.log": {
+      "bytes": 6238487,
+      "sha256": "fd57dd4a47626d82e0b13c6b05e64223e5c6bf4450a172b942422265edc85ae6"
+    },
+    "mitral_p2prolapse.xplt": {
+      "bytes": 265315412,
+      "sha256": "5db07c308101bad9639f5aa33eaea136a90b13ab51abf2cf40850d8dac4e77f3"
+    }
+  },
+  "log": {
+    "version": "4.9.0.6dcb43939",
+    "accepted_steps": 394,
+    "last_accepted_time_log": 0.0134945,
+    "last_failed_time": 0.0134962,
+    "failed_attempts": 17,
+    "error_termination": true,
+    "last_accepted_convergence_norms_as_printed": {
+      "residual": {
+        "initial": 1324.372,
+        "current": 47.39609,
+        "required": 0.0
+      },
+      "energy": {
+        "initial": 0.691459,
+        "current": 1.728676e-05,
+        "required": 0.00691459
+      },
+      "displacement": {
+        "initial": 0.0003914014,
+        "current": 2.04621e-10,
+        "required": 3.65528e-10
+      }
+    },
+    "solve_seconds": 973.279,
+    "total_seconds": 973.708,
+    "linear_solver_seconds": 304.456,
+    "model_update_seconds": 353.519,
+    "residual_seconds": 121.547,
+    "stiffness_seconds": 107.628,
+    "linear_solver": "pardiso"
+  },
+  "cardiofem": {
+    "full_valve_run": false,
+    "runtime_seconds": null,
+    "full_model_agreement": false,
+    "comparison_errors": null
+  },
+  "tables": {
+    "A1_p2Prolapse.csv": {
+      "states": 395,
+      "final_step": 394,
+      "final_time": 0.0134945247,
+      "rows": 220,
+      "columns": [
+        "Ux",
+        "Uy",
+        "Uz",
+        "s1",
+        "E1"
+      ],
+      "statistics": {
+        "Ux": {
+          "count": 220,
+          "minimum": 0.895605151029,
+          "maximum": 1.10218752586,
+          "mean": 0.979055149424132
+        },
+        "Uy": {
+          "count": 220,
+          "minimum": 0.819331732644,
+          "maximum": 1.0685249391,
+          "mean": 0.9419504350503682
+        },
+        "Uz": {
+          "count": 220,
+          "minimum": 1.05518554455,
+          "maximum": 1.16451272334,
+          "mean": 1.1090643399908182
+        },
+        "s1": {
+          "count": 220,
+          "minimum": 153.494453637,
+          "maximum": 662.807954335,
+          "mean": 448.27115726165
+        },
+        "E1": {
+          "count": 220,
+          "minimum": 0.178381420898,
+          "maximum": 0.361378052774,
+          "mean": 0.2934171599134182
+        }
+      }
+    },
+    "A2_p2Prolapse.csv": {
+      "states": 395,
+      "final_step": 394,
+      "final_time": 0.0134945247,
+      "rows": 270,
+      "columns": [
+        "Ux",
+        "Uy",
+        "Uz",
+        "s1",
+        "E1"
+      ],
+      "statistics": {
+        "Ux": {
+          "count": 270,
+          "minimum": 0.969816367493,
+          "maximum": 1.11598684669,
+          "mean": 1.0433970120646223
+        },
+        "Uy": {
+          "count": 270,
+          "minimum": 0.796942973586,
+          "maximum": 1.03065483823,
+          "mean": 0.8860718906602482
+        },
+        "Uz": {
+          "count": 270,
+          "minimum": 1.02360956198,
+          "maximum": 1.1703164212,
+          "mean": 1.1174231600528146
+        },
+        "s1": {
+          "count": 270,
+          "minimum": 489.45973018,
+          "maximum": 673.335065801,
+          "mean": 570.151294410589
+        },
+        "E1": {
+          "count": 270,
+          "minimum": 0.214257613244,
+          "maximum": 0.328883786767,
+          "mean": 0.27345635560682585
+        }
+      }
+    },
+    "A3_p2Prolapse.csv": {
+      "states": 395,
+      "final_step": 394,
+      "final_time": 0.0134945247,
+      "rows": 220,
+      "columns": [
+        "Ux",
+        "Uy",
+        "Uz",
+        "s1",
+        "E1"
+      ],
+      "statistics": {
+        "Ux": {
+          "count": 220,
+          "minimum": 0.871300822267,
+          "maximum": 1.10700134226,
+          "mean": 0.942349526175359
+        },
+        "Uy": {
+          "count": 220,
+          "minimum": 0.844681407794,
+          "maximum": 0.99014709096,
+          "mean": 0.9535142822495726
+        },
+        "Uz": {
+          "count": 220,
+          "minimum": 1.01593773673,
+          "maximum": 1.19688693176,
+          "mean": 1.1256470909107272
+        },
+        "s1": {
+          "count": 220,
+          "minimum": 16.9531894251,
+          "maximum": 590.157922712,
+          "mean": 339.35341125785
+        },
+        "E1": {
+          "count": 220,
+          "minimum": 0.0852886797711,
+          "maximum": 0.348144923672,
+          "mean": 0.26190490064076904
+        }
+      }
+    },
+    "P1_p2Prolapse.csv": {
+      "states": 395,
+      "final_step": 394,
+      "final_time": 0.0134945247,
+      "rows": 220,
+      "columns": [
+        "Ux",
+        "Uy",
+        "Uz",
+        "s1",
+        "E1"
+      ],
+      "statistics": {
+        "Ux": {
+          "count": 220,
+          "minimum": 0.860663091082,
+          "maximum": 1.01532979863,
+          "mean": 0.9095922302962045
+        },
+        "Uy": {
+          "count": 220,
+          "minimum": 0.998060136041,
+          "maximum": 1.12701298632,
+          "mean": 1.0752503472818955
+        },
+        "Uz": {
+          "count": 220,
+          "minimum": 0.939427297086,
+          "maximum": 1.09550993434,
+          "mean": 1.0236469960624317
+        },
+        "s1": {
+          "count": 220,
+          "minimum": 36.8489757191,
+          "maximum": 256.101279732,
+          "mean": 145.54288044619364
+        },
+        "E1": {
+          "count": 220,
+          "minimum": 0.131976046964,
+          "maximum": 0.269436211957,
+          "mean": 0.2018231411198318
+        }
+      }
+    },
+    "P2_p2Prolapse.csv": {
+      "states": 395,
+      "final_step": 394,
+      "final_time": 0.0134945247,
+      "rows": 270,
+      "columns": [
+        "Ux",
+        "Uy",
+        "Uz",
+        "s1",
+        "E1"
+      ],
+      "statistics": {
+        "Ux": {
+          "count": 270,
+          "minimum": 0.991493791555,
+          "maximum": 1.1307177627,
+          "mean": 1.0630282809579963
+        },
+        "Uy": {
+          "count": 270,
+          "minimum": 0.922136807194,
+          "maximum": 1.03086191952,
+          "mean": 0.9693695795202296
+        },
+        "Uz": {
+          "count": 270,
+          "minimum": 0.948767538099,
+          "maximum": 1.08098793001,
+          "mean": 0.9981640727105889
+        },
+        "s1": {
+          "count": 270,
+          "minimum": 261.451763905,
+          "maximum": 414.21945843,
+          "mean": 331.19102198858883
+        },
+        "E1": {
+          "count": 270,
+          "minimum": 0.146390480631,
+          "maximum": 0.272906123415,
+          "mean": 0.19070018372324446
+        }
+      }
+    },
+    "P3_p2Prolapse.csv": {
+      "states": 395,
+      "final_step": 394,
+      "final_time": 0.0134945247,
+      "rows": 220,
+      "columns": [
+        "Ux",
+        "Uy",
+        "Uz",
+        "s1",
+        "E1"
+      ],
+      "statistics": {
+        "Ux": {
+          "count": 220,
+          "minimum": 0.855145987585,
+          "maximum": 1.01327569482,
+          "mean": 0.9360177242763453
+        },
+        "Uy": {
+          "count": 220,
+          "minimum": 0.942944702117,
+          "maximum": 1.12543749094,
+          "mean": 1.040683409639159
+        },
+        "Uz": {
+          "count": 220,
+          "minimum": 0.923438702045,
+          "maximum": 1.12182612209,
+          "mean": 1.0315039697374364
+        },
+        "s1": {
+          "count": 220,
+          "minimum": -41.313770816,
+          "maximum": 216.912161148,
+          "mean": 127.45067549703145
+        },
+        "E1": {
+          "count": 220,
+          "minimum": 0.119035496921,
+          "maximum": 0.234401194429,
+          "mean": 0.19401078822414544
+        }
+      }
+    },
+    "contactarea_p2Prolapse_sev.csv": {
+      "states": 395,
+      "final_step": 394,
+      "final_time": 0.0134945247,
+      "rows": 1,
+      "columns": [
+        "contact area"
+      ],
+      "statistics": {
+        "contact area": {
+          "count": 1,
+          "minimum": 89.6454289849,
+          "maximum": 89.6454289849,
+          "mean": 89.6454289849
+        }
+      }
+    },
+    "mitral_p2Prolapse_contact.csv": {
+      "states": 395,
+      "final_step": 394,
+      "final_time": 0.0134945247,
+      "rows": 7200,
+      "columns": [
+        "contact gap"
+      ],
+      "statistics": {
+        "contact gap": {
+          "count": 7200,
+          "minimum": 0.0,
+          "maximum": 0.490833427783,
+          "mean": 0.022100582639782415
+        }
+      }
+    },
+    "mitral_p2Prolapse_output.csv": {
+      "states": 395,
+      "final_step": 394,
+      "final_time": 0.0134945247,
+      "rows": 7200,
+      "columns": [
+        "Ux",
+        "Uy",
+        "Uz",
+        "s1",
+        "E1"
+      ],
+      "statistics": {
+        "Ux": {
+          "count": 7200,
+          "minimum": 0.819777607342,
+          "maximum": 1.30922372539,
+          "mean": 1.004423753524233
+        },
+        "Uy": {
+          "count": 7200,
+          "minimum": 0.786258717467,
+          "maximum": 1.36084168033,
+          "mean": 0.9768476552444383
+        },
+        "Uz": {
+          "count": 7200,
+          "minimum": 0.808729058137,
+          "maximum": 1.30093774105,
+          "mean": 1.0373985965431158
+        },
+        "s1": {
+          "count": 7200,
+          "minimum": -157.898170528,
+          "maximum": 2258.13200383,
+          "mean": 282.74458538567785
+        },
+        "E1": {
+          "count": 7200,
+          "minimum": 0.047870687667,
+          "maximum": 0.60916134913,
+          "mean": 0.2314162576524749
+        }
+      }
+    }
+  },
+  "reference_internal_checks": {
+    "patch_vs_whole_csv": {
+      "A1": {
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "relative_l2": 0.0
+      },
+      "A2": {
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "relative_l2": 0.0
+      },
+      "A3": {
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "relative_l2": 0.0
+      },
+      "P1": {
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "relative_l2": 0.0
+      },
+      "P2": {
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "relative_l2": 0.0
+      },
+      "P3": {
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "relative_l2": 0.0
+      }
+    },
+    "gap_xplt_vs_csv_mm": {
+      "max_abs": 1.4854644181383492e-08,
+      "rms": 1.7442858567780537e-09,
+      "relative_l2": 2.118798510817615e-08
+    },
+    "gap_equal_after_float32_rounding": true
+  },
+  "final_state": {
+    "step": 394,
+    "time_csv_seconds": 0.0134945247,
+    "time_xplt_seconds": 0.013494525104761124,
+    "prescribed_pressure_kpa": -13.3,
+    "nominal_end_time_seconds": 0.02,
+    "displacement_magnitude_mm": {
+      "count": 7442,
+      "minimum": 0.0,
+      "maximum": 24.881800551908704,
+      "mean": 9.198812602758784
+    },
+    "stress_tensor_components_kpa": {
+      "count": 43200,
+      "minimum": -680.5579833984375,
+      "maximum": 2055.859375,
+      "mean": 44.942780438652015
+    },
+    "strain_tensor_components": {
+      "count": 43200,
+      "minimum": -0.3249386250972748,
+      "maximum": 0.47074398398399353,
+      "mean": 0.006496532304852861
+    },
+    "csv_s1_kpa": {
+      "count": 7200,
+      "minimum": -157.898170528,
+      "maximum": 2258.13200383,
+      "mean": 282.74458538567785
+    },
+    "csv_E1": {
+      "count": 7200,
+      "minimum": 0.047870687667,
+      "maximum": 0.60916134913,
+      "mean": 0.2314162576524749
+    },
+    "chord_force_magnitude_mn": {
+      "count": 100,
+      "minimum": 0.0,
+      "maximum": 239.18361787829105,
+      "mean": 114.5114275341351
+    },
+    "gap_mm": {
+      "count": 7200,
+      "minimum": 0.0,
+      "maximum": 0.49083343148231506,
+      "mean": 0.022100582649517392
+    },
+    "contact_pressure_kpa": {
+      "count": 7200,
+      "minimum": 0.0,
+      "maximum": 66.69605255126953,
+      "mean": 0.7444427226495524
+    },
+    "facets_with_positive_exported_gap": 630,
+    "facets_with_positive_exported_pressure": 630,
+    "total_contact_area_mm2": 89.6454289849
+  },
+  "xplt": {
+    "version": 53,
+    "software": "FEBio 4.9.0.6dcb43939",
+    "units": "mm-kg-s",
+    "states": 395,
+    "status_codes": [
+      0
+    ],
+    "dictionary": {
+      "node": [
+        {
+          "name": "displacement",
+          "type": 1,
+          "format": 0,
+          "units": "L"
+        }
+      ],
+      "domain": [
+        {
+          "name": "stress",
+          "type": 2,
+          "format": 1,
+          "units": "P"
+        },
+        {
+          "name": "relative volume",
+          "type": 0,
+          "format": 1,
+          "units": "dimensionless"
+        },
+        {
+          "name": "discrete element force",
+          "type": 1,
+          "format": 1,
+          "units": "F"
+        },
+        {
+          "name": "shell thickness",
+          "type": 0,
+          "format": 2,
+          "units": "L"
+        },
+        {
+          "name": "Lagrange strain",
+          "type": 2,
+          "format": 1,
+          "units": "dimensionless"
+        }
+      ],
+      "surface": [
+        {
+          "name": "contact gap",
+          "type": 0,
+          "format": 1,
+          "units": "L"
+        },
+        {
+          "name": "contact pressure",
+          "type": 0,
+          "format": 1,
+          "units": "P"
+        }
+      ]
+    },
+    "max_time_difference_seconds": 4.891220085206927e-10
+  },
+  "prescribed_reference_state_chord_check": {
+    "description": "Independent slack-force formula evaluated on FEBio displacements; not an independent CardioFEM solve",
+    "force_magnitude_errors_mn": {
+      "max_abs": 3.029699875867209e-05,
+      "rms": 1.0799752476441355e-05,
+      "relative_l2": 8.434076679690481e-08
+    },
+    "precision_limit": "XPLT displacement and force are float32; no scientific acceptance tolerance is inferred"
+  }
+}
