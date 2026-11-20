@@ -1,0 +1,1223 @@
+===========================================================================
+         ________    _________   _______       __     _________            
+        |        |\ |        |\ |       \\    |  |\  /         \\          
+        |    ____|| |    ____|| |    __  ||   |__|| |    ___    ||         
+        |   |\___\| |   |\___\| |   |\_| ||    \_\| |   //  \   ||         
+        |   ||__    |   ||__    |   ||_| ||   |  |\ |  ||    |  ||         
+        |       |\  |       |\  |         \\  |  || |  ||    |  ||         
+        |    ___||  |    ___||  |    ___   || |  || |  ||    |  ||         
+        |   |\__\|  |   |\__\|  |   |\__|  || |  || |  ||    |  ||         
+        |   ||      |   ||___   |   ||__|  || |  || |   \\__/   ||         
+        |   ||      |        |\ |          || |  || |           ||         
+        |___||      |________|| |_________//  |__||  \_________//          
+                                                                           
+      F I N I T E   E L E M E N T S   F O R   B I O M E C H A N I C S      
+                                                                           
+  version 4.9.0.6dcb43939
+  FEBio is a registered trademark.                                         
+  copyright (c) 2006-2025 - All rights reserved                            
+                                                                           
+===========================================================================
+
+
+
+
+
+ FILES USED
+===========================================================================
+	Input file : /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_2PM_4chords_mitral_pattern.feb
+	Plot file  : /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_2PM_4chords_mitral_pattern.xplt
+	Log file   : /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_2PM_4chords_mitral_pattern.log
+
+
+ MESH INFO
+===========================================================================
+	Number of materials ............................ : 2
+	Number of domains .............................. : 2
+	Number of nodes ................................ : 1934
+	Number of shell elements ....................... : 1863
+
+
+ MODULE
+===========================================================================
+	Module type ....................................... : solid
+
+
+ CONTROL DATA
+===========================================================================
+	analysis .......................................... : DYNAMIC (1)
+	time_steps ........................................ : 100
+	step_size ......................................... : 0.001
+	plot_zero_state ................................... : no (0)
+	plot_range ........................................ : 0,-1
+	plot_level ........................................ : PLOT_MAJOR_ITRS (1)
+	output_level ...................................... : OUTPUT_MAJOR_ITRS (1)
+	plot_stride ....................................... : 1
+	output_stride ..................................... : 1
+	adaptor_re_solve .................................. : yes (1)
+	Auto time stepper activated ....................... : yes
+	  max_retries ..................................... : 10
+	  opt_iter ........................................ : 11
+	  dtmin ........................................... : 0.001
+	  dtmax ........................................... : 0.01
+	  aggressiveness .................................. : 0
+	  cutback ......................................... : 0.5
+	  dtforce ......................................... : no (0)
+ SOLVER PARAMETERS
+===========================================================================
+	symmetric_stiffness ............................... : symmetric (1)
+	equation_scheme ................................... : staggered (0)
+	equation_order .................................... : default (0)
+	optimize_bw ....................................... : no (0)
+	lstol ............................................. : 0.9
+	lsmin ............................................. : 0.01
+	lsiter ............................................ : 5
+	ls_check_jacobians ................................ : no (0)
+	max_refs .......................................... : 15
+	check_zero_diagonal ............................... : no (0)
+	zero_diagonal_tol ................................. : 0
+	force_partition ................................... : 0
+	reform_each_time_step ............................. : yes (1)
+	reform_augment .................................... : no (0)
+	diverge_reform .................................... : yes (1)
+	min_residual ...................................... : 1e-20
+	max_residual ...................................... : 0
+	dtol .............................................. : 0.001
+	etol .............................................. : 0.01
+	rtol .............................................. : 0
+	rhoi .............................................. : -2
+	alpha ............................................. : 1
+	beta .............................................. : 0.25
+	gamma ............................................. : 0.5
+	logSolve .......................................... : no (0)
+	arc_length ........................................ : 0
+	arc_length_scale .................................. : 0
+
+
+
+
+
+
+ MATERIAL DATA
+===========================================================================
+  1 - Material1 (type: isotropic elastic)
+	density ........................................... : 1e-09
+	E ................................................. : 1
+	v ................................................. : 0.3
+---------------------------------------------------------------------------
+  2 - SyntheticChord (type: nonlinear spring)
+	scale ............................................. : 30
+	measure ........................................... : elongation (0)
+	force: (type: point)
+	  interpolate ..................................... : linear (0)
+	  extend .......................................... : extrapolate (1)
+	  points .......................................... : (can't display value)
+
+
+ BOUNDARY CONDITION DATA
+===========================================================================
+  1 -  Type: zero displacement
+	x_dof ............................................. : yes (1)
+	y_dof ............................................. : yes (1)
+	z_dof ............................................. : yes (1)
+---------------------------------------------------------------------------
+  2 -  Type: zero displacement
+	x_dof ............................................. : yes (1)
+	y_dof ............................................. : yes (1)
+	z_dof ............................................. : yes (1)
+
+
+ MODEL LOAD DATA
+===========================================================================
+  1 -  Type: pressure
+	pressure .......................................... : 0.0133
+	symmetric_stiffness ............................... : yes (1)
+	linear ............................................ : no (0)
+	shell_bottom ...................................... : no (0)
+
+
+ LOAD CONTROLLER DATA
+===========================================================================
+load controller   1 - LC1 (type: loadcurve)
+	interpolate ....................................... : LINEAR (0)
+	extend ............................................ : CONSTANT (0)
+	points ............................................ : (can't display value)
+
+
+ OUTPUT DATA
+===========================================================================
+ LINEAR SOLVER DATA
+===========================================================================
+	Default linear solver ............................. : pardiso
+
+
+Data Record #1
+===========================================================================
+Step = 0
+Time = 0
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+ *************************************************************************
+ * Selecting linear solver pardiso                                       *
+ *************************************************************************
+
+===== beginning time step 1 : 0.001 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+===== reforming stiffness matrix:
+	Nr of equations ........................... : 11184
+	Nr of nonzeroes in stiffness matrix ....... : 298236
+ 1
+ Nonlinear solution status: time= 0.001
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.880084e-07    4.231332e-07    0.000000e+00 
+	   energy              4.450029e-04    9.015302e-06    4.450029e-06 
+	   displacement        8.571102e-01    8.571102e-01    8.571102e-07 
+ 2
+ Nonlinear solution status: time= 0.001
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.880084e-07    5.563962e-10    0.000000e+00 
+	   energy              4.450029e-04    3.426415e-08    4.450029e-06 
+	   displacement        8.571102e-01    5.398309e-04    8.187048e-07 
+ 3
+ Nonlinear solution status: time= 0.001
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.880084e-07    1.610785e-12    0.000000e+00 
+	   energy              4.450029e-04    7.667956e-13    4.450029e-06 
+	   displacement        8.571102e-01    5.277855e-06    8.214777e-07 
+ 4
+ Nonlinear solution status: time= 0.001
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.880084e-07    1.584071e-14    0.000000e+00 
+	   energy              4.450029e-04    2.215167e-13    4.450029e-06 
+	   displacement        8.571102e-01    7.223618e-09    8.215873e-07 
+
+convergence summary
+    number of iterations   : 4
+    number of reformations : 1
+
+------- converged at time : 0.001
+
+
+Data Record #1
+===========================================================================
+Step = 1
+Time = 0.001
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.0028
+
+
+===== beginning time step 2 : 0.0038 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.0038
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.522852e-06    2.963644e-04    0.000000e+00 
+	   energy              7.241541e-03    1.743637e-03    7.241541e-05 
+	   displacement        2.120452e+01    2.120452e+01    2.120452e-05 
+ 2
+ Nonlinear solution status: time= 0.0038
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.522852e-06    2.263849e-05    0.000000e+00 
+	   energy              7.241541e-03    2.527551e-04    7.241541e-05 
+	   displacement        2.120452e+01    1.157149e+00    1.395150e-05 
+ 3
+ Nonlinear solution status: time= 0.0038
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.522852e-06    1.029700e-06    0.000000e+00 
+	   energy              7.241541e-03    2.941009e-06    7.241541e-05 
+	   displacement        2.120452e+01    1.411386e-01    1.513543e-05 
+ 4
+ Nonlinear solution status: time= 0.0038
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.522852e-06    4.974907e-07    0.000000e+00 
+	   energy              7.241541e-03    1.726787e-06    7.241541e-05 
+	   displacement        2.120452e+01    1.469416e-02    1.595206e-05 
+ 5
+ Nonlinear solution status: time= 0.0038
+	stiffness updates             = 4
+	right hand side evaluations   = 6
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.522852e-06    4.702387e-09    0.000000e+00 
+	   energy              7.241541e-03    1.212847e-10    7.241541e-05 
+	   displacement        2.120452e+01    8.434965e-04    1.580325e-05 
+ 6
+ Nonlinear solution status: time= 0.0038
+	stiffness updates             = 5
+	right hand side evaluations   = 7
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.522852e-06    5.034170e-10    0.000000e+00 
+	   energy              7.241541e-03    1.343585e-09    7.241541e-05 
+	   displacement        2.120452e+01    1.255965e-05    1.579660e-05 
+
+convergence summary
+    number of iterations   : 6
+    number of reformations : 1
+
+------- converged at time : 0.0038
+
+
+Data Record #1
+===========================================================================
+Step = 2
+Time = 0.0038
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.00424
+
+
+===== beginning time step 3 : 0.00804 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.00804
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            1.136951e-05    7.589151e-05    0.000000e+00 
+	   energy              6.402877e-03    6.083756e-04    6.402877e-05 
+	   displacement        1.211579e+01    1.211579e+01    1.211579e-05 
+ 2
+ Nonlinear solution status: time= 0.00804
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            1.136951e-05    2.086437e-06    0.000000e+00 
+	   energy              6.402877e-03    3.101473e-05    6.402877e-05 
+	   displacement        1.211579e+01    1.907581e-01    9.793996e-06 
+ 3
+ Nonlinear solution status: time= 0.00804
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            1.136951e-05    1.465536e-08    0.000000e+00 
+	   energy              6.402877e-03    1.055342e-07    6.402877e-05 
+	   displacement        1.211579e+01    1.299125e-02    1.017518e-05 
+ 4
+ Nonlinear solution status: time= 0.00804
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            1.136951e-05    2.407869e-09    0.000000e+00 
+	   energy              6.402877e-03    9.947631e-09    6.402877e-05 
+	   displacement        1.211579e+01    9.604683e-05    1.022654e-05 
+ 5
+ Nonlinear solution status: time= 0.00804
+	stiffness updates             = 4
+	right hand side evaluations   = 6
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            1.136951e-05    7.843312e-12    0.000000e+00 
+	   energy              6.402877e-03    1.996290e-12    6.402877e-05 
+	   displacement        1.211579e+01    2.109902e-06    1.022325e-05 
+
+convergence summary
+    number of iterations   : 5
+    number of reformations : 1
+
+------- converged at time : 0.00804
+
+
+Data Record #1
+===========================================================================
+Step = 3
+Time = 0.00804
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.005392
+
+
+===== beginning time step 4 : 0.013432 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.013432
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            2.229371e-05    2.935987e-04    0.000000e+00 
+	   energy              1.485079e-02    1.905857e-03    1.485079e-04 
+	   displacement        2.450700e+01    2.450700e+01    2.450700e-05 
+ 2
+ Nonlinear solution status: time= 0.013432
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            2.229371e-05    1.130739e-05    0.000000e+00 
+	   energy              1.485079e-02    1.405982e-04    1.485079e-04 
+	   displacement        2.450700e+01    6.076170e-01    1.894880e-05 
+ 3
+ Nonlinear solution status: time= 0.013432
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            2.229371e-05    1.069405e-07    0.000000e+00 
+	   energy              1.485079e-02    7.404972e-07    1.485079e-04 
+	   displacement        2.450700e+01    5.426138e-02    1.984055e-05 
+ 4
+ Nonlinear solution status: time= 0.013432
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            2.229371e-05    2.451575e-08    0.000000e+00 
+	   energy              1.485079e-02    1.062771e-07    1.485079e-04 
+	   displacement        2.450700e+01    5.631394e-04    2.002532e-05 
+ 5
+ Nonlinear solution status: time= 0.013432
+	stiffness updates             = 4
+	right hand side evaluations   = 6
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            2.229371e-05    3.224432e-10    0.000000e+00 
+	   energy              1.485079e-02    3.872541e-10    1.485079e-04 
+	   displacement        2.450700e+01    2.254221e-05    2.001205e-05 
+ 6
+ Nonlinear solution status: time= 0.013432
+	stiffness updates             = 5
+	right hand side evaluations   = 7
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            2.229371e-05    6.355170e-12    0.000000e+00 
+	   energy              1.485079e-02    1.005773e-10    1.485079e-04 
+	   displacement        2.450700e+01    3.877540e-07    2.000826e-05 
+
+convergence summary
+    number of iterations   : 6
+    number of reformations : 1
+
+------- converged at time : 0.013432
+
+
+Data Record #1
+===========================================================================
+Step = 4
+Time = 0.013432
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.0063136
+
+
+===== beginning time step 5 : 0.0197456 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.0197456
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            2.672905e-05    1.007803e-04    0.000000e+00 
+	   energy              1.233183e-02    8.440622e-04    1.233183e-04 
+	   displacement        1.592106e+01    1.592106e+01    1.592106e-05 
+ 2
+ Nonlinear solution status: time= 0.0197456
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            2.672905e-05    1.342145e-06    0.000000e+00 
+	   energy              1.233183e-02    2.426440e-05    1.233183e-04 
+	   displacement        1.592106e+01    1.153109e-01    1.389126e-05 
+ 3
+ Nonlinear solution status: time= 0.0197456
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            2.672905e-05    1.785813e-08    0.000000e+00 
+	   energy              1.233183e-02    3.441577e-08    1.233183e-04 
+	   displacement        1.592106e+01    6.474891e-03    1.411345e-05 
+ 4
+ Nonlinear solution status: time= 0.0197456
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            2.672905e-05    7.129229e-10    0.000000e+00 
+	   energy              1.233183e-02    5.497006e-09    1.233183e-04 
+	   displacement        1.592106e+01    2.857810e-05    1.414502e-05 
+ 5
+ Nonlinear solution status: time= 0.0197456
+	stiffness updates             = 4
+	right hand side evaluations   = 6
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            2.672905e-05    8.281100e-12    0.000000e+00 
+	   energy              1.233183e-02    1.596509e-11    1.233183e-04 
+	   displacement        1.592106e+01    8.839988e-07    1.414275e-05 
+
+convergence summary
+    number of iterations   : 5
+    number of reformations : 1
+
+------- converged at time : 0.0197456
+
+
+Data Record #1
+===========================================================================
+Step = 5
+Time = 0.0197456
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.00705088
+
+
+===== beginning time step 6 : 0.0267965 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.0267965
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            3.819695e-05    1.834939e-04    0.000000e+00 
+	   energy              1.887144e-02    1.318805e-03    1.887144e-04 
+	   displacement        2.197249e+01    2.197249e+01    2.197249e-05 
+ 2
+ Nonlinear solution status: time= 0.0267965
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            3.819695e-05    2.109518e-06    0.000000e+00 
+	   energy              1.887144e-02    3.360146e-05    1.887144e-04 
+	   displacement        2.197249e+01    1.363070e-01    1.926037e-05 
+ 3
+ Nonlinear solution status: time= 0.0267965
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            3.819695e-05    6.656757e-08    0.000000e+00 
+	   energy              1.887144e-02    1.147031e-07    1.887144e-04 
+	   displacement        2.197249e+01    7.441518e-03    1.951423e-05 
+ 4
+ Nonlinear solution status: time= 0.0267965
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            3.819695e-05    8.301055e-10    0.000000e+00 
+	   energy              1.887144e-02    9.758943e-09    1.887144e-04 
+	   displacement        2.197249e+01    5.177495e-05    1.956142e-05 
+ 5
+ Nonlinear solution status: time= 0.0267965
+	stiffness updates             = 4
+	right hand side evaluations   = 6
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            3.819695e-05    4.527109e-11    0.000000e+00 
+	   energy              1.887144e-02    3.829186e-11    1.887144e-04 
+	   displacement        2.197249e+01    1.570098e-06    1.955754e-05 
+
+convergence summary
+    number of iterations   : 5
+    number of reformations : 1
+
+------- converged at time : 0.0267965
+
+
+Data Record #1
+===========================================================================
+Step = 6
+Time = 0.02679648
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.0076407
+
+
+===== beginning time step 7 : 0.0344372 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.0344372
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            4.125368e-05    9.377593e-05    0.000000e+00 
+	   energy              1.604468e-02    8.199742e-04    1.604468e-04 
+	   displacement        1.646536e+01    1.646536e+01    1.646536e-05 
+ 2
+ Nonlinear solution status: time= 0.0344372
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            4.125368e-05    4.976651e-07    0.000000e+00 
+	   energy              1.604468e-02    1.061266e-05    1.604468e-04 
+	   displacement        1.646536e+01    4.854945e-02    1.495144e-05 
+ 3
+ Nonlinear solution status: time= 0.0344372
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            4.125368e-05    1.951389e-08    0.000000e+00 
+	   energy              1.604468e-02    3.600747e-08    1.604468e-04 
+	   displacement        1.646536e+01    1.491840e-03    1.505443e-05 
+ 4
+ Nonlinear solution status: time= 0.0344372
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            4.125368e-05    6.476689e-11    0.000000e+00 
+	   energy              1.604468e-02    1.132257e-09    1.604468e-04 
+	   displacement        1.646536e+01    8.474807e-06    1.507097e-05 
+
+convergence summary
+    number of iterations   : 4
+    number of reformations : 1
+
+------- converged at time : 0.0344372
+
+
+Data Record #1
+===========================================================================
+Step = 7
+Time = 0.034437184
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.00811256
+
+
+===== beginning time step 8 : 0.0425497 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.0425497
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            5.175468e-05    1.386738e-04    0.000000e+00 
+	   energy              2.088167e-02    1.067679e-03    2.088167e-04 
+	   displacement        1.996722e+01    1.996722e+01    1.996722e-05 
+ 2
+ Nonlinear solution status: time= 0.0425497
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            5.175468e-05    7.017595e-07    0.000000e+00 
+	   energy              2.088167e-02    1.136583e-05    2.088167e-04 
+	   displacement        1.996722e+01    5.181821e-02    1.813980e-05 
+ 3
+ Nonlinear solution status: time= 0.0425497
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            5.175468e-05    5.571806e-08    0.000000e+00 
+	   energy              2.088167e-02    5.025689e-08    2.088167e-04 
+	   displacement        1.996722e+01    1.277260e-03    1.825522e-05 
+ 4
+ Nonlinear solution status: time= 0.0425497
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            5.175468e-05    4.320388e-11    0.000000e+00 
+	   energy              2.088167e-02    1.507362e-09    2.088167e-04 
+	   displacement        1.996722e+01    1.037228e-05    1.827460e-05 
+
+convergence summary
+    number of iterations   : 4
+    number of reformations : 1
+
+------- converged at time : 0.0425497
+
+
+Data Record #1
+===========================================================================
+Step = 8
+Time = 0.0425497472
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.00849005
+
+
+===== beginning time step 9 : 0.0510398 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.0510398
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            5.362721e-05    8.332441e-05    0.000000e+00 
+	   energy              1.809582e-02    7.615249e-04    1.809582e-04 
+	   displacement        1.573377e+01    1.573377e+01    1.573377e-05 
+ 2
+ Nonlinear solution status: time= 0.0510398
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            5.362721e-05    2.531148e-07    0.000000e+00 
+	   energy              1.809582e-02    5.306564e-06    1.809582e-04 
+	   displacement        1.573377e+01    2.743226e-02    1.452571e-05 
+ 3
+ Nonlinear solution status: time= 0.0510398
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            5.362721e-05    1.685544e-08    0.000000e+00 
+	   energy              1.809582e-02    1.640529e-08    1.809582e-04 
+	   displacement        1.573377e+01    4.145036e-04    1.458959e-05 
+ 4
+ Nonlinear solution status: time= 0.0510398
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            5.362721e-05    6.954735e-12    0.000000e+00 
+	   energy              1.809582e-02    3.073386e-10    1.809582e-04 
+	   displacement        1.573377e+01    2.462615e-06    1.459826e-05 
+
+convergence summary
+    number of iterations   : 4
+    number of reformations : 1
+
+------- converged at time : 0.0510398
+
+
+Data Record #1
+===========================================================================
+Step = 9
+Time = 0.0510397978
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.00879204
+
+
+===== beginning time step 10 : 0.0598318 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.0598318
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.262953e-05    1.074867e-04    0.000000e+00 
+	   energy              2.153858e-02    8.994823e-04    2.153858e-04 
+	   displacement        1.769224e+01    1.769224e+01    1.769224e-05 
+ 2
+ Nonlinear solution status: time= 0.0598318
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.262953e-05    3.430818e-07    0.000000e+00 
+	   energy              2.153858e-02    5.287889e-06    2.153858e-04 
+	   displacement        1.769224e+01    2.894007e-02    1.633377e-05 
+ 3
+ Nonlinear solution status: time= 0.0598318
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.262953e-05    3.357133e-08    0.000000e+00 
+	   energy              2.153858e-02    1.873667e-08    2.153858e-04 
+	   displacement        1.769224e+01    3.455243e-04    1.640470e-05 
+ 4
+ Nonlinear solution status: time= 0.0598318
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.262953e-05    1.767466e-11    0.000000e+00 
+	   energy              2.153858e-02    4.130897e-10    2.153858e-04 
+	   displacement        1.769224e+01    2.458385e-06    1.641367e-05 
+
+convergence summary
+    number of iterations   : 4
+    number of reformations : 1
+
+------- converged at time : 0.0598318
+
+
+Data Record #1
+===========================================================================
+Step = 10
+Time = 0.0598318382
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.00903363
+
+
+===== beginning time step 11 : 0.0688655 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.0688655
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.378271e-05    7.112735e-05    0.000000e+00 
+	   energy              1.910086e-02    6.905789e-04    1.910086e-04 
+	   displacement        1.447366e+01    1.447366e+01    1.447366e-05 
+ 2
+ Nonlinear solution status: time= 0.0688655
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.378271e-05    1.547178e-07    0.000000e+00 
+	   energy              1.910086e-02    3.049781e-06    1.910086e-04 
+	   displacement        1.447366e+01    1.810535e-02    1.349956e-05 
+ 3
+ Nonlinear solution status: time= 0.0688655
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.378271e-05    1.160697e-08    0.000000e+00 
+	   energy              1.910086e-02    7.265954e-09    1.910086e-04 
+	   displacement        1.447366e+01    1.520234e-04    1.354448e-05 
+ 4
+ Nonlinear solution status: time= 0.0688655
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            6.378271e-05    3.274773e-12    0.000000e+00 
+	   energy              1.910086e-02    1.120116e-10    1.910086e-04 
+	   displacement        1.447366e+01    7.603273e-07    1.354913e-05 
+
+convergence summary
+    number of iterations   : 4
+    number of reformations : 1
+
+------- converged at time : 0.0688655
+
+
+Data Record #1
+===========================================================================
+Step = 11
+Time = 0.0688654706
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.00922691
+
+
+===== beginning time step 12 : 0.0780924 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.0780924
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.129634e-05    8.257809e-05    0.000000e+00 
+	   energy              2.143359e-02    7.618270e-04    2.143359e-04 
+	   displacement        1.546516e+01    1.546516e+01    1.546516e-05 
+ 2
+ Nonlinear solution status: time= 0.0780924
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.129634e-05    1.936124e-07    0.000000e+00 
+	   energy              2.143359e-02    2.923424e-06    2.143359e-04 
+	   displacement        1.546516e+01    1.843314e-02    1.443227e-05 
+ 3
+ Nonlinear solution status: time= 0.0780924
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.129634e-05    1.757924e-08    0.000000e+00 
+	   energy              2.143359e-02    7.814424e-09    2.143359e-04 
+	   displacement        1.546516e+01    1.305807e-04    1.447983e-05 
+ 4
+ Nonlinear solution status: time= 0.0780924
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.129634e-05    7.417637e-12    0.000000e+00 
+	   energy              2.143359e-02    1.415365e-10    2.143359e-04 
+	   displacement        1.546516e+01    7.053008e-07    1.448437e-05 
+
+convergence summary
+    number of iterations   : 4
+    number of reformations : 1
+
+------- converged at time : 0.0780924
+
+
+Data Record #1
+===========================================================================
+Step = 12
+Time = 0.0780923765
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.00938152
+
+
+===== beginning time step 13 : 0.0874739 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.0874739
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.220408e-05    5.947037e-05    0.000000e+00 
+	   energy              1.951307e-02    6.200087e-04    1.951307e-04 
+	   displacement        1.313061e+01    1.313061e+01    1.313061e-05 
+ 2
+ Nonlinear solution status: time= 0.0874739
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.220408e-05    1.024791e-07    0.000000e+00 
+	   energy              1.951307e-02    1.922916e-06    1.951307e-04 
+	   displacement        1.313061e+01    1.274204e-02    1.234078e-05 
+ 3
+ Nonlinear solution status: time= 0.0874739
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.220408e-05    7.246402e-09    0.000000e+00 
+	   energy              1.951307e-02    3.500732e-09    1.951307e-04 
+	   displacement        1.313061e+01    6.909700e-05    1.237377e-05 
+ 4
+ Nonlinear solution status: time= 0.0874739
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.220408e-05    2.120017e-12    0.000000e+00 
+	   energy              1.951307e-02    4.805354e-11    1.951307e-04 
+	   displacement        1.313061e+01    2.671247e-07    1.237641e-05 
+
+convergence summary
+    number of iterations   : 4
+    number of reformations : 1
+
+------- converged at time : 0.0874739
+
+
+Data Record #1
+===========================================================================
+Step = 13
+Time = 0.0874739012
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.00950522
+
+
+===== beginning time step 14 : 0.0969791 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.0969791
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.829136e-05    6.319445e-05    0.000000e+00 
+	   energy              2.095858e-02    6.484344e-04    2.095858e-04 
+	   displacement        1.349932e+01    1.349932e+01    1.349932e-05 
+ 2
+ Nonlinear solution status: time= 0.0969791
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.829136e-05    1.160566e-07    0.000000e+00 
+	   energy              2.095858e-02    1.778638e-06    2.095858e-04 
+	   displacement        1.349932e+01    1.240460e-02    1.270167e-05 
+ 3
+ Nonlinear solution status: time= 0.0969791
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.829136e-05    8.848400e-09    0.000000e+00 
+	   energy              2.095858e-02    3.617364e-09    2.095858e-04 
+	   displacement        1.349932e+01    5.988002e-05    1.273474e-05 
+ 4
+ Nonlinear solution status: time= 0.0969791
+	stiffness updates             = 3
+	right hand side evaluations   = 5
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.829136e-05    2.913750e-12    0.000000e+00 
+	   energy              2.095858e-02    5.388751e-11    2.095858e-04 
+	   displacement        1.349932e+01    2.374751e-07    1.273722e-05 
+
+convergence summary
+    number of iterations   : 4
+    number of reformations : 1
+
+------- converged at time : 0.0969791
+
+
+Data Record #1
+===========================================================================
+Step = 14
+Time = 0.0969791209
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+AUTO STEPPER: increasing time step, dt = 0.00960418
+
+MUST POINT CONTROLLER: adjusting time step. dt = 0.00302088
+
+
+===== beginning time step 15 : 0.1 =====
+
+
+Reforming stiffness matrix: reformation #1
+
+ 1
+ Nonlinear solution status: time= 0.1
+	stiffness updates             = 0
+	right hand side evaluations   = 2
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.808647e-06    4.579445e-07    0.000000e+00 
+	   energy              1.906907e-03    1.641319e-05    1.906907e-05 
+	   displacement        1.134553e+00    1.134553e+00    1.134553e-06 
+ 2
+ Nonlinear solution status: time= 0.1
+	stiffness updates             = 1
+	right hand side evaluations   = 3
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.808647e-06    4.232942e-11    0.000000e+00 
+	   energy              1.906907e-03    4.157567e-09    1.906907e-05 
+	   displacement        1.134553e+00    8.961226e-05    1.114999e-06 
+ 3
+ Nonlinear solution status: time= 0.1
+	stiffness updates             = 2
+	right hand side evaluations   = 4
+	stiffness matrix reformations = 1
+	step from line search         = 1.000000
+	convergence norms :     INITIAL         CURRENT         REQUIRED
+	   residual            7.808647e-06    3.082100e-13    0.000000e+00 
+	   energy              1.906907e-03    4.536282e-13    1.906907e-05 
+	   displacement        1.134553e+00    4.081611e-08    1.115267e-06 
+
+convergence summary
+    number of iterations   : 3
+    number of reformations : 1
+
+------- converged at time : 0.1
+
+
+Data Record #1
+===========================================================================
+Step = 15
+Time = 0.1
+Data = Ux;Uy;Uz;s1;E1
+File = /Users/aslans1/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/Documents/research/newton-patch/simulation2/with_chords/jobs/patch_output.csv
+
+
+ N O N L I N E A R   I T E R A T I O N   I N F O R M A T I O N
+
+	Number of time steps completed .................... : 15
+
+	Total number of equilibrium iterations ............ : 66
+
+	Average number of equilibrium iterations .......... : 4.4
+
+	Total number of right hand evaluations ............ : 81
+
+	Total number of stiffness reformations ............ : 15
+
+
+ L I N E A R   S O L V E R   S T A T S
+
+	Total calls to linear solver ........ : 66
+
+	Avg iterations per solve ............ : 1
+
+	Time in linear solver: 0:00:01
+
+
+ Elapsed time : 0:00:02
+
+ T I M I N G   I N F O R M A T I O N
+
+	Input time ...................... : 0:00:00 (0.0241418 sec)
+
+	Initialization time ............. : 0:00:00 (0.003141 sec)
+
+	Solve time ...................... : 0:00:02 (1.63376 sec)
+
+	   IO-time (plot, dmp, data) .... : 0:00:00 (0.3112 sec)
+
+	   reforming stiffness .......... : 0:00:00 (0.00323254 sec)
+
+	   evaluating stiffness ......... : 0:00:00 (0.196205 sec)
+
+	   evaluating residual .......... : 0:00:00 (0.0919039 sec)
+
+	   model update ................. : 0:00:00 (0.0807146 sec)
+
+	   QN updates ................... : 0:00:00 (0.00257746 sec)
+
+	   time in linear solver ........ : 0:00:01 (0.87905 sec)
+
+	Total elapsed time .............. : 0:00:02 (1.66798 sec)
+
+
+ N O R M A L   T E R M I N A T I O N
+

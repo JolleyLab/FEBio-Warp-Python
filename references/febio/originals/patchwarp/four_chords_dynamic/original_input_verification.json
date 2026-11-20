@@ -1,0 +1,62 @@
+{
+  "status": "Uploaded original verified against available log/model/output evidence; static derivative prepared, not run",
+  "source": "reference/febio/chords/patch_4chords.feb",
+  "source_sha256": "3f4c12c19b9522705c7a08249a53896ded8f8084ee371af5f88d278befcf3c2b",
+  "provenance_limit": "Historical log used a different basename and contains no input digest; original byte identity cannot be proven from outputs alone",
+  "shell_nodes": 1932,
+  "quads": 1863,
+  "fixed_top_nodes": 136,
+  "fixed_bottom_nodes": 0,
+  "anchors_node_ids": [
+    1933,
+    1934
+  ],
+  "attachment_node_ids": [
+    1891,
+    1868,
+    1274,
+    3
+  ],
+  "maximum_coordinate_difference_vs_patchwarp_mm": 1.432144669219779e-14,
+  "maximum_coordinate_difference_vs_XPLT_mm": 3.5857975594284595e-06,
+  "material": {
+    "law": "isotropic elastic / full3D StVK",
+    "E_MPa": 1.0,
+    "nu": 0.3,
+    "density_kg_m3": 1000
+  },
+  "thickness_mm": 0.5,
+  "spring_law": "bilateral F=30 N/mm*(L-L0); points(0,0),(1,1); linear extrapolation",
+  "pressure_MPa": 0.0133,
+  "pressure_curve": [
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.1,
+      1.0
+    ]
+  ],
+  "pressure_history": "linear ramp0to13300Pa in0.1s then constant",
+  "physical_mismatches_detected": [],
+  "static_input": "patch_four_chords_static_original.feb",
+  "static_sha256": "84b14a385f25fa453843a3b3a2d53fb6699f06a521d6785a51c19822f76ca961",
+  "changes": [
+    "analysis DYNAMIC->STATIC",
+    "rtol0->1e-12; normratio1e-6",
+    "unique CSV filename",
+    "add direct discrete force outputs"
+  ],
+  "unchanged_physical_sections": [
+    "Module",
+    "Globals",
+    "Material",
+    "Mesh",
+    "MeshDomains",
+    "Boundary",
+    "Loads",
+    "Discrete",
+    "LoadData"
+  ]
+}

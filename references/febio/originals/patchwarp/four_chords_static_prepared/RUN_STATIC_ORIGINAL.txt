@@ -1,0 +1,20 @@
+Use this bundle in preference to the earlier reconstructed static input.
+Derived directly from uploaded reference/febio/chords/patch_4chords.feb.
+All physical sections, mesh, material, thickness, BCs, springs, anchors and
+pressure/loadcurve are preserved. Only analysis=STATIC, rtol=1e-12, uniqueCSV
+filename and direct discrete-force output requests differ. Other controls stay.
+
+Extract into a NEW directory. With FEBio4.9.0.6dcb43939 if available:
+  febio4 -i patch_four_chords_static_original.feb
+Return .feb, .xplt, .log and *_output.csv together. No FEBio execution performed here.
+
+Require STATIC normal termination at pseudo-time0.1 and final residual criterion
+satisfied. rtol=1e-12 acts on squared residual ratio (normratio1e-6), not absolute
+force tolerance. Compare final topdisplacements with existing nativequadPW state.
+From PatchWarp:
+  .venv/bin/python validation/diagnostics/four_chord_equilibrium/compare_static.py /path/to/patch_four_chords_static_original.xplt
+
+The uploaded source matches recorded settings/topology/coordinates. The historical
+log names patch_2PM_4chords_mitral_pattern.feb; no historical inputhash exists,
+so outputs cannot establish byte-for-byte identity. SourceSHA256 is now recorded.
+Static comparison remains pending. The prior dynamic state is not proven settled.
