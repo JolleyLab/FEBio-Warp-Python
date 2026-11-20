@@ -8,11 +8,8 @@ https://github.com/febiosoftware/FEBio/blob/develop/FECore/tens4d.h
 and, for how the MFEM plugin calls FEBio materials,
 https://github.com/JolleyLab/FEBioMFEMiFSI/blob/main/MFEMImSolid/MFEMImmersedElasticDomain.cpp
 
-The tangent is recovered from the reference-frame functions:
-
-    J c:d = dP[d F] F^T + P (d F)^T - d tau - tau d,    tau = P F^T
-
-which is the inverse of the relation used in model.from_spatial.
+Column b of the 6x6 is the model's spatial_tangent_action applied to the b-th
+symmetric unit tensor, so this kernel adds no mechanics of its own.
 
 The caller owns the memory. `wrap` builds Warp arrays on caller pointers so
 nothing is copied. On GPU, pass the device pointer that MFEM returns from
@@ -35,7 +32,7 @@ def make_exchange_kernel(model, dtype=wp.float64):
     mat = wp.types.matrix(shape=(3, 3), dtype=dtype)
     mat66 = wp.types.matrix(shape=(6, 6), dtype=dtype)
     vec = model.param_vector(dtype)
-    pk1, tangent_action = model.pk1, model.tangent_action
+    cauchy, spatial_tangent_action = model.cauchy, model.spatial_tangent_action
     vec6i = wp.types.vector(length=6, dtype=wp.int32)
     vi = wp.constant(vec6i(0, 1, 2, 0, 1, 0))
     vj = wp.constant(vec6i(0, 1, 2, 1, 2, 2))
@@ -53,27 +50,16 @@ def make_exchange_kernel(model, dtype=wp.float64):
         # passes the generalized-alpha intermediate value.
         Fn = F[n]
         p = params[region[n]]
-        J = wp.determinant(Fn)
-        Ft = wp.transpose(Fn)
-        P = pk1(Fn, Q[n], p)
-        tau = P * Ft  # Kirchhoff stress, tau = P F^T = J sigma
-        sigma[n] = tau / J
+        sigma[n] = cauchy(Fn, Q[n], p)
         out = mat66()
         half = dtype(0.5)
-        # Column b of the 6x6 is c contracted with the b-th symmetric unit
-        # tensor. Shear columns use (e_k e_l + e_l e_k)/2, so the entry is c_ijkl
-        # itself (the tens4ds convention), not engineering shear.
+        # Shear columns use (e_k e_l + e_l e_k)/2, so the entry is c_ijkl itself
+        # (the tens4ds convention), not engineering shear.
         for b in range(6):
             d = mat()
             d[vi[b], vj[b]] = d[vi[b], vj[b]] + half
             d[vj[b], vi[b]] = d[vj[b], vi[b]] + half
-            H = d * Fn  # the perturbation of F whose velocity gradient is d
-            cd = (
-                tangent_action(Fn, H, Q[n], p) * Ft
-                + P * wp.transpose(H)
-                - d * tau
-                - tau * d
-            ) / J
+            cd = spatial_tangent_action(Fn, d, Q[n], p)
             for a in range(6):
                 out[a, b] = cd[vi[a], vj[a]]
         c[n] = out

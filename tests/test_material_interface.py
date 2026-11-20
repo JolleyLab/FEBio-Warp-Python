@@ -32,6 +32,9 @@ LIMITS = {
     "rest_stress": 1e-12,
     "objectivity_energy": 1e-12,
     "objectivity_stress": 1e-12,
+    "cauchy_asymmetry": 1e-12,
+    "pk1_vs_cauchy": 1e-12,
+    "pk1_tangent_vs_fd": 1e-7,
     "stress_vs_energy_fd": 1e-7,
     "tangent_vs_stress_fd": 1e-7,
     "fp32_vs_fp64_stress": 1e-4,
@@ -139,7 +142,7 @@ class MaterialInterfaceTests(unittest.TestCase):
         for model in model_api.all_models():
             cpu = model_api.evaluate(model, F, PARAMETERS[model.name])
             gpu = model_api.evaluate(model, F, PARAMETERS[model.name], device=devices[0])
-            np.testing.assert_allclose(gpu["pk1"], cpu["pk1"], rtol=1e-11, atol=1e-8)
+            np.testing.assert_allclose(gpu["cauchy"], cpu["cauchy"], rtol=1e-11, atol=1e-8)
 
 
 if __name__ == "__main__":

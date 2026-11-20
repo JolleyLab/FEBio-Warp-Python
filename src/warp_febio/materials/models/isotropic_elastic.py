@@ -6,12 +6,12 @@ FEBio feature manual: https://febiosoftware.github.io/febio-feature-manual/featu
 Used in             : PatchWarp native-quad shell verification; Zelonis et al. (TPVR)
                       text, Eq. 4, for the nitinol device with a load curve on E.
 
-This file is the example of authoring form A. FEBio writes this model spatially
-(Cauchy stress and spatial tangent in terms of b). Here it is written from its
-energy in the reference frame instead, and the exchange kernel recovers the
-FEBio spatial quantities. The test compares those against the closed forms in
-FEIsotropicElastic.cpp, which checks the reference-to-spatial direction of the
-interface on a model that was not written spatially.
+This file is the example of writing a model in the reference form. FEBio writes
+this model spatially (Cauchy stress and spatial tangent in terms of b). Here it
+is written from its energy in the reference frame instead, and `from_reference`
+produces the Cauchy stress and spatial tangent that elements consume. The test
+compares those against the closed forms in FEIsotropicElastic.cpp, which checks
+the reference-to-spatial direction on a model that was not written spatially.
 
 Strain energy per reference volume (matches FEIsotropicElastic::StrainEnergyDensity):
 
@@ -34,7 +34,7 @@ from typing import Any
 
 import warp as wp
 
-from ..model import MaterialModel, register
+from ..model import from_reference, register
 from .neo_hookean import lame_lambda, lame_mu  # same E, v -> Lame conversion as FEBio
 
 
@@ -74,14 +74,13 @@ def tangent_action(F: Any, H: Any, Q: Any, p: Any):
 
 
 ISOTROPIC_ELASTIC = register(
-    MaterialModel(
+    from_reference(
         name="isotropic_elastic",
         febio_type="isotropic elastic",
         param_names=("E", "v"),
         energy=energy,
         pk1=pk1,
         tangent_action=tangent_action,
-        authored="reference",
         source="https://github.com/febiosoftware/FEBio/blob/develop/FEBioMech/FEIsotropicElastic.cpp",
     )
 )

@@ -23,16 +23,17 @@ from warp_febio.materials import models  # noqa: E402,F401
 from warp_febio.materials.conformance import check_model, sample_states  # noqa: E402
 
 ROWS = [
-    ("previous_energy", "Energy vs previous implementation"),
-    ("previous_stress", "First Piola stress vs previous implementation"),
-    ("previous_tangent", "Tangent action vs previous implementation"),
     ("cauchy_vs_febio", "Cauchy stress vs FEBio closed form"),
     ("tangent_vs_febio", "6x6 spatial tangent vs FEBio closed form"),
+    ("cauchy_asymmetry", "Cauchy stress asymmetry"),
     ("tangent_asymmetry", "6x6 tangent asymmetry"),
-    ("stress_vs_energy_fd", "Stress vs finite difference of energy"),
-    ("tangent_vs_stress_fd", "Tangent vs finite difference of stress"),
-    ("objectivity_stress", "Objectivity, P(RF) = R P(F)"),
+    ("stress_vs_energy_fd", "Cauchy stress vs finite difference of energy"),
+    ("tangent_vs_stress_fd", "Spatial tangent vs finite difference of stress"),
+    ("objectivity_stress", "Objectivity, sigma(RF) = R sigma(F) R^T"),
     ("rest_stress", "Stress at F = I and at a rigid rotation"),
+    ("pk1_vs_cauchy", "First Piola stress consistent with Cauchy stress"),
+    ("previous_stress", "First Piola stress vs previous implementation"),
+    ("previous_tangent", "First Piola tangent action vs previous implementation"),
     ("fp32_vs_fp64_stress", "FP32 vs FP64 stress"),
     ("parameter_gradient_vs_fd", "Parameter gradient, tape vs finite difference"),
 ]
