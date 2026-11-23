@@ -144,6 +144,7 @@ Tests use `unittest` and live in `tests/`.
    - Imperative mood in the subject line ("Add Ogden material", not "Added").
    - Subject under about 50 characters. Use the body to explain why.
    - Reference issues as `(GH-123)`.
+   - Sign off every commit with `git commit --signoff` (or `-s`) to certify the Developer Certificate of Origin.
    - A few logical commits, often one. No fixup or merge commits in the final history. Each commit should pass the tests.
 
 To squash a branch onto the current `main`:
@@ -179,12 +180,48 @@ AI-assisted contributions are welcome and are held to the same expectations as a
 
 ## Licensing and sign-off
 
-<!-- DECISION (maintainers): Warp requires DCO sign-off and no CLA. Confirm that DCO is wanted here, or remove the sign-off requirement. Existing commits are not signed off. -->
-
 FEBio-Warp is released under the Apache-2.0 license. FEBio itself is MIT licensed. Code translated from FEBio must keep attribution to the FEBio source it derives from.
 
-Contributions are accepted under the [Developer Certificate of Origin 1.1](https://developercertificate.org/). No contributor license agreement is required. Sign off every commit, with an email that matches the commit author:
+Rather than requiring a formal Contributor License Agreement (CLA), we use the [Developer Certificate of Origin](https://developercertificate.org/) to ensure contributors have the right to submit their contributions to this project. Please ensure that all commits have a [sign-off](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt--s) added with an email address that matches the commit author to agree to the DCO terms for each particular contribution.
 
 ```bash
 git commit --signoff
+```
+
+### Developer Certificate of Origin
+
+```text
+Version 1.1
+
+Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
+
+Everyone is permitted to copy and distribute verbatim copies of this
+license document, but changing it is not allowed.
+
+
+Developer's Certificate of Origin 1.1
+
+By making a contribution to this project, I certify that:
+
+(a) The contribution was created in whole or in part by me and I
+    have the right to submit it under the open source license
+    indicated in the file; or
+
+(b) The contribution is based upon previous work that, to the best
+    of my knowledge, is covered under an appropriate open source
+    license and I have the right under that license to submit that
+    work with modifications, whether created in whole or in part
+    by me, under the same open source license (unless I am
+    permitted to submit under a different license), as indicated
+    in the file; or
+
+(c) The contribution was provided directly to me by some other
+    person who certified (a), (b) or (c) and I have not modified
+    it.
+
+(d) I understand and agree that this project and the contribution
+    are public and that a record of the contribution (including all
+    personal information I submit with it, including my sign-off) is
+    maintained indefinitely and may be redistributed consistent with
+    this project or the open source license(s) involved.
 ```
