@@ -73,5 +73,12 @@ Each example keeps its settings beside the code or reference deck.
 5. [Validation scope](validation/README.md)
 
 The examples run from this repository and use synthetic inputs. See [merge/upload instructions](MERGE_NOTES.md).
-No repository-wide license is assigned by this handoff; retain or select a license
-based on ownership of the prototype-derived code before publishing.
+
+## License
+
+FEBio-Warp-Python is released under the [Apache License 2.0](LICENSE), the same license as
+[NVIDIA Warp](https://github.com/NVIDIA/warp). Contributions are accepted under the same terms.
+
+[FEBio](https://github.com/febiosoftware/FEBio) is distributed separately under the MIT license.
+Material in this repository that derives from FEBio, including the reference inputs under
+`references/febio/`, keeps its attribution to the FEBio project.
