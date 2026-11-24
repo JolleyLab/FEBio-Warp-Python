@@ -47,7 +47,7 @@ directory exists as a place for the work and holds no code yet.
 | Analysis | `analysis/` | Static and implicit dynamic steps, load stepping, staged procedures | Not started |
 | Sensitivity | `sensitivity/` | Gradients through equilibrium and through trajectories | Not started |
 | Input and output | `io/` | FEBio input and plot files, building on [pyfebio](https://github.com/febiosoftware/pyfebio) | Design |
-| Verification | `tests/`, `references/` | Harness built on the FEBio test and verification suites, plus the driving applications | Design |
+| Verification | `tests/`, `references/` | FEBio-Warp run on FEBio input files and compared with pinned FEBio references; cases from the FEBio test suite and the driving applications | Draft ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)), tabled until input and output |
 
 Design notes live in [`docs/design/`](docs/design/README.md).
 

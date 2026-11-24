@@ -9,7 +9,7 @@ added or updated in the same pull request as the code it describes, or ahead of 
 | Materials | With [PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2) | Draft, under redesign |
 | Contact | To be added with the contact pull request | Draft |
 | Assembly | To be added | Design |
-| Verification | To be added | Design |
+| Verification | [verification.md](verification.md) | Draft, tabled until input and output |
 | Input and output | To be added | Design |
 
 Notes describing the pilot phase are in [`pilots/docs/`](../../pilots/docs/).

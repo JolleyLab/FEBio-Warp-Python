@@ -34,4 +34,4 @@
 !**/.env.example
 
 # FEBio runs of the verification cases
-validation/cases/outputs/
+references/small_problems/outputs/
