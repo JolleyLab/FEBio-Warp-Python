@@ -67,6 +67,7 @@ Each example keeps its settings beside the code or reference deck.
 ## Read and extend
 
 1. [Architecture and status](docs/ARCHITECTURE.md)
+1. [Material interface proposal and results](docs/MATERIALS.md) (draft for discussion)
 2. [Physics walkthrough](docs/PHYSICS.md)
 3. [Warp FEM inventory and public imports](docs/WARP_FEM.md)
 4. [Development and prototype provenance](docs/DEVELOPMENT.md)
