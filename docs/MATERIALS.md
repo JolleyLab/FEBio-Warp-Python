@@ -96,7 +96,7 @@ FEBio throws on a non-positive Jacobian and the solver cuts the step. A kernel c
 | Nitinol, effective modulus | elastic law with a load curve on `E` | Published TPVR device model | Implemented |
 | Nitinol, superelastic, uniaxial | none | Beam-element devices | Shell: interface and tests in place, law to be refined later |
 | HGO, uncoupled, with three-field element | `Holzapfel-Gasser-Ogden` | Outflow tract as published | Next, with the element |
-| Chordae | to be confirmed | Valve chordae, under the uniaxial kind | Next |
+| Chordae | FEBio nonlinear spring | Valve chordae, tension only, under the uniaxial kind | Next |
 
 Deferred until a project needs them: Ogden, anisotropic Lee-Sacks, fiber components and continuous fiber distributions, a three-dimensional superelastic law.
 
