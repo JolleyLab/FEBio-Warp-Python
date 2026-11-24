@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 import warp as wp
 
-from warp_febio.materials.lee_sacks import evaluate
+from warp_febio_pilot.materials.lee_sacks import evaluate
 
 PARAMETERS = dict(c0=200.0, c1=2968.4, c2=0.2661, k=5000.0, tangent_scale=10.0)
 

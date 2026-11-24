@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import warp as wp
 
-from warp_febio.materials import neo_hookean as nh
+from warp_febio_pilot.materials import neo_hookean as nh
 
 
 @wp.kernel

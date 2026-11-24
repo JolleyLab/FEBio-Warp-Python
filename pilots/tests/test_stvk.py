@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import warp as wp
 
-from warp_febio.materials import stvk
+from warp_febio_pilot.materials import stvk
 
 
 @wp.kernel

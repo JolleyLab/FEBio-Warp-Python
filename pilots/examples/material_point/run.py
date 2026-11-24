@@ -2,8 +2,8 @@
 
 import argparse
 import numpy as np
-from warp_febio.materials.lee_sacks import evaluate
-from warp_febio.io.results import write_report
+from warp_febio_pilot.materials.lee_sacks import evaluate
+from warp_febio_pilot.io.results import write_report
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--device", default="cpu")

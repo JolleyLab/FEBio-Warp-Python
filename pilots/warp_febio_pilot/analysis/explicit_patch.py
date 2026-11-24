@@ -1,4 +1,4 @@
-"""Run with python -m warp_febio.analysis.explicit_patch; no external solver dependencies."""
+"""Run with python -m warp_febio_pilot.analysis.explicit_patch; no external solver dependencies."""
 
 import argparse
 import hashlib
@@ -7,8 +7,8 @@ import time
 from pathlib import Path
 import numpy as np
 import warp as wp
-from warp_febio.mesh.stl import load_patch
-from warp_febio.elements.triangular_membrane import assemble, advance, ramp_pressure
+from warp_febio_pilot.mesh.stl import load_patch
+from warp_febio_pilot.elements.triangular_membrane import assemble, advance, ramp_pressure
 
 
 def reference_data(x, tri, thickness, density):
@@ -258,7 +258,7 @@ def main():
         timing_note="CUDA event intervals include launch starvation; diagnostics excluded from event intervals, included in solve wall time",
         status="finite-duration damped transient; not physical validation",
     )
-    from warp_febio.visualization.patch import render
+    from warp_febio_pilot.visualization.patch import render
 
     render(args.output / "state.npz", args.output / "deformation.png")
     result["total_wall_s"] = time.perf_counter() - start

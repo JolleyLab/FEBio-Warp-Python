@@ -12,8 +12,8 @@ import warp.fem as fem
 from warp.optim.linear import cg
 from warp.sparse import bsr_mv
 
-from warp_febio.constraints.dirichlet import project_nodal_boundary
-from warp_febio.elements.linear_elastic_solid import linear_elastic_stiffness
+from warp_febio_pilot.constraints.dirichlet import project_nodal_boundary
+from warp_febio_pilot.elements.linear_elastic_solid import linear_elastic_stiffness
 
 
 @fem.integrand
