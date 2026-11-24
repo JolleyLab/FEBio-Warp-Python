@@ -1,0 +1,130 @@
+[
+ {
+  "case": "mp_lee_sacks_uniaxial",
+  "tier": 0,
+  "tags": [
+   "isotropic Lee-Sacks"
+  ]
+ },
+ {
+  "case": "mp_lee_sacks_biaxial",
+  "tier": 0,
+  "tags": [
+   "isotropic Lee-Sacks"
+  ]
+ },
+ {
+  "case": "mp_lee_sacks_shear",
+  "tier": 0,
+  "tags": [
+   "isotropic Lee-Sacks"
+  ]
+ },
+ {
+  "case": "mp_lee_sacks_general",
+  "tier": 0,
+  "tags": [
+   "isotropic Lee-Sacks"
+  ]
+ },
+ {
+  "case": "mp_hgo_uncoupled_biaxial",
+  "tier": 0,
+  "tags": [
+   "Holzapfel-Gasser-Ogden"
+  ]
+ },
+ {
+  "case": "mp_hgo_uncoupled_general",
+  "tier": 0,
+  "tags": [
+   "Holzapfel-Gasser-Ogden"
+  ]
+ },
+ {
+  "case": "mp_hgo_unconstrained_biaxial",
+  "tier": 0,
+  "tags": [
+   "HGO unconstrained"
+  ]
+ },
+ {
+  "case": "mp_hgo_unconstrained_general",
+  "tier": 0,
+  "tags": [
+   "HGO unconstrained"
+  ]
+ },
+ {
+  "case": "mp_neo_hookean_general",
+  "tier": 0,
+  "tags": [
+   "neo-Hookean"
+  ]
+ },
+ {
+  "case": "ch_chord_slack_tension",
+  "tier": 1,
+  "tags": [
+   "nonlinear spring"
+  ]
+ },
+ {
+  "case": "bk_hgo_three_field",
+  "tier": 2,
+  "tags": [
+   "Holzapfel-Gasser-Ogden",
+   "three-field-solid"
+  ]
+ },
+ {
+  "case": "bk_mass_damping",
+  "tier": 2,
+  "tags": [
+   "mass damping",
+   "dynamic"
+  ]
+ },
+ {
+  "case": "bk_modulus_load_curve",
+  "tier": 2,
+  "tags": [
+   "material load curve"
+  ]
+ },
+ {
+  "case": "bk_contact_potential_patch",
+  "tier": 2,
+  "tags": [
+   "contact potential"
+  ]
+ },
+ {
+  "case": "sh_lee_sacks_pressure",
+  "tier": 2,
+  "tags": [
+   "isotropic Lee-Sacks",
+   "elastic-shell",
+   "pressure",
+   "mass damping"
+  ]
+ },
+ {
+  "case": "sh_self_contact_fold",
+  "tier": 2,
+  "tags": [
+   "contact potential",
+   "self-contact",
+   "elastic-shell"
+  ]
+ },
+ {
+  "case": "bk_ring_in_tube",
+  "tier": 3,
+  "tags": [
+   "contact potential",
+   "material load curve",
+   "prescribed deformation"
+  ]
+ }
+]

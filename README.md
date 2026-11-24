@@ -71,6 +71,7 @@ Each example keeps its settings beside the code or reference deck.
 3. [Warp FEM inventory and public imports](docs/WARP_FEM.md)
 4. [Development and prototype provenance](docs/DEVELOPMENT.md)
 5. [Validation scope](validation/README.md)
+6. [Verification harness outline](docs/VERIFICATION.md) (draft for discussion)
 
 The examples run from this repository and use synthetic inputs. See [merge/upload instructions](MERGE_NOTES.md).
 

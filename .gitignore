@@ -32,3 +32,6 @@
 **/.env
 **/.env.*
 !**/.env.example
+
+# FEBio runs of the verification cases
+validation/cases/outputs/
