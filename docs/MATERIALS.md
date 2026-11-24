@@ -218,9 +218,11 @@ Each question was checked before being asked: against the FEBio source (develop,
 10. Precision. Single precision loses the stress at small strain (table above), so stiff parts need FP64 while tissue does not. In 1.19.0, `wp.Mesh` and `wp.Bvh` accept only `vec3` (FP32) points and bounds, while `wp.HashGrid` accepts FP64. For contact between FP64 bodies, is casting positions to FP32 for the queries the intended pattern, and is mixed precision by domain reasonable to plan for?
 11. `warp.fem` for nonlinear solids. With the material evaluated once per point and stored, `fem.integrate` assembled the tangent in 210 to 260 ms on CPU against 55 to 70 ms for a dedicated hexahedron kernel (table above); no GPU numbers yet. Is storing point data and indexing it by `s.qp_index` the intended way to avoid re-evaluating a material per trial function, and is there a faster route within `warp.fem` that we missed?
 
+12. Shells in `warp.fem`. The valve models use four-node quadrilateral shells with thickness (0.396 mm), and FEBio's elastic shell domain carries a second displacement per node for the back face (`sx`, `sy`, `sz`) with integration through the thickness. `warp.fem` 1.19.0 has surface meshes embedded in 3D (`Quadmesh3D`, `Trimesh3D`) but no shell abstraction that we could find: no thickness, director or through-thickness rule. In a short check outside this PR, a `Quadmesh3D` with two `vec3d` fields, the surface gradient, the surface normal and a hand-written two-point rule through the thickness compiled and integrated in FP64. Is that the route you would take for shells, with the shell kinematics written in the integrand, or is a shell element type planned or better placed in `warp.fem` itself? Is there shell work elsewhere (Newton, for example) that we should build on instead?
+
 **Seda**
 
-12. In this repository the pilot files `lee_sacks.py`, `neo_hookean.py` and `stvk.py` are imported only by `tests/test_material.py`, `tests/test_neo_hookean.py`, `tests/test_stvk.py` and `examples/material_point/run.py`. Does any work outside the repository depend on them before they are removed?
+13. In this repository the pilot files `lee_sacks.py`, `neo_hookean.py` and `stvk.py` are imported only by `tests/test_material.py`, `tests/test_neo_hookean.py`, `tests/test_stvk.py` and `examples/material_point/run.py`. Does any work outside the repository depend on them before they are removed?
 
 ## Next steps
 
