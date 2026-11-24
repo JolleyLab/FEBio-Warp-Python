@@ -14,7 +14,7 @@ class PhysicsTerm(Protocol):
     """Planned static residual sign: internal + contact - external, in newtons.
 
     Path-dependent materials must not commit history during rejected Newton trials.
-    Current explicit/material-point examples are not yet adapters to this protocol.
+    The pilot examples under pilots/ are not adapters to this protocol.
     """
 
     def residual(self, state: Any, history: Any, out: Any) -> None: ...
