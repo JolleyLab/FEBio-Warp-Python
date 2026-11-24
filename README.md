@@ -1,27 +1,95 @@
 # FEBio-Warp-Python
 
-A component-by-component repository scaffold for GPU cardiovascular mechanics built in concert with the FEBio (www.febio.org) team.
-The [architecture map](docs/ARCHITECTURE.md) shows where to add mesh types,
-materials, elements, assembly, and individual solvers. Each planned component
-has its own Python file and a short description of what belongs there.
+GPU-accelerated, differentiable finite element mechanics for cardiovascular simulation,
+written in Python on [Warp](https://github.com/NVIDIA/warp) and built in concert with the
+[FEBio](https://febio.org) team. The formulations follow FEBio. The architecture is designed
+for the GPU and for differentiation.
 
-The scaffold includes
-an initial PatchWarp membrane example, CardioFEM material-point mechanics and a
-working Warp FEM solid-elasticity verification example in one installable package.
-It contains synthetic geometry only and imports Warp as an external dependency.
+FEBio-Warp is intended to stand next to FEBio, not to replace it. FEBio remains the place for
+broad constitutive modeling and general biomechanics. FEBio-Warp targets a focused set of
+applications where speed and gradients matter.
 
-## What works today
+## Project status
 
-| Example | What it demonstrates | What it does not establish |
-|---|---|---|
-| Pressurized patch | StVK membrane, fixed perimeter, follower pressure, GPU time stepping and viewer | Current native-quad shell or clinical ePTFE behavior |
-| Material point | CardioFEM Lee–Sacks energy, PK1/Cauchy stress, exact tangent action | A spatial solid or full valve solve |
-| Warp FEM solid | 3D vector space, elasticity forms, sparse assembly, prescribed BCs and CG | Nonlinear tissue, contact or FEBio solid agreement |
-| FEBio solid reference | Original synthetic hex8 tension input and final displacement excerpt | A recovered CardioFEM global solid solver |
+This project is at an early stage. Interfaces will change, and most areas listed below are in
+design or draft. Nothing here is released.
+
+Development has now moved to a design-led process. Each area is specified in a design note,
+reviewed by the FEBio and Warp developers involved, implemented, and verified against FEBio
+reference problems where one exists. The pilot work is preserved in [`pilots/`](pilots/README.md) and at the
+[`pilot-2026-11`](https://github.com/JolleyLab/FEBio-Warp-Python/tree/pilot-2026-11) tag.
+
+## Driving applications
+
+The first targets set the scope. Capabilities are added because one of these needs them.
+
+| Application | Needs |
+|---|---|
+| Atrioventricular valve closure and repair | Shell leaflets, fiber-reinforced hyperelastic tissue, chordae, pressure loading, leaflet self-contact |
+| Self-expanding nitinol devices (transcatheter pulmonary valve replacement, septal occluders) | Beam frames, nitinol material, device-to-vessel contact, hyperelastic vessel wall |
+| Patch and material verification problems | Small problems with known or FEBio reference solutions, used to verify each component |
+
+## Development areas
+
+Status as of November 2026. "Design" means a design note is in progress. "Draft" means code
+exists on a branch or draft pull request and is under review. "Not started" means the package
+directory exists as a place for the work and holds no code yet.
+
+| Area | Package | Scope for the first targets | Status |
+|---|---|---|---|
+| Materials | `materials/` | Common material interface; neo-Hookean, HGO, Ogden, Lee-Sacks, nitinol | Draft ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)), under redesign |
+| Contact | `contact/` | Potential-based contact for leaflets and devices; sliding contact later | Draft (branch `contact-potential`) |
+| Assembly | `assembly/` | Full assembly of residual and tangent on the GPU | Design |
+| Elements | `elements/` | Shells, solids, beams, springs | Not started |
+| Mesh and discretization | `mesh/`, `discretization/` | Mesh types, degree-of-freedom maps, quadrature | Not started |
+| Loads and constraints | `loads/`, `constraints/` | Follower pressure, nodal loads, prescribed and multipoint constraints | Not started |
+| Solvers | `solvers/` | Newton with line search; iterative linear solvers and preconditioners | Not started |
+| Analysis | `analysis/` | Static and implicit dynamic steps, load stepping, staged procedures | Not started |
+| Sensitivity | `sensitivity/` | Gradients through equilibrium and through trajectories | Not started |
+| Input and output | `io/` | FEBio input and plot files, building on [pyfebio](https://github.com/febiosoftware/pyfebio) | Design |
+| Verification | `tests/`, `references/` | Harness built on the FEBio test and verification suites, plus the driving applications | Design |
+
+Design notes live in [`docs/design/`](docs/design/README.md).
+
+### Relation to FEBio's structure
+
+The package layout under `src/warp_febio/` follows FEBio's separation of concerns.
+
+| FEBio-Warp | FEBio counterpart |
+|---|---|
+| `mesh/`, `discretization/` | FECore mesh, degrees of freedom, element traits |
+| `elements/` | FEBioMech domains |
+| `materials/` | FEBioMech materials |
+| `loads/`, `constraints/`, `contact/` | FEBioMech loads, constraints and contact interfaces |
+| `assembly/`, `solvers/` | FECore solver interfaces, NumCore linear solvers |
+| `analysis/` | FECore analysis steps |
+| `io/` | FEBioXML, FEBioPlot |
+| `sensitivity/` | Added here |
+
+## How code enters the package
+
+1. A design note in `docs/design/` states the formulation, the FEBio source it follows, and
+   how it will be verified.
+2. A draft pull request implements it and is reviewed.
+3. It is verified against FEBio reference problems where one exists, in double precision.
+
+Exploratory work is welcome and belongs in `pilots/` until it has been through these steps.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Pilot work
+
+The initial prototypes were contributed by [@aslanseda9](https://github.com/aslanseda9): an
+explicit membrane patch solver, Lee-Sacks and neo-Hookean material-point functions, and a solid
+elasticity check built on `warp.fem`. They were written to explore the approach, not as verified
+implementations, and each one lists what it does and does not establish. They remain available
+and runnable in [`pilots/`](pilots/README.md). They are not maintained and are not a dependency
+of the package.
+
+The FEBio inputs and results assembled during the pilot phase are kept in `references/febio/`.
+They will be reviewed for inclusion in the verification harness and should not be read as
+verified benchmarks until then.
 
 ## Install
-
-From this folder, using Python 3.11 (tested) or a supported Python >=3.10:
 
 ```bash
 python3 -m venv .venv
@@ -29,56 +97,20 @@ python3 -m venv .venv
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-Windows: use `.venv\Scripts\python.exe` instead. Warp is pinned to **1.19.0**.
-For wheel/driver requirements see [NVIDIA installation](https://nvidia.github.io/warp/v1.19/user_guide/installation.html).
-CPU material/FEM checks do not require CUDA. The explicit patch requires CUDA.
+Python 3.10 or later; 3.11 is the tested version. On Windows use `.venv\Scripts\python.exe`.
+Warp is pinned to 1.19.0; see the
+[Warp installation guide](https://nvidia.github.io/warp/v1.19/user_guide/installation.html).
 
-## Run the examples (all commands from this repository root)
+## Acknowledgments
 
-```bash
-# A prescribed material state; output stresses are explicitly labeled Pa.
-.venv/bin/python examples/material_point/run.py
-
-# A manufactured affine-displacement solid test, with a known exact solution.
-.venv/bin/python examples/fem_solid.py --device cpu
-# Optional GPU verification:
-.venv/bin/python examples/fem_solid.py --device cuda:0
-
-# Initial membrane example on a generated, non-anatomical patch:
-.venv/bin/python examples/patch_pressurization/generate_mesh.py
-.venv/bin/python examples/patch_pressurization/run.py --mesh synthetic_patch.stl --output outputs/patch --device cuda:0 --pressure-mmhg 40 --young-mpa 10 --duration .05 --ramp .01
-.venv/bin/python -m warp_febio.visualization.patch outputs/patch/state.npz
-```
-
-The patch saves a PNG even in headless mode. Interactive plotting needs a display.
-Outputs and kernel caches are ignored by Git and excluded from the upload ZIP.
-Small reference records and reproducible checks live in `validation/`.
-
-## FEBio comparison settings
-
-Each example keeps its settings beside the code or reference deck.
-
-| Example folder | Archived settings and evidence |
-|---|---|
-| [Patch pressurization](examples/patch_pressurization/README.md) | Original membrane and shell comparisons, including the native quad, A2, and four chords |
-| [CardioFEM valve](examples/cardiofem_valve/README.md) | Lee–Sacks shell, chord curves, contact, loading, solver settings, and matched-state comparison records |
-| [Solid reference](examples/solid_reference/README.md) | Neo-Hookean FEBio tension target and the earlier Newton/Warp leaflet comparison |
-
-## Read and extend
-
-1. [Architecture and status](docs/ARCHITECTURE.md)
-2. [Physics walkthrough](docs/PHYSICS.md)
-3. [Warp FEM inventory and public imports](docs/WARP_FEM.md)
-4. [Development and prototype provenance](docs/DEVELOPMENT.md)
-5. [Validation scope](validation/README.md)
-6. [Verification harness outline](docs/VERIFICATION.md) (draft for discussion)
-
-The examples run from this repository and use synthetic inputs. See [merge/upload instructions](MERGE_NOTES.md).
+FEBio-Warp builds on the formulations, documentation and test suites of
+[FEBio](https://github.com/febiosoftware/FEBio), developed at the University of Utah, and on
+[Warp](https://github.com/NVIDIA/warp).
 
 ## License
 
 FEBio-Warp-Python is released under the [Apache License 2.0](LICENSE), the same license as
-[NVIDIA Warp](https://github.com/NVIDIA/warp). Contributions are accepted under the same terms.
+[Warp](https://github.com/NVIDIA/warp). Contributions are accepted under the same terms.
 
 [FEBio](https://github.com/febiosoftware/FEBio) is distributed separately under the MIT license.
 Material in this repository that derives from FEBio, including the reference inputs under

@@ -34,6 +34,7 @@ When you open a new issue, include enough for someone else to reproduce it:
 
 - Search existing issues and pull requests before starting.
 - Report bugs and propose substantial changes in an issue before opening a pull request. Explain what the change addresses and which simulation workflow needs it.
+- Code enters `src/warp_febio/` through a design note in `docs/design/`, a draft pull request, and review. Exploratory prototypes are welcome under `pilots/`; see the [README](README.md#how-code-enters-the-package).
 - Discuss new features with the maintainers first. A new material model, element, or contact formulation should come with a concrete use case and an FEBio reference to verify against.
 - An open issue is not an assignment. If you would like to take on an issue someone else filed, ask in the issue first.
 - A fix for a bug you found yourself can go straight to a pull request.
