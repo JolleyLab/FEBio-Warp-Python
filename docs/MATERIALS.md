@@ -4,7 +4,7 @@ Draft v0.3, November 24, 2026. For Steve Maas, Jeff Weiss, Ryan Black, the Warp 
 
 ## For reviewers
 
-**In brief.** Materials follow FEBio's structure (typed parameters with ranges, separate material axes and fibers, solid mixtures, the uncoupled split, history), expressed so that Warp compiles each material tree into one kernel. Four solid models are implemented and checked against FEBio's source and against every parameter set the FEBio test suite uses for them. Gradients are tested for every model. Nothing has been run on a GPU or against a FEBio run yet.
+**In brief.** Materials follow FEBio's structure (typed parameters with ranges, separate material axes and fibers, solid mixtures, the uncoupled split, history), expressed so that Warp compiles each material tree into one kernel. Four solid models are implemented and checked against FEBio's source and against every parameter set the FEBio test suite uses for them. Gradients are tested for every model. Everything so far was run on CPU, which is adequate for design and correctness checks at this stage; GPU access for this workflow is being set up for the team, and the timings will be repeated there. Nothing has been compared against a FEBio run yet.
 
 **Where to look.**
 
@@ -19,7 +19,7 @@ Draft v0.3, November 24, 2026. For Steve Maas, Jeff Weiss, Ryan Black, the Warp 
 | FEBio closed forms used for comparison (test-only) | `tests/febio_closed_forms.py` |
 | Use by an element, and inside `warp.fem` | `tests/test_material_element_consumer.py`, `tests/test_material_warp_fem.py` |
 
-**Most useful feedback.** The questions at the end are grouped by reviewer. The three that most affect what is built next are 1 (composition at kernel build time), 2 (geometry fields for fibers) and 14 (`warp.fem` or dedicated element kernels).
+**Most useful feedback.** The questions at the end are grouped by reviewer. Each was checked against the FEBio source, the FEBio test suite, the Warp source and documentation, or the project papers before being asked, and what we found is stated with it. The two that most affect what is built next are 1 (composition at kernel build time) and 2 (geometry fields for fibers).
 
 ## Recommendation
 
@@ -27,7 +27,7 @@ Adopt FEBio's way of structuring materials, and keep the list of implemented mod
 
 - **Structure: follow FEBio.** Parameters of several types with range checks, material axes and fibers as separate properties, nested materials (solid mixture), the uncoupled split, and history. These are what make FEBio's library extensible, and Steve's review shows where a flat design would run out.
 - **Mechanism: build the structure when the kernel is compiled.** FEBio composes materials from objects at run time. Warp kernels cannot dispatch at run time, but the same composition can be done once, in Python, before compilation. The result is a single kernel with no branching on material type.
-- **Differentiability is tested, not assumed.** Every model is checked for reverse-mode gradients of energy and of stress, with respect to parameters, deformation gradient and geometry. Two defects were found this way and fixed.
+- **Differentiability is tested, not assumed.** Every model is checked for reverse-mode gradients of energy and of stress, with respect to parameters, deformation gradient and geometry. Two errors of ours were found this way and fixed.
 - **Catalog: only what the first projects need.** Valve closure and repair, and nitinol device deployment. Fluids, biphasic and multiphasic materials, reactive and growth models stay in FEBio.
 - **Use what Warp already has.** The models are plain Warp functions and run unchanged inside `warp.fem`, which already provides meshes, spaces, quadrature and sparse assembly.
 - **Evidence: the FEBio test suite.** Every model is tied to FEBio source and to the parameter sets the suite uses. The verification harness is proposed separately because it applies to elements, contact and solvers as well.
@@ -39,7 +39,7 @@ Adopt FEBio's way of structuring materials, and keep the list of implemented mod
 | 1. Models exist in several representations | Reference formulas moved to `tests/febio_closed_forms.py`, test-only. The pilot files (`lee_sacks.py`, `neo_hookean.py`, `stvk.py`) are still used as an independent comparison and should be removed once their callers are migrated. |
 | 2. Parameters are floats only | Three kinds of parameter, by what they do. Floats stay in the parameter array, with FEBio's range checks applied when they are packed. Integers, flags and enumerations (for example `pressure_model`) select code, so they are options fixed when the kernel is built. Vectors and frames are geometry (row 5). |
 | 3. Density | A property of the `Material` object, read from the input file and available to domains. It never enters a constitutive kernel. |
-| 4. Tangent action versus full tensor | Measured, and Steve's concern holds for a representative material. For HGO, stress plus six tangent actions took 191 ms per million points on CPU; one pass that shares intermediates took 89 ms, with identical results. A model can now supply `stress_and_tangent`, returning the Cauchy stress and the 6x6 together, written with helpers that mirror FEBio's `dyad1s` and `dyad4s`. The action stays for matrix-free use and as the fallback, and the two are compared in the tests. A GPU measurement is still needed. |
+| 4. Tangent action versus full tensor | Measured, and Steve's concern holds for a representative material. For HGO, stress plus six tangent actions took 191 ms per million points on CPU; one pass that shares intermediates took 89 ms, with identical results. A model can now supply `stress_and_tangent`, returning the Cauchy stress and the 6x6 together, written with helpers that mirror FEBio's `dyad1s` and `dyad4s`. The action stays for matrix-free use and as the fallback, and the two are compared in the tests. The same holds one level up: inside `warp.fem`, a tangent form that uses the stored one-pass result assembled in about 210 to 260 ms, against about 650 ms for a form that calls the action (see Relation to warp.fem). A GPU measurement is still needed. |
 | 5. Nested materials and fibers | `solid_mixture` composes models and nests. Fibers are named fields of a per-point geometry vector, separate from the material axes; a model declares the fields it needs, and a material can have several. Continuous fiber distributions are not designed yet. |
 
 ## Architecture
@@ -78,7 +78,7 @@ A model can be written in this form, close to the FEBio source, or from its ener
 
 ### Failure inside a kernel
 
-FEBio throws on a non-positive Jacobian and the solver cuts the step. A kernel cannot throw. The rule here (`status.py`): every kernel that evaluates a material writes one status code per point. It checks J before calling the material, so materials may assume J > 0; a non-finite result is reported and zeroed instead of written; the host reads the worst status after the launch and treats any failure as FEBio treats its exception. A failed point does not affect other points in the same launch.
+FEBio throws on a non-positive Jacobian and the solver cuts the step. A kernel cannot throw. The rule here (`status.py`): every kernel that evaluates a material writes one status code per point. It checks J before calling the material, so materials may assume J > 0; a non-finite result is reported and zeroed instead of written; the host reads the worst status after the launch and treats any failure as FEBio treats its exception. A failed point does not affect other points in the same launch. Treating a non-finite result like a negative Jacobian matches FEBio, which retries the step when the residual or solution norm is not a number (`NANInResidualDetected` and `NANInSolutionDetected`, caught in `FECore/FEAnalysis.cpp`).
 
 ### Model kinds
 
@@ -108,7 +108,7 @@ Deferred until a project needs them: Ogden, anisotropic Lee-Sacks, fiber compone
 
 ## What has been checked
 
-43 tests pass on CPU. Two GPU tests skip without a CUDA device. No GPU run has been made, and FEBio itself has not been run: comparisons with FEBio are against closed forms transcribed from its source.
+43 tests pass on CPU. Two GPU tests skip without a CUDA device. No GPU run has been made yet; GPU access for this workflow is being set up, and CPU is adequate for the design and correctness questions here. FEBio itself has not been run: comparisons with FEBio are against closed forms transcribed from its source.
 
 **Models against the FEBio source, and their derivatives** (relative error over 66 deformation states, FP64):
 
@@ -141,12 +141,12 @@ Deferred until a project needs them: Ogden, anisotropic Lee-Sacks, fiber compone
 
 **Defects found by these tests and fixed:**
 
-- Reverse-mode gradients through a history were wrong when the new state was made by copying the committed vector and writing its components (Warp 1.19). Forward values were correct. Building the state with a constructor fixed it.
+- Reverse-mode gradients through a history were wrong when the new state was made by copying the committed vector and overwriting one component. Forward values were correct. This is our error, not Warp's: Warp's differentiability guide says a vector component may be assigned only once, and the adjoint of the overwritten value is not cleared. No warning is raised, so it is easy to write. Building the state with a constructor fixed it, a test covers it, and `examples/material_interface/warp_component_write_gradient.py` shows it in a few lines.
 - The gradient check itself failed for the suite's smallest moduli (1e-12) because its step was absolute. It is now relative.
 
 **Things the tests corrected in this document:** an earlier statement that HGO is nearly isotropic at the published kappa = 0.33 was too strong. Changing the material axes changes the stress by up to 4.5 percent there, against about 90 percent at kappa = 0.1.
 
-**Kernel build cost of composition** (CPU, first call, includes compilation): 1.6 s for a mixture of two components, 3.1 s for eight. Later calls reuse the kernel.
+**Kernel build cost of composition** (CPU, first call, includes compilation): 1.6 s for a mixture of two components, 3.1 s for eight. Later calls reuse the kernel. Across processes, loading the ten kernels for the four models and one mixture took 12.8 s the first time on two CPU cores and 0.03 s afterwards, from Warp's kernel cache.
 
 **Single precision.** FP32 stress error against FP64 grows as strain shrinks: 2e-4 at a strain of 1e-3, 1e-2 at 1e-5. Taking the displacement gradient as input and forming b - I and J - 1 without cancellation removes this when rotations are small (error 1e-7 at every strain tested). With a 30 degree rotation it helps by only a factor of three, because the small strain is still the difference of order-one numbers. Consequence: FP32 is adequate for soft tissue at finite strain, and is not adequate for stiff parts at small strain with large rotation, such as a nitinol frame meshed with solids. Those need FP64, or beam elements whose strain is formed in a co-rotated frame.
 
@@ -159,12 +159,23 @@ Warp already ships a finite element module, `warp.fem`. Read from the installed 
 Two findings bear on this proposal.
 
 - **The materials work inside `warp.fem` as they are.** A FEBio-Warp model is a set of plain Warp functions, so an integrand can call it with no adapter. `tests/test_material_warp_fem.py` assembles the residual and tangent of a hexahedral grid in double precision with neo-Hookean and with HGO; the tangent matches finite differences of the residual to 1e-8 and is symmetric. `warp.fem` works with reference-configuration gradients, so these forms use first Piola stress and the tangent action, which every model carries.
-- **General assembly costs far more than the material.** On CPU, for 4,096 hexahedra (32,768 integration points) with HGO, assembling the tangent took 3.6 s with the "generic" strategy and 0.65 s with "dispatch"; the residual took 46 ms. Evaluating stress and the full tangent once per integration point, as a dedicated element kernel would, took 5 ms. With neo-Hookean the assembly times were 3.1 s and 0.5 s, so most of the cost is assembly, not the material. The option that reuses the sparsity map was not tested, and none of this was run on a GPU.
+- **How the tangent is formed matters more than which material is used.** Three ways to form the tangent of the same grid were compared, all in double precision and all agreeing to 1e-16. CPU, two cores, 4,096 hexahedra (32,768 integration points); timings vary by about 20 percent between runs.
+
+| Route | HGO | Neo-Hookean |
+|---|---|---|
+| A. `warp.fem` form that calls the tangent action | about 650 ms | about 450 ms |
+| B. `warp.fem` form on stress and 6x6 stored once per point | 210 to 260 ms | 210 to 230 ms |
+| C. Dedicated hexahedron kernel, then sparse build | 55 to 70 ms | 50 to 60 ms |
+
+Route A evaluates the material again for every trial function, which is why the one-pass form helps. Evaluating the material is 6 to 10 ms of route B. Reusing the sparsity map (`construction="mapped"`) did not change A or B on CPU. None of this has been run on a GPU.
+
+A correction: an earlier version of this section compared assembly with the material evaluation alone and reported a gap of about one hundred. That compared unlike things. A first, plain version of the dedicated kernel took about 490 ms, no faster than `warp.fem`; the figure above is after one rewrite of its inner loop.
 
 What follows for the design:
 
-- Keep both forms on every model. The tangent action is what a `warp.fem` bilinear form consumes, and what a matrix-free operator consumes. The one-pass stress and 6x6 tangent is what a dedicated element kernel consumes.
-- `warp.fem` is a good basis for the reference tier and for checking elements: it is already written, tested by the Warp team, and differentiable. A dedicated element kernel is likely needed for the fast tier. That choice belongs to the element design and is a question for the Warp team below.
+- Keep both forms on every model. The tangent action is what a matrix-free operator consumes and the simplest thing to write in a `warp.fem` form. The one-pass stress and 6x6 tangent is what an assembled element consumes, in `warp.fem` or in a dedicated kernel, and it also serves partial assembly, where the tensors are stored at the points and applied without forming a matrix.
+- `warp.fem` is a good basis for the reference tier and for checking elements: it is already written, tested by the Warp team, and differentiable.
+- Whether the fast tier needs dedicated element kernels, and whether to assemble the matrix or apply it matrix-free, are element and solver questions. They are taken up in a separate draft on assembly, with the comparison script, so that this proposal stays about materials.
 
 ## Coupling to MFEM
 
@@ -177,44 +188,46 @@ Unchanged in substance. The exchange kernel returns Cauchy stress and the 6x6 sp
 - Verification against the FEBio test suite (Jeff, Steve).
 - The pilot implementations are not the basis for the design (MJ, Steve).
 - Superelastic nitinol for beams, kept as a shell for now; no shape-memory material in FEBio for now (MJ).
+- A non-finite result is handled like a negative Jacobian. FEBio retries the step in both cases, so this needed no question.
+- Chordae follow the published valve models (Wu et al. 2022; arXiv 2509.22865): tension-only two-node springs with zero force until the elongation passes a threshold (5 mm in those papers) and a linear response beyond it, modeled with FEBio's nonlinear spring. No new constitutive law is needed. It will be added under the uniaxial kind and checked against the suite's nonlinear spring problems (`di04`, `oi05`).
 
 ## Questions for reviewers
 
+Each question was checked before being asked: against the FEBio source (develop, commit `552138d`), the FEBio test suite (commit `986005f`), the Warp 1.19.0 source and documentation, the immersed FSI plugin source, or the project papers. What we found is stated with the question. Four questions from the previous version were answered by those sources and have been removed; they are recorded under Decisions or as findings above.
+
 **Steve**
 
-1. Is composing materials when the kernel is built an acceptable counterpart to FEBio's run-time composition, given that each distinct material tree compiles its own kernel?
-2. Is a flat per-point geometry vector with named fields enough for what fiber materials need, including several fibers and, later, continuous distributions?
-3. Which FEBio integer and enumeration parameters, if any, need to change within one model instance at run time, so that build-time options would not be enough?
-4. Lee-Sacks has no parameter ranges in FEBio. We added non-negativity. Is that right, and would a Lee-Sacks problem be useful in the FEBio suite, which has none?
-5. HGO: FEBio's energy divides by zero at k2 = 0 while its range allows it. Is that worth changing in FEBio?
-6. Can FEBio drive a material through a prescribed deformation history without a mesh, and write F and stress at integration points to the log? Either would let us compare against FEBio runs and not only its source.
+1. Composition when the kernel is built. Tested here: mixtures nest, compile in both precisions, and cost 1.6 to 3.1 s to build once. Is this an acceptable counterpart to FEBio's run-time composition, given that each distinct material tree compiles its own kernel?
+2. Geometry for fibers. FEBio's fiber materials hold their own fiber vector (`FEElasticFiberMaterial::m_fiber`), separate from `mat_axis`. Here that is one named three-component field per fiber in a flat per-point vector, tested with two independent fibers in a mixture. Is that enough for what fiber materials need, and what would continuous fiber distributions require beyond it?
+3. Build-time options. FEBio's load controllers can drive integer and boolean parameters as well as real ones (`FEModel.cpp`). In the test suite, the material parameters under a load curve are all real-valued (seven names, 29 uses). Is it safe to fix integer, boolean and enumeration parameters when the kernel is built, or is there a case where one changes during a run?
+4. Lee-Sacks ranges. `FEIsotropicLeeSacks` and its uncoupled form declare no parameter ranges. We added non-negativity for c0, c1, c2 and k. Is that right? The suite has no Lee-Sacks problem; would one be welcome there?
+5. HGO at k2 = 0. In `FEHolzapfelUnconstrained.cpp` the range for k2 allows zero, and the strain energy divides by k2 (stress and tangent do not). Is that worth changing in FEBio? Here the energy uses a form that is finite at k2 = 0.
+6. A FEBio reference at a material point. From the source, two routes look possible: the material test diagnostic (`FEBioTest/FEMaterialTest`, uni-axial and simple shear scenarios), or one element under `FEBCPrescribedDeformation` with the log variables `Fxx` to `Fzz` and `sx` to `sxz`, which average over the element's integration points. We have run neither, because we have had no FEBio binary in this environment. Which would you recommend, and is the diagnostic maintained?
 
 **Jeff**
 
-7. The published outflow tract model used uncoupled HGO at a bulk to shear ratio of 7.5. Should that case be treated as coupled going forward, which the unconstrained model here now allows?
-8. Chordae: which constitutive law should the uniaxial kind carry for the valve problems?
-9. Failure rule: is zeroing a failed point and cutting the step, as FEBio does for a negative Jacobian, also right for a non-finite stress?
+7. The published outflow tract model (Zelonis et al., Table 1) uses uncoupled HGO with c = 200 kPa and k = 1500 kPa, a bulk to shear ratio of 7.5, well under the ratio of about 100 you gave as the threshold. Should that case be run as coupled going forward? The unconstrained model here allows it with the same parameters.
 
 **Ryan**
 
-10. For MFEM, is Cauchy stress with the 6x6 tangent per quadrature point what the immersed solid should receive, and is the one-pass form useful for partial assembly, or would you want the action only?
+8. The plugin's immersed elastic domain calls `Stress` and `SolidTangent`, takes the tangent as a `tens4dmm`, and has switches for secant stress and secant tangent. The exchange kernel here returns Cauchy stress and a full 6x6 in the same pair order (11, 22, 33, 12, 23, 13), stored by rows where `tens4dmm` stores by columns. Is the secant form needed from the Warp side, and is there anything else the domain reads from the material point?
 
 **Warp team (Eric, Kay)**
 
-11. Is the wrong reverse-mode gradient after writing components of a copied vector argument a known limitation? A short reproducer is available.
-12. Is building kernels from captured functions, one kernel per material tree, the recommended way to specialize, and are there limits on how many such kernels a session should hold?
-13. Precision: given the single-precision results above, is mixed precision by domain (FP64 for stiff parts, FP32 for tissue) reasonable to plan for?
-14. `warp.fem`: for solid elements, would you build on `fem.integrate` and tune it (dispatch assembly, reused sparsity map), or write dedicated element kernels that evaluate the material once per integration point? The CPU timings above suggest the second for speed, but we have no GPU numbers.
+9. Kernels per material tree. The code generation guide describes building kernels from captured functions, which is what is done here, with one `module="unique"` kernel per material tree. Measured cost is under Kernel build cost above. For a library of this shape, would you keep one module per tree, or group a model's kernels in a named module, and is ahead-of-time compilation the intended route for deployment?
+10. Precision. Single precision loses the stress at small strain (table above), so stiff parts need FP64 while tissue does not. In 1.19.0, `wp.Mesh` and `wp.Bvh` accept only `vec3` (FP32) points and bounds, while `wp.HashGrid` accepts FP64. For contact between FP64 bodies, is casting positions to FP32 for the queries the intended pattern, and is mixed precision by domain reasonable to plan for?
+11. `warp.fem` for nonlinear solids. With the material evaluated once per point and stored, `fem.integrate` assembled the tangent in 210 to 260 ms on CPU against 55 to 70 ms for a dedicated hexahedron kernel (table above); no GPU numbers yet. Is storing point data and indexing it by `s.qp_index` the intended way to avoid re-evaluating a material per trial function, and is there a faster route within `warp.fem` that we missed?
 
 **Seda**
 
-15. Which pilot callers still depend on `lee_sacks.py`, `neo_hookean.py` and `stvk.py`, so they can be migrated and the files removed?
+12. In this repository the pilot files `lee_sacks.py`, `neo_hookean.py` and `stvk.py` are imported only by `tests/test_material.py`, `tests/test_neo_hookean.py`, `tests/test_stvk.py` and `examples/material_point/run.py`. Does any work outside the repository depend on them before they are removed?
 
 ## Next steps
 
 1. Verification harness (separate draft).
-2. HGO, uncoupled, with a three-field element.
-3. Chordae under the uniaxial kind.
-4. A GPU run of the tests and of the tangent timing.
-5. Remove the pilot material files once their callers are migrated.
-6. Later, as dedicated work: the superelastic law.
+2. Assembly: assembled against matrix-free, `warp.fem` against dedicated kernels (separate draft).
+3. HGO, uncoupled, with a three-field element.
+4. Chordae as FEBio's nonlinear spring under the uniaxial kind.
+5. A GPU run of the tests and of the timings, once GPU access is in place.
+6. Remove the pilot material files once their callers are migrated.
+7. Later, as dedicated work: the superelastic law.
