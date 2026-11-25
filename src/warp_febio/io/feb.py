@@ -122,12 +122,34 @@ def _format_value(value):
 
 def _record(elem) -> Record:
     """Generic conversion of an XML element to a Record, losing nothing."""
+    text = elem.text.strip() if elem.text and elem.text.strip() else None
     return Record(
         tag=elem.tag,
         attrs=dict(elem.attrib),
-        value=_parse_text(elem.text),
+        value=_parse_text(text),
         children=[_record(c) for c in elem],
+        text=text,
     )
+
+
+def _same(a, b) -> bool:
+    if isinstance(a, np.ndarray) or isinstance(b, np.ndarray):
+        return (
+            isinstance(a, np.ndarray)
+            and isinstance(b, np.ndarray)
+            and a.dtype == b.dtype
+            and a.shape == b.shape
+            and np.array_equal(a, b)
+        )
+    return type(a) is type(b) and a == b
+
+
+def _record_text(rec: Record):
+    """Text to write for a record: the file's own text while the value is
+    unchanged, otherwise the value formatted."""
+    if rec.text is not None and _same(_parse_text(rec.text), rec.value):
+        return rec.text
+    return _format_value(rec.value)
 
 
 def _rows(elems, dtype):
@@ -176,6 +198,14 @@ def _read_root(root) -> Model:
     top_control = None
     for sec in root:
         tag = sec.tag
+        if sec.get("from") is not None or tag == "Include":
+            # FEBio can pull a section from another file. That is not followed
+            # here, so it is reported and the model cannot run.
+            model.other_sections.append(_record(sec))
+            model.issues.append(
+                Issue(tag, "refers to another file; included files are not read")
+            )
+            continue
         if tag == "Module":
             model.module = sec.get("type", "solid")
             model.module_record = _record(sec)
@@ -489,7 +519,7 @@ def write_feb(model: Model, path) -> None:
 
 def _element(rec: Record, tag=None):
     e = ET.Element(tag or rec.tag, {k: str(v) for k, v in rec.attrs.items()})
-    e.text = _format_value(rec.value)
+    e.text = _record_text(rec)
     for c in rec.children:
         e.append(_element(c))
     return e

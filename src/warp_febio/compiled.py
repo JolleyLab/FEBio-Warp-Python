@@ -461,11 +461,15 @@ class CompiledModel:
             return np.zeros(0, np.int64), np.zeros(0)
         return np.concatenate(dofs), np.concatenate(vals)
 
-    def state(self) -> "State":
-        """A zero state (reference configuration) for this model."""
-        return State(
-            time=0.0, u=wp.zeros(self.ndof, dtype=wp.float64, device=self.device)
+    def state(self, requires_grad: bool = False) -> "State":
+        """A zero state (reference configuration) for this model.
+
+        The call mirrors Newton's `Model.state(requires_grad=...)`.
+        """
+        u = wp.zeros(
+            self.ndof, dtype=wp.float64, device=self.device, requires_grad=requires_grad
         )
+        return State(time=0.0, u=u)
 
 
 @dataclass

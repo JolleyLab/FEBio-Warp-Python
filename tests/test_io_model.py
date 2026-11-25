@@ -57,6 +57,31 @@ class FebReadWrite(unittest.TestCase):
             np.array_equal(mesh.node_ids[mesh.node_index(mesh.node_ids)], mesh.node_ids)
         )
 
+    def test_original_text_is_written_back(self):
+        """Values are written as they stood in the file unless they were changed."""
+        with open(os.path.join(SINGLE, "hex8_neo_hookean.feb")) as f:
+            text = (
+                f.read()
+                .replace("<E>1</E>", "<E>1.00</E>")
+                .replace("<v>0.3</v>", "<v>3.0E-1</v>")
+            )
+        model = read_feb_string(text)
+        self.assertEqual(model.materials[0].value("E"), 1.0)
+        model.materials[0].params.set("v", 0.25)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = os.path.join(tmp, "o.feb")
+            write_feb(model, out)
+            with open(out) as f:
+                written = f.read()
+        self.assertIn("<E>1.00</E>", written)
+        self.assertIn("<v>0.25</v>", written)
+
+    def test_reference_to_another_file_is_reported(self):
+        model = read_feb_string(
+            '<febio_spec version="4.0"><Module type="solid"/><Include>mesh.feb</Include></febio_spec>'
+        )
+        self.assertEqual([i.where for i in model.issues], ["Include"])
+
     def test_only_spec_4_is_read(self):
         with self.assertRaises(ValueError):
             read_feb_string(

@@ -70,6 +70,10 @@ class Record:
     attrs: dict = field(default_factory=dict)
     value: Any = None
     children: list = field(default_factory=list)
+    # The text as it stood in the file. The writer emits it again while
+    # `value` is unchanged, so formatting such as "0.10" or "007" survives.
+    # Not part of equality.
+    text: Optional[str] = None
 
     @property
     def type(self) -> Optional[str]:
@@ -99,6 +103,7 @@ class Record:
             c = Record(tag)
             self.children.append(c)
         c.value = value
+        c.text = None
         c.attrs.update({k: str(v) for k, v in attrs.items()})
         return c
 

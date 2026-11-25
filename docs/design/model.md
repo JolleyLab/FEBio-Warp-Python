@@ -1,6 +1,6 @@
 # Central model and FEBio input and output
 
-Draft v0.2 for discussion, November 25, 2026. For Steve Maas, Ryan Black, Jeff Weiss, the Warp team and the FEBio-Warp team. The code is a local draft on branch `io-model-draft`; nothing is merged.
+Draft v0.3 for discussion, November 25, 2026. For Steve Maas, Jeff Weiss, the Warp and Newton team, Andras Lasso, Ryan Black and the FEBio-Warp team. The code is a local draft on branch `io-model-draft`; nothing is merged.
 
 Scope: the model object and the files that go in and out of it. Elements, assembly, solvers, time stepping, contact and materials are separate designs that are still to be made. A minimal version of some of them exists in the draft only so the model could be exercised end to end, as Steve suggested; section 7 says what that was.
 
@@ -10,7 +10,7 @@ Scope: the model object and the files that go in and out of it. Elements, assemb
 - **FEBio's files are the fixed standard.** A spec 4.0 `.feb` is read as written and written back so FEBio runs it. Results are written as `.xplt` in the layout FEBio writes today.
 - **Our own reader and writers,** as Steve recommended: no third-party library in the path, and only the standard library and NumPy for `.feb` and `.xplt`, so they load in 3D Slicer.
 - **Nothing is dropped.** A feature the code does not yet interpret is carried, written back unchanged, and listed by a coverage report that decides whether a model can run.
-- **Input is needed on seven points** in section 6: three for Steve, two for Ryan, two for the Warp team.
+- **Input is needed on seven points** in section 6: two for the FEBio team, two for the Warp and Newton team, three for Andras on the Slicer side.
 
 ## 2. Big picture
 
@@ -75,7 +75,7 @@ Record(tag="material", attrs={"id": "1", "name": "Valve", "type": "isotropic Lee
        children=[Record("density", value=1e-9), Record("c0", value=...), ...])
 ```
 
-A record loses nothing, which is what lets every input in section 7 read and write back equal, including features and modules FEBio-Warp will not implement for a long time. The cost is that a record is not validated when it is read: a misspelled parameter is caught later, by the coverage report. Whether features should be typed classes in the model is question 1.
+A record also keeps the text as it stood in the file and writes it back while the value is unchanged. It loses nothing, which is what lets every input in section 7 read and write back equal, including features and modules FEBio-Warp will not implement for a long time. The cost is that a record is not validated when it is read: a misspelled parameter is caught later, by the coverage report. Whether features should be typed classes in the model is question 1.
 
 ### Where FEBio-Warp differs from FEBio, and why
 
@@ -83,8 +83,8 @@ A record loses nothing, which is what lets every input in section 7 read and wri
 | --- | --- | --- |
 | Objects per node, element, material point | Flat arrays | Warp kernels operate on arrays |
 | The model carries the current solution | `State` is separate from `Model` | Several states per model: output history, and reverse-mode differentiation. Newton makes the same split |
-| The model changes as it runs | `Model` is frozen once built; time-dependent values are evaluated from it | One source of truth on the host; see question 2 |
-| Parameters default in constructors | A parameter missing from the file is refused for materials | No table of FEBio defaults exists here yet; see question 3 |
+| The model changes as it runs | `Model` is frozen once built; time-dependent values are evaluated from it | One source of truth on the host; see section 6 |
+| Parameters default in constructors | A parameter missing from the file is refused for materials | No table of FEBio defaults exists here yet; see question 2 |
 
 ### How the parts use it
 
@@ -118,6 +118,7 @@ The model layer imports only NumPy, so it is the attachment point for Slicer, fo
 
 - **Reader.** Mesh blocks are converted in bulk, not row by row. Older spec versions are refused with a message; FEBio Studio converts them.
 - **XPLT.** There is no written specification, so the writer follows `FEBioPlotFile.cpp` and was checked against files FEBio wrote. Mesh, sets, parts and the dictionary are laid out as FEBio lays them out, so a FEBio-Warp file lines up item for item with FEBio's for the same input.
+- **Element sets and node sets.** Node sets and surfaces hold node indices; element sets hold FEBio element IDs, since a set can span parts.
 - **Slicer.** `model_to_vtk` gives a grid with FEBio IDs and, for a result, displacement and stress. `model_from_vtk` turns a mesh made in Slicer into a model that `write_feb` saves. The SlicerHeart modules themselves are not written yet.
 - **Coverage report.** `python -m warp_febio inspect model.feb` lists every feature in a model by its FEBio name and whether it is implemented. It is the contract between the model and whatever runs it: one unsupported feature and the model is refused, with the list.
 
@@ -126,30 +127,41 @@ The model layer imports only NumPy, so it is the attachment point for Slicer, fo
 - **The device side.** `CompiledModel` and `State` exist in the draft in the simplest form that works. Their layout should follow from the element, assembly and solver designs, not precede them.
 - **Typed access to features.** Compile currently reads records directly. If records stay (question 1), small typed views can be added per feature as each is implemented.
 - **Mesh data beyond shell thickness.** Per-element material axes, which the TPVR inputs carry, are still records and should become arrays.
-- **FEBio's defaults** (question 3).
+- **FEBio's defaults** (question 2).
+- **Units in the plot file.** FEBio writes the model's units into the plot file header and dictionary; the writer here does not yet.
+- **Comments.** XML comments in an input are not kept when it is written back.
 - **Results beyond displacement and stress.** The results store and the XPLT dictionary take any variable; only these two are produced.
 
 ## 6. Input needed
 
-Each point was checked against the FEBio source (`552138d`), a FEBio run, the plugin source, or the installed Warp before being written, and what was found is stated with it.
+Questions were kept to those we could not settle ourselves. Each was checked against the FEBio source (`552138d`), a FEBio run, Newton (`fc9d2db`), SlicerHeart (`9de69e7`) or the installed Warp before being written, and what was found is stated with it. Points we could settle are listed after the questions.
 
-**For Steve**
+**For Steve and Jeff (FEBio)**
 
 1. **Records or typed features.** FEBio builds a typed object per feature with declared parameters. The draft stores features as generic records under FEBio's names and interprets them at compile. With records, all 538 suite inputs and the open application inputs read and write back equal, including modules we do not implement. Would you keep records as the stored form and add typed access where a feature is implemented, or declare typed features in the model from the start, as FEBio does?
-2. **A frozen model.** The draft treats the model as fixed once read. Values that change in time (a load curve on a parameter, conditions and contact that differ by step) are definitions in the model, evaluated as the run proceeds. The plot file also carries a status flag per element in every state; it is 1 for every element in every FEBio file we read. For the valve and device applications, is there anything FEBio changes in the mesh or the sets during a run that a frozen model could not represent?
-3. **Parameter defaults.** An input need not list every parameter; FEBio fills the rest from its constructors. To do the same we need FEBio's defaults by class. We looked through FEBio's command-line options (`-info`, `-dump`, `-task` and the rest in `FEBioApp.cpp`) and found none that exports the class and parameter registry. Is there an existing way to export it (names, types, defaults, ranges), or should we transcribe defaults per feature from the source as each is implemented?
+2. **Parameter defaults.** An input need not list every parameter; FEBio fills the rest from its constructors. Our plan is to generate a table of defaults from FEBio itself, with a small program that walks `FECoreKernel`'s factory list and each class's parameter list, rather than transcribe constructors by hand. Is there already an export of that registry we should use instead? We found none among the command-line options in `FEBioApp.cpp`.
 
-One request, not a question: we could not open results in FEBio Studio from this environment. If the two attached files (`hex8_neo_hookean_warp.xplt`, `quad4_shell_neo_hookean_warp.xplt`) open and display in FEBio Studio as FEBio's own do, that closes the last check on the writer.
+One request: we could not open results in FEBio Studio from this environment. If the two attached files (`hex8_neo_hookean_warp.xplt`, `quad4_shell_neo_hookean_warp.xplt`) open and display as FEBio's own do, that closes the last check on the writer.
 
-**For Ryan**
+**For the Warp and Newton team (Eric, Kay)**
 
-4. **The plugin's inputs.** The 15 test inputs in FEBioMFEMiFSI (`e50d0ae`) read and write back equal. They are standard spec 4.0 with module `mfemifsi`, solver type `mfem`, and the plugin's own material, boundary condition and solver settings, all carried as records. The solver settings include `final_state_folder`, a path outside the file. Does the plugin read anything else that is not in the `.feb` itself, which a shared model would need to resolve?
-5. **What MFEM would need from the model.** The model keeps the original connectivity and IDs for every element block (the plugin's tests use hex8, and tet4 in one input). If FEBio-Warp were to stand where FEBio stands for the immersed solid, is node coordinates, connectivity by part, sets and material records enough on the model side, or does the coupling need something the list in section 3 lacks?
+3. **Precision where a FEBio-Warp model meets Newton.** The model and state here are float64, which the comparison with FEBio needs. Newton's model and state arrays are `wp.vec3`, single precision (`particle_q` in `newton/_src/sim/model.py`). Would you cast at the boundary each step, or is there a double-precision path in Newton we should target?
+4. **Elements Newton does not have.** Newton's builder adds particles, springs, edges, triangles and tetrahedra. The valve and device models need hex8, wedge and quad4 shells with thickness. We see two extension points, `SolverBase` and `ModelBuilder.add_custom_attribute`. For a FEBio-Warp body in a Newton scene, would you have FEBio-Warp run as its own solver and expose only its surface and nodes to Newton for contact and display, or carry the extra element data in the Newton model as custom attributes?
 
-**For the Warp team (Eric, Kay)**
+**For Andras (Slicer and SlicerHeart)**
 
-6. **Device form of the mesh.** The model gives one connectivity array per part and element type, and compile moves them to `wp.array`s as they are. The open TPVR input mixes hex8, penta6, tet4 and tri3 in one mesh (30,192, 1,536, 49,256 and 7,000 elements), and `warp.fem` 1.19.0 has no wedge geometry. Would you keep plain arrays per block as the device form and build `warp.fem` geometries from them only where a block type has one, or is there a mixed-element mesh form in Warp or Newton we should target?
-7. **Model and state conventions.** The draft separates a frozen model from a state, and builds the device model from the host model in one call. We did not mirror Newton's builder or naming. Which of Newton's conventions (builder then finalize on a device, array naming, state and control objects) are worth adopting now so a FEBio-Warp model can sit next to a Newton model later, and which would you leave alone?
+5. **How SlicerHeart gets the code.** The model and file layers need only NumPy and the standard library, but the package currently declares Warp as a required dependency (`warp-lang==1.19.0` in `pyproject.toml`). SlicerHeart already installs packages on demand (`slicer.util.pip_install('geomdl')` in ValveFemExport). Would you want the model and I/O installable without Warp, for example Warp as an optional extra, and installed by pip from the module, or kept as a copy inside SlicerHeart?
+6. **Units and coordinate system.** ImportExportSimulationModel converts between LPS and RAS and between unit systems, and stores the units with the imported model. The VTK adapter here passes coordinates through unchanged. FEBio inputs can declare units in `Module` (the open TPVR inputs say `mm-kg-s`); the model carries that string. Should a FEBio model enter Slicer through ImportExportSimulationModel, with the adapter supplying the grid and the declared units, so conversion stays in one place?
+7. **A FEBio model in the scene.** The adapter gives one `vtkUnstructuredGrid` with a `part` cell array, FEBio node and element IDs as arrays, and shells as surface cells. Node sets, surfaces, shell thickness and boundary conditions are not put in the scene yet. What scene representation would you want for those (arrays on the one model node, a node per part, markups), given how FEBioMeshIO and ValveFemExport work today?
+
+**For Ryan, for information.** The 15 test inputs in FEBioMFEMiFSI (`e50d0ae`) read and write back equal. The plugin's module, solver, materials and boundary conditions are carried as records. From its source, the plugin takes nodes, domains and facet sets from FEBio's mesh, all of which the model holds, and three path parameters (`folder_path`, `final_state_folder`, `file_name`) that point outside the input file. No question for now.
+
+**Settled without asking**
+
+- **A frozen model is enough for the applications.** The FEBio feature that changes the mesh during a run is the mesh adaptor. Nine suite inputs use one; none of the eight open valve and TPVR inputs do.
+- **Device form of the mesh: plain arrays per block.** Every `warp.fem` geometry in 1.19.0 has a single cell type (`Hexmesh`, `Tetmesh`, `Quadmesh3D`, `Trimesh3D`, grids), and the TPVR input mixes four. A `warp.fem` geometry can be built from a block where one exists.
+- **Newton's calling conventions.** `compile(model, device)` plays the role of `ModelBuilder.finalize(device)`, and `CompiledModel.state(requires_grad=...)` follows `Model.state(requires_grad=...)`.
+- **Files that point at other files.** FEBio has an `Include` section, and its older geometry sections accept a `from` attribute. The reader does not follow either; it reports them and the model does not run. None of the inputs in section 7 uses either.
 
 **Reported, no reply needed**
 
@@ -193,7 +205,7 @@ CPU only. FEBio is 4.13.0 built from source at `552138d` with GCC and without MK
 - The same results were obtained with materials taken from the material layer of draft PR #2 and with Warp's own linear solvers (`warp.optim.linear`).
 - The coverage report refuses the other 532 suite inputs and all open application inputs and lists why. For the open mitral input: `isotropic Lee-Sacks`, `contact potential`, nonlinear springs, `pressure`, `mass damping`, dynamic analysis.
 
-**Automated tests.** 18 tests cover the above and pass. They do not need FEBio, since its outputs are stored under `references/`.
+**Automated tests.** 20 tests cover the above and pass. They do not need FEBio, since its outputs are stored under `references/`.
 
 **Not checked**
 
