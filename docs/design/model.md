@@ -142,7 +142,7 @@ Both attach to the model layer, so neither needs changes to the reader or the wr
 | Newton | A Newton model is built from the model's arrays. `compile` and `state` already follow Newton's `finalize` and `Model.state` calls. | Newton's builder has particles, springs, edges, triangles and tetrahedra, and its arrays are single precision (questions 3 and 4). |
 | OpenUSD | Mesh and results are written from the model and the results store, with FEBio IDs and parameters as attributes. | `UsdGeom.TetMesh` is the volumetric prim we found; hex8, wedge and shells with thickness have no direct counterpart. |
 
-Earlier trials, reported in the I/O proposal (section 9) and not repeated here: tetrahedra, triangles and springs from `.feb` files built Newton models, and tetrahedra and time-sampled results round-tripped through OpenUSD. The model keeps the original connectivity and IDs for every element type, which leaves each route open.
+Earlier trials, reported in the I/O proposal (section 9) and not repeated here: tetrahedra, triangles and springs from `.feb` files built Newton models, tetrahedra round-tripped through `UsdGeom.TetMesh`, and results were written as time-sampled meshes. The model keeps the original connectivity and IDs for every element type, which leaves each route open.
 
 ## 6. Input needed
 
