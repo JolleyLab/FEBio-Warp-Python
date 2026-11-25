@@ -179,6 +179,27 @@ def inspect(model: Model, material_backend: str = "minimal") -> CoverageReport:
                     "missing; FEBio defaults are not applied yet",
                 )
 
+    # Shells that share nodes with solid elements. FEBio then ties the solid to
+    # the shell's back face (FESSIShellDomain::FindSSI), which is not done here.
+    shell_nodes, solid_nodes = set(), set()
+    for block in model.mesh.blocks:
+        try:
+            kind = model.domain_of(block.name).kind
+        except KeyError:
+            continue
+        nodes = set(np.unique(block.connectivity).tolist())
+        if kind == "ShellDomain":
+            shell_nodes |= nodes
+        else:
+            solid_nodes |= nodes
+    if shell_nodes & solid_nodes:
+        rep.add(
+            "domain",
+            "shell attached to solid elements",
+            NOT_SUPPORTED,
+            note="shell-solid interface (FESSIShellDomain::FindSSI)",
+        )
+
     for r in model.mesh_data:
         if (
             r.tag == "ElementData"
@@ -231,15 +252,17 @@ def inspect(model: Model, material_backend: str = "minimal") -> CoverageReport:
                 rep.add(r.tag, c.type or c.tag, NOT_SUPPORTED, c.name or "")
     for lc in model.load_controllers:
         interp = str(lc.params.get("interpolate", "LINEAR")).upper()
+        extend = str(lc.params.get("extend", "CONSTANT")).upper()
         ok = (
             lc.type == "loadcurve"
-            and interp == "LINEAR"
+            and interp in ("LINEAR", "STEP", "SMOOTH")
+            and extend == "CONSTANT"
             and lc.points is not None
             and len(lc.points) >= 2
         )
         rep.add(
             "load controller",
-            f"{lc.type}, {interp}",
+            f"{lc.type}, {interp}, {extend}",
             IMPLEMENTED if ok else NOT_SUPPORTED,
             f"id {lc.id}",
         )
@@ -302,14 +325,34 @@ def _inspect_control(control, rep, where):
                     )
                 else:
                     rep.add("solver setting", s.tag, NOT_SUPPORTED, where)
+        elif c.tag == "plot_level":
+            ok = str(c.value) in ("PLOT_MAJOR_ITRS", "PLOT_MUST_POINTS")
+            rep.add(
+                "control",
+                f"plot_level {c.value}",
+                IMPLEMENTED if ok else NOT_SUPPORTED,
+                where,
+            )
         elif c.tag == "time_stepper":
+            ok = c.type in (None, "default")
             rep.add(
                 "control",
                 "time_stepper",
-                NOT_SUPPORTED,
+                IMPLEMENTED if ok else NOT_SUPPORTED,
                 where,
-                "automatic time stepping; fixed steps only in this draft",
+                "step sizes follow the iteration count, which can differ from FEBio's (full Newton here)",
             )
+            for s_ in c.children:
+                if s_.tag not in (
+                    "max_retries",
+                    "opt_iter",
+                    "dtmin",
+                    "dtmax",
+                    "aggressiveness",
+                    "cutback",
+                    "dtforce",
+                ):
+                    rep.add("time stepper setting", s_.tag, NOT_SUPPORTED, where)
         else:
             rep.add("control", c.tag, NOT_SUPPORTED, where)
 
@@ -399,6 +442,9 @@ class CompiledModel:
     dN: wp.array  # (Q, 8, 3)
     gw: wp.array  # (Q,)
     directors: Optional[np.ndarray] = None  # (N, 3) shell directors d0, host
+    constrained_device: Any = (
+        None  # (ndof,) int32 on the device: 1 = fixed or prescribed
+    )
 
     def prescribed_values(self, time: float):
         """(dofs, values) of all prescribed degrees of freedom at `time`."""
@@ -464,20 +510,15 @@ def shell_directors(model: Model) -> Optional[np.ndarray]:
 def shell_thickness(model: Model, block) -> np.ndarray:
     """Thickness at each node of each shell element, shape (E, nodes).
 
-    From <ElementData type="shell thickness"> or from the domain's
-    <shell_thickness> (FEBio ignores a domain value of 0).
+    From <ElementData type="shell thickness"> if present, otherwise from the
+    domain's <shell_thickness> (FEBio ignores a domain value of 0).
     """
     n = block.connectivity.shape[1]
     data = model.element_data("shell thickness", block.name)
     dom = model.domain_of(block.name)
     h_dom = float(dom.params.get("shell_thickness", 0.0))
-    if data is not None and h_dom > 0.0:
-        # Which one FEBio applies last was not verified, so this is refused
-        # rather than guessed.
-        raise ValueError(
-            f"shell part {block.name!r} has both <shell_thickness> and "
-            "shell thickness ElementData; precedence is not settled in this draft"
-        )
+    # When both are given, FEBio uses the element data. Checked by running
+    # FEBio 4.13.0 on the single-shell reference with each one and with both.
     if data is not None:
         return np.asarray(data.value, dtype=np.float64).reshape(block.count, n)
     if h_dom > 0.0:
@@ -601,6 +642,9 @@ def compile(
         fixed=fixed,
         prescribed=prescribed,
         free=free,
+        constrained_device=wp.array(
+            constrained.astype(np.int32), dtype=wp.int32, device=device
+        ),
         dN=dN,
         gw=gw,
         directors=directors,

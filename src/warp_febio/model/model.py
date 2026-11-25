@@ -183,10 +183,21 @@ class Mesh:
 
     def node_index(self, node_ids) -> np.ndarray:
         """Zero-based indices for FEBio node IDs."""
-        order = np.argsort(self.node_ids, kind="stable")
-        pos = np.searchsorted(self.node_ids[order], node_ids)
-        idx = order[np.clip(pos, 0, len(order) - 1)]
-        if not np.array_equal(self.node_ids[idx], np.asarray(node_ids)):
+        # The sorted order is cached; it is rebuilt if the ID array is replaced.
+        cache = self.__dict__.get("_id_order")
+        if cache is None or cache[0] is not self.node_ids:
+            order = np.argsort(self.node_ids, kind="stable")
+            cache = (self.node_ids, order, self.node_ids[order])
+            self.__dict__["_id_order"] = cache
+        _, order, sorted_ids = cache
+        node_ids = np.asarray(node_ids)
+        if len(order) == 0:
+            if node_ids.size:
+                raise KeyError("node ID not present in the mesh")
+            return np.zeros(node_ids.shape, np.int32)
+        pos = np.clip(np.searchsorted(sorted_ids, node_ids), 0, len(order) - 1)
+        idx = order[pos]
+        if not np.array_equal(self.node_ids[idx], node_ids):
             raise KeyError("node ID not present in the mesh")
         return idx.astype(np.int32)
 
@@ -257,20 +268,55 @@ class LoadController:
     points: Optional[np.ndarray] = None
 
     def value(self, time: float) -> float:
-        """Value at `time`. LINEAR and STEP interpolation, CONSTANT extension.
+        """Value at `time`, as PointCurve::value
+        (https://github.com/febiosoftware/FEBio/blob/develop/FECore/PointCurve.cpp).
 
-        Other interpolation and extension modes are reported by the coverage
-        report as not yet supported; they are not evaluated here.
+        Interpolation LINEAR, STEP and SMOOTH; extension CONSTANT. Other modes
+        are reported by the coverage report as not yet supported.
         """
         if self.type != "loadcurve" or self.points is None:
             raise NotImplementedError(f"load controller type {self.type!r}")
-        interp = str(self.params.get("interpolate", "LINEAR")).upper()
         t, v = self.points[:, 0], self.points[:, 1]
+        n = len(t)
+        if n == 0:
+            return 0.0
+        if n == 1 or time <= t[0]:
+            return float(v[0])  # CONSTANT extension below the first point
+        if time >= t[-1]:
+            return float(v[-1])  # CONSTANT extension above the last point
+        interp = str(self.params.get("interpolate", "LINEAR")).upper()
+        # FEBio's binarySearch: the first point whose time is greater than `time`.
+        k = int(np.searchsorted(t, time, side="right"))
+        if interp == "LINEAR":
+            return _lerp(time, t[k - 1], v[k - 1], t[k], v[k])
         if interp == "STEP":
-            # FEBio's step curve takes the value of the point at or after t.
-            i = int(np.searchsorted(t, time, side="left"))
-            return float(v[min(i, len(v) - 1)])
-        return float(np.interp(time, t, v))
+            return float(v[k])
+        if interp == "SMOOTH":
+            if n == 2:
+                return _lerp(time, t[0], v[0], t[1], v[1])
+            if n == 3 or k == 1:
+                return _qerp(time, t[0:3], v[0:3])
+            if k == n - 1:
+                return _qerp(time, t[k - 2 : k + 1], v[k - 2 : k + 1])
+            q1 = _qerp(time, t[k - 2 : k + 1], v[k - 2 : k + 1])
+            q2 = _qerp(time, t[k - 1 : k + 2], v[k - 1 : k + 2])
+            return _lerp(time, t[k - 1], q1, t[k], q2)
+        raise NotImplementedError(f"load curve interpolation {interp!r}")
+
+
+def _lerp(t, t0, f0, t1, f1):
+    return float(f0 + (f1 - f0) * (t - t0) / (t1 - t0))
+
+
+def _qerp(t, tt, ff):
+    """Quadratic through three points (FEBio's qerp)."""
+    t0, t1, t2 = tt
+    f0, f1, f2 = ff
+    return float(
+        f0 * (t - t1) * (t - t2) / ((t0 - t1) * (t0 - t2))
+        + f1 * (t - t0) * (t - t2) / ((t1 - t0) * (t1 - t2))
+        + f2 * (t - t0) * (t - t1) / ((t2 - t0) * (t2 - t1))
+    )
 
 
 @dataclass

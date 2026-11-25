@@ -81,7 +81,6 @@ class CoverageError(RuntimeError):
 CONTROL_IMPLEMENTED = {"analysis", "time_steps", "step_size"}
 CONTROL_NO_EFFECT = {
     "plot_zero_state": "the initial state is always written, as FEBio does with plot_range 0,-1",
-    "plot_level": "all converged steps are kept",
     "output_level": "no log file is written",
     "plot_stride": "all converged steps are kept",
     "output_stride": "no log file is written",
@@ -89,10 +88,10 @@ CONTROL_NO_EFFECT = {
 }
 SOLVER_IMPLEMENTED = {"dtol", "etol", "rtol", "min_residual", "max_refs"}
 SOLVER_NO_EFFECT = {
-    "symmetric_stiffness": "the draft uses a dense direct solve on the host",
-    "equation_scheme": "the draft uses a dense direct solve on the host",
-    "equation_order": "the draft uses a dense direct solve on the host",
-    "optimize_bw": "the draft uses a dense direct solve on the host",
+    "symmetric_stiffness": "linear solver settings; this draft uses Warp iterative solvers or a dense host solve",
+    "equation_scheme": "linear solver settings; this draft uses Warp iterative solvers or a dense host solve",
+    "equation_order": "linear solver settings; this draft uses Warp iterative solvers or a dense host solve",
+    "optimize_bw": "linear solver settings; this draft uses Warp iterative solvers or a dense host solve",
     "lstol": "no line search yet; full Newton steps",
     "lsmin": "no line search yet; full Newton steps",
     "lsiter": "no line search yet; full Newton steps",
@@ -111,5 +110,5 @@ SOLVER_NO_EFFECT = {
     "logSolve": "not used",
     "arc_length": "0 only",
     "arc_length_scale": "arc length is off",
-    "qn_method": "full Newton every iteration; same converged solution within the tolerances",
+    "qn_method": "full Newton every iteration; same converged solution within the tolerances, iteration counts can differ",
 }

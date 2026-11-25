@@ -108,7 +108,59 @@ class PlotFiles(unittest.TestCase):
                 self.assertLess(abs(pf.variable("stress")[0] - s).max(), 1e-7)
 
 
+class LoadCurves(unittest.TestCase):
+    def test_interpolation_follows_febio_point_curve(self):
+        from warp_febio.model import LoadController, Record
+
+        pts = np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 0.0], [4.0, 2.0]])
+
+        def curve(mode):
+            rec = Record("load_controller")
+            rec.set("interpolate", mode)
+            return LoadController(1, "loadcurve", rec, pts)
+
+        self.assertAlmostEqual(curve("LINEAR").value(0.25), 0.25)
+        self.assertAlmostEqual(curve("LINEAR").value(9.0), 2.0)  # constant extension
+        # STEP takes the value of the first point later than the time. At an
+        # interior point's own time that is the following point (PointCurve's
+        # binarySearch); only the first and last points return their own value.
+        self.assertEqual(curve("STEP").value(0.5), 1.0)
+        self.assertEqual(curve("STEP").value(1.0), 0.0)
+        self.assertEqual(curve("STEP").value(1.5), 0.0)
+        self.assertEqual(curve("STEP").value(4.0), 2.0)
+        # SMOOTH passes through the points and is quadratic in the first interval.
+        smooth = curve("SMOOTH")
+        for t, v in pts:
+            self.assertAlmostEqual(smooth.value(t), v)
+        self.assertAlmostEqual(
+            smooth.value(0.5), 0.75
+        )  # parabola through (0,0), (1,1), (2,0)
+
+
 class Coverage(unittest.TestCase):
+    def test_shell_on_solid_is_refused(self):
+        """Found by the FEBio suite (sh48, sh50): shells sharing nodes with solids
+        need FEBio's shell-solid interface, which is not implemented."""
+        from warp_febio.compiled import inspect
+        from warp_febio.model import ElementBlock, Record, Domain
+
+        model = read_feb(os.path.join(SINGLE, "hex8_neo_hookean.feb"))
+        model.mesh.blocks.append(
+            ElementBlock(
+                "Skin",
+                "quad4",
+                np.array([[4, 5, 6, 7]], np.int32),
+                np.array([2], np.int32),
+            )
+        )
+        rec = Record("ShellDomain", {"name": "Skin", "mat": "Material1"})
+        rec.set("shell_thickness", 0.1)
+        model.domains.append(Domain("ShellDomain", "Skin", "Material1", rec))
+        self.assertIn(
+            "shell attached to solid elements",
+            {e.febio_name for e in inspect(model).missing()},
+        )
+
     def test_mitral_input_is_reported_not_runnable(self):
         from warp_febio.compiled import compile, inspect
         from warp_febio.coverage import CoverageError
@@ -136,15 +188,16 @@ class Coverage(unittest.TestCase):
 class SingleElement(unittest.TestCase):
     """Read a FEBio input, solve in Warp, write results, compare with FEBio."""
 
-    def solve(self, name, backend="minimal", folder=SINGLE):
+    def solve(self, name, backend="minimal", folder=SINGLE, linear_solver="direct"):
         from warp_febio.analysis.static import run
         from warp_febio.compiled import compile
 
         model = read_feb(os.path.join(folder, name + ".feb"))
-        return model, run(compile(model, device="cpu", material_backend=backend))
+        compiled = compile(model, device="cpu", material_backend=backend)
+        return model, run(compiled, linear_solver=linear_solver)
 
-    def compare(self, name, backend, folder=SINGLE):
-        model, results = self.solve(name, backend, folder)
+    def compare(self, name, backend, folder=SINGLE, linear_solver="direct"):
+        model, results = self.solve(name, backend, folder, linear_solver)
         n = len(results.states)
         u_ref = febio_log(os.path.join(folder, "febio", name + "_nodes.txt"), n, 3)
         s_ref = febio_log(os.path.join(folder, "febio", name + "_elements.txt"), n, 6)
@@ -159,6 +212,18 @@ class SingleElement(unittest.TestCase):
         for name in CASES:
             with self.subTest(name):
                 self.compare(name, "minimal")
+
+    def test_agrees_with_febio_using_warp_linear_solvers(self):
+        """The same comparison with Warp's iterative solvers on the device."""
+        for method in ("cg", "bicgstab", "gmres"):
+            for name, folder in (
+                (CASES[0], SINGLE),
+                (CASES[1], SINGLE),
+                ("hex_block", SMALL),
+                ("shell_patch", SMALL),
+            ):
+                with self.subTest(method=method, name=name):
+                    self.compare(name, "minimal", folder, method)
 
     def test_small_meshes_agree_with_febio(self):
         """Eight hexahedra, and nine shells on a curved surface."""
@@ -240,7 +305,7 @@ class SingleElement(unittest.TestCase):
     def test_tangent_is_the_derivative_of_the_residual(self):
         import warp as wp
 
-        from warp_febio.analysis.static import _dense, evaluate
+        from warp_febio.analysis.static import dense, evaluate, tangent_matrix
         from warp_febio.compiled import State, compile
 
         rng = np.random.default_rng(0)
@@ -253,8 +318,7 @@ class SingleElement(unittest.TestCase):
                 at = lambda v: evaluate(
                     cm, State(0.0, wp.array(v, dtype=wp.float64, device="cpu"))
                 )
-                R, K = at(u)
-                K = _dense(K)
+                K = dense(tangent_matrix(cm, at(u)[1]))
                 h = 1e-6
                 fd = np.zeros_like(K)
                 for j in range(cm.ndof):

@@ -307,13 +307,16 @@ def _read_mesh(sec, model):
                 model.issues.append(
                     Issue(f"Mesh/Surface/{f.tag}", "facet type not known to the reader")
                 )
+        # Convert all facets of the surface in one lookup.
+        lists = [np.array(f.text.split(","), dtype=np.int64) for f in facets]
+        sizes = [len(x) for x in lists]
+        flat = (
+            mesh.node_index(np.concatenate(lists)) if lists else np.zeros(0, np.int32)
+        )
         mesh.surfaces[item.get("name")] = Surface(
             name=item.get("name"),
             facet_types=[f.tag for f in facets],
-            facets=[
-                mesh.node_index(np.array(f.text.split(","), dtype=np.int64))
-                for f in facets
-            ],
+            facets=np.split(flat, np.cumsum(sizes)[:-1]) if lists else [],
             ids=_ids(facets) if facets else np.zeros(0, np.int32),
         )
 
