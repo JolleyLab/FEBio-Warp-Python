@@ -1,6 +1,6 @@
 # Central model and FEBio input and output
 
-Draft v0.3 for discussion, November 25, 2026. For Steve Maas, Jeff Weiss, the Warp and Newton team, Andras Lasso, Ryan Black and the FEBio-Warp team. The code is a local draft on branch `io-model-draft`; nothing is merged.
+Draft v0.3 for discussion, November 25, 2026. For Steve Maas, Jeff Weiss, the Warp and Newton team, Andras Lasso, and Ryan Black.  Happy Thanksgiving! The code is a local draft on branch `io-model-draft`; nothing is merged.
 
 Scope: the model object and the files that go in and out of it. Elements, assembly, solvers, time stepping, contact and materials are separate designs that are still to be made. A minimal version of some of them exists in the draft only so the model could be exercised end to end, as Steve suggested; section 7 says what that was.
 
