@@ -47,7 +47,7 @@ See the [README](README.md) for installation:
 git clone git@github.com:<username>/FEBio-Warp-Python.git
 cd FEBio-Warp-Python
 python3 -m venv .venv
-.venv/bin/python -m pip install -e .
+.venv/bin/python -m pip install -e ".[warp]"
 ```
 
 Python 3.10 or newer is supported, and 3.11 is the tested version. Warp is pinned to an exact version in `pyproject.toml`. Do not change the pin as part of an unrelated pull request.

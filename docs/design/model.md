@@ -162,7 +162,7 @@ One request: we could not open results in FEBio Studio from this environment. If
 
 **For Andras (Slicer and SlicerHeart)**
 
-5. **How SlicerHeart gets the code.** The model and file layers need only NumPy and the standard library, but the package currently declares Warp as a required dependency (`warp-lang==1.19.0` in `pyproject.toml`). SlicerHeart already installs packages on demand (`slicer.util.pip_install('geomdl')` in ValveFemExport). Would you want the model and I/O installable without Warp, for example Warp as an optional extra, and installed by pip from the module, or kept as a copy inside SlicerHeart?
+5. **How SlicerHeart gets the code.** The model and file layers need only NumPy and the standard library, and the package now installs them without Warp (Warp is an optional extra; installed, it is about 380 MB). SlicerHeart already installs packages on demand (`slicer.util.pip_install('geomdl')` in ValveFemExport). Would you install the package by pip from the module, or keep a copy of the model and I/O files inside SlicerHeart?
 6. **Units and coordinate system.** ImportExportSimulationModel converts between LPS and RAS and between unit systems, and stores the units with the imported model. The VTK adapter here passes coordinates through unchanged. FEBio inputs can declare units in `Module` (the open TPVR inputs say `mm-kg-s`); the model carries that string. Should a FEBio model enter Slicer through ImportExportSimulationModel, with the adapter supplying the grid and the declared units, so conversion stays in one place?
 7. **A FEBio model in the scene.** The adapter gives one `vtkUnstructuredGrid` with a `part` cell array, FEBio node and element IDs as arrays, and shells as surface cells. Node sets, surfaces, shell thickness and boundary conditions are not put in the scene yet. What scene representation would you want for those (arrays on the one model node, a node per part, markups), given how FEBioMeshIO and ValveFemExport work today?
 
@@ -217,7 +217,7 @@ CPU only. FEBio is 4.13.0 built from source at `552138d` with GCC and without MK
 - The same results were obtained with materials taken from the material layer of draft PR #2 and with Warp's own linear solvers (`warp.optim.linear`).
 - The coverage report refuses the other 532 suite inputs and all open application inputs and lists why. For the open mitral input: `isotropic Lee-Sacks`, `contact potential`, nonlinear springs, `pressure`, `mass damping`, dynamic analysis.
 
-**Automated tests.** 20 tests cover the above and pass. They do not need FEBio, since its outputs are stored under `references/`.
+**Automated tests.** 21 tests cover the above and pass. They do not need FEBio, since its outputs are stored under `references/`.
 
 **Not checked**
 

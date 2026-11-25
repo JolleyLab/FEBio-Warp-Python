@@ -93,9 +93,13 @@ verified benchmarks until then.
 
 ```bash
 python3 -m venv .venv
-.venv/bin/python -m pip install -e .
+.venv/bin/python -m pip install -e ".[warp]"
 .venv/bin/python -m unittest discover -s tests -v
 ```
+
+The `warp` extra installs Warp, which compiling and running a model needs. Without it,
+`pip install -e .` installs only the model and the FEBio file readers and writers
+(`warp_febio.model`, `warp_febio.io`), which depend on NumPy alone and can be used inside 3D Slicer.
 
 Python 3.10 or later; 3.11 is the tested version. On Windows use `.venv\Scripts\python.exe`.
 Warp is pinned to 1.19.0; see the

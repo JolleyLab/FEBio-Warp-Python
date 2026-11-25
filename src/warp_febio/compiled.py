@@ -20,7 +20,15 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 import numpy as np
-import warp as wp
+
+try:
+    import warp as wp
+except ImportError as err:  # the model and I/O layers work without Warp
+    raise ImportError(
+        "Compiling and running a model needs Warp. Install it with "
+        "pip install 'warp_febio[warp]'. Reading and writing FEBio files "
+        "(warp_febio.io, warp_febio.model) does not need it."
+    ) from err
 
 from .coverage import (
     CONTROL_IMPLEMENTED,

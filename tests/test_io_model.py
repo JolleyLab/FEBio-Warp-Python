@@ -26,6 +26,37 @@ def febio_log(path, states, columns):
     return np.array(rows, dtype=float)[:, 1:].reshape(states, -1, columns)
 
 
+try:
+    import warp  # noqa: F401
+
+    HAVE_WARP = True
+except ImportError:
+    HAVE_WARP = False
+needs_warp = unittest.skipUnless(
+    HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')"
+)
+
+
+class WithoutWarp(unittest.TestCase):
+    def test_model_and_io_import_without_warp(self):
+        """The model and the file layers must load where Warp is absent, as in
+        3D Slicer. Run in a fresh interpreter with the import of warp blocked."""
+        import subprocess
+        import sys
+
+        code = (
+            "import sys; sys.modules['warp'] = None\n"
+            "import warp_febio, warp_febio.model\n"
+            "from warp_febio.io import read_feb, write_feb, read_xplt, write_xplt\n"
+            f"m = read_feb({os.path.join(SINGLE, 'hex8_neo_hookean.feb')!r})\n"
+            "assert len(m.mesh.nodes) == 8\n"
+        )
+        done = subprocess.run(
+            [sys.executable, "-c", code], capture_output=True, text=True
+        )
+        self.assertEqual(done.returncode, 0, done.stderr)
+
+
 class FebReadWrite(unittest.TestCase):
     def test_round_trip_of_every_reference_input(self):
         files = glob.glob(
@@ -88,6 +119,7 @@ class FebReadWrite(unittest.TestCase):
                 '<febio_spec version="3.0"><Module type="solid"/></febio_spec>'
             )
 
+    @needs_warp
     def test_unknown_section_is_reported_and_blocks_the_run(self):
         from warp_febio.compiled import inspect
 
@@ -162,6 +194,7 @@ class LoadCurves(unittest.TestCase):
         )  # parabola through (0,0), (1,1), (2,0)
 
 
+@needs_warp
 class Coverage(unittest.TestCase):
     def test_shell_on_solid_is_refused(self):
         """Found by the FEBio suite (sh48, sh50): shells sharing nodes with solids
@@ -210,6 +243,7 @@ class Coverage(unittest.TestCase):
             compile(model, device="cpu")
 
 
+@needs_warp
 class SingleElement(unittest.TestCase):
     """Read a FEBio input, solve in Warp, write results, compare with FEBio."""
 
@@ -354,6 +388,7 @@ class SingleElement(unittest.TestCase):
                 self.assertLess(abs(K - K.T).max() / abs(K).max(), 1e-12)
 
 
+@needs_warp
 class VtkOutput(unittest.TestCase):
     def setUp(self):
         try:
