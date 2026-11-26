@@ -50,8 +50,13 @@ from ..assembly.system import State, System
 from ..solvers.linear.warp_linear import solve
 
 
-def adjoint_solve(system: System, state: State, dJ_du, linear_solver: str = "direct",
-                  exact: bool = True) -> wp.array:
+def adjoint_solve(
+    system: System,
+    state: State,
+    dJ_du,
+    linear_solver: str = "direct",
+    exact: bool = True,
+) -> wp.array:
     """lambda from K^T lambda = dJ/du at a converged state.
 
     The tangent is taken in its exact form: a tangent that Newton may
@@ -62,7 +67,9 @@ def adjoint_solve(system: System, state: State, dJ_du, linear_solver: str = "dir
     system.update(state)
     system.tangent(state, exact=exact)
     A = system.constrained_matrix()
-    rhs = wp.array(np.asarray(dJ_du) * system.fields.free, dtype=wp.vec3d, device=system.device)
+    rhs = wp.array(
+        np.asarray(dJ_du) * system.fields.free, dtype=wp.vec3d, device=system.device
+    )
     lam, _ = solve(warp.sparse.bsr_transposed(A), rhs, linear_solver)
     system.mask(lam)
     return lam
@@ -87,8 +94,13 @@ def accumulate_parameter_gradients(system: System, state: State, lam: wp.array) 
         wp.copy(array.grad, totals[key])
 
 
-def parameter_gradient(system: System, state: State, dJ_du: np.ndarray,
-                       linear_solver: str = "direct", exact: bool = True):
+def parameter_gradient(
+    system: System,
+    state: State,
+    dJ_du: np.ndarray,
+    linear_solver: str = "direct",
+    exact: bool = True,
+):
     """dJ/dp for every parameter array of the system, at a converged state.
 
     dJ_du: (n_entries, 3) derivative of the output with respect to the
@@ -116,7 +128,9 @@ def _active_tape():
         return None
 
 
-def solve_on_tape(system: System, tape: wp.Tape, linear_solver: str = "direct") -> State:
+def solve_on_tape(
+    system: System, tape: wp.Tape, linear_solver: str = "direct"
+) -> State:
     """Run the model and put the solve on `tape` as one differentiable step.
 
     Returns the final State; its `u` has requires_grad. In the reverse pass

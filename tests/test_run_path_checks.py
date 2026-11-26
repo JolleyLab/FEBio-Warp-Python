@@ -29,7 +29,9 @@ def febio_log(path, states, columns):
     return np.array(rows, dtype=float)[:, 1:].reshape(states, -1, columns)
 
 
-@unittest.skipUnless(HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')")
+@unittest.skipUnless(
+    HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')"
+)
 class TwoMaterialTests(unittest.TestCase):
     """references/small_meshes/two_material_pressure.feb: two hex8 domains
     (neo-Hookean and isotropic elastic), pressure on the top."""
@@ -47,7 +49,10 @@ class TwoMaterialTests(unittest.TestCase):
         u = np.stack([s.displacement for s in results.states])
         r = np.stack([s.reaction_force for s in results.states])
         s = np.stack(
-            [np.concatenate([s.stress[d.name] for d in model.domains]) for s in results.states]
+            [
+                np.concatenate([s.stress[d.name] for d in model.domains])
+                for s in results.states
+            ]
         )
         self.assertLess(abs(u - u_ref).max() / abs(u_ref).max(), 1e-9)
         self.assertLess(abs(s - s_ref).max() / abs(s_ref).max(), 1e-9)
@@ -64,7 +69,9 @@ class TwoMaterialTests(unittest.TestCase):
         self.check("warp.fem")
 
 
-@unittest.skipUnless(HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')")
+@unittest.skipUnless(
+    HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')"
+)
 class AutoStepTests(unittest.TestCase):
     """references/single_element/hex8_pressure_autostep.feb."""
 
@@ -74,13 +81,17 @@ class AutoStepTests(unittest.TestCase):
         from warp_febio.analysis.steps import build_system, run
 
         results = run(build_system(read_feb(self.CASE), device="cpu"))
-        ref = np.loadtxt(os.path.join(SINGLE, "febio", "hex8_pressure_autostep_steps.txt"))
+        ref = np.loadtxt(
+            os.path.join(SINGLE, "febio", "hex8_pressure_autostep_steps.txt")
+        )
         states = results.states[1:]
         self.assertEqual(len(states), len(ref))
         np.testing.assert_allclose([s.time for s in states], ref[:, 0], rtol=2e-6)
         self.assertEqual([s.iterations for s in states], list(ref[:, 1].astype(int)))
         n = len(results.states)
-        u_ref = febio_log(os.path.join(SINGLE, "febio", "hex8_pressure_autostep_nodes.txt"), n, 3)
+        u_ref = febio_log(
+            os.path.join(SINGLE, "febio", "hex8_pressure_autostep_nodes.txt"), n, 3
+        )
         u = np.stack([s.displacement for s in results.states])
         self.assertLess(abs(u - u_ref).max() / abs(u_ref).max(), 1e-6)
 
@@ -97,7 +108,18 @@ class AutoStepTests(unittest.TestCase):
         with self.assertRaises(SolveError):
             run(build_system(model, device="cpu"), log=log.append)
         times = [float(line.split()[3]) for line in log if line.startswith("converged")]
-        febio = [0.1, 0.24, 0.35, 0.505271, 0.649024, 0.782114, 0.8, 0.899817, 0.943039, 0.955516]
+        febio = [
+            0.1,
+            0.24,
+            0.35,
+            0.505271,
+            0.649024,
+            0.782114,
+            0.8,
+            0.899817,
+            0.943039,
+            0.955516,
+        ]
         np.testing.assert_allclose(times, febio, rtol=2e-6)
         retried = sum("retrying" in line for line in log)
         self.assertEqual(retried + 1, 13)

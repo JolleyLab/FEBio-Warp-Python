@@ -103,8 +103,15 @@ def inspect(model: Model, load_support=None, domain_support=None) -> CoverageRep
             and dtype in (None, "elastic-shell")
         ):
             rep.add("domain", "elastic-shell, quad4", IMPLEMENTED, where)
-        elif domain_support is not None and domain_support(dom.kind, block.febio_type, dtype):
-            rep.add("domain", f"{dtype or 'elastic-solid'}, {block.febio_type}", IMPLEMENTED, where)
+        elif domain_support is not None and domain_support(
+            dom.kind, block.febio_type, dtype
+        ):
+            rep.add(
+                "domain",
+                f"{dtype or 'elastic-solid'}, {block.febio_type}",
+                IMPLEMENTED,
+                where,
+            )
         else:
             rep.add(
                 "domain",

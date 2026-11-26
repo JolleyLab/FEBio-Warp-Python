@@ -68,8 +68,11 @@ def _make_forms(bound):
         return grad_u + wp.identity(n=3, dtype=wp.float64)
 
     def internal_force(
-        s: fem.Sample, u: fem.Field, v: fem.Field,
-        params: wp.array(dtype=pvec), geom: wp.array(dtype=gvec),
+        s: fem.Sample,
+        u: fem.Field,
+        v: fem.Field,
+        params: wp.array(dtype=pvec),
+        geom: wp.array(dtype=gvec),
     ):
         """P : Grad v, with P = J sigma F^-T."""
         F = deformation_gradient(fem.grad(u, s))
@@ -78,8 +81,12 @@ def _make_forms(bound):
         return wp.ddot(P, fem.grad(v, s))
 
     def stiffness(
-        s: fem.Sample, u: fem.Field, du: fem.Field, v: fem.Field,
-        params: wp.array(dtype=pvec), geom: wp.array(dtype=gvec),
+        s: fem.Sample,
+        u: fem.Field,
+        du: fem.Field,
+        v: fem.Field,
+        params: wp.array(dtype=pvec),
+        geom: wp.array(dtype=gvec),
     ):
         """(grad v : c : grad du + sigma : (grad du^T grad v)) J, with spatial
         gradients grad w = Grad w F^-1: material and geometric parts."""
@@ -90,17 +97,34 @@ def _make_forms(bound):
         gu = fem.grad(du, s) * Fi
         two = wp.float64(2.0)
         # symmetric parts in FEBio's tens4ds order xx, yy, zz, xy, yz, xz
-        a = wp.vector(gv[0, 0], gv[1, 1], gv[2, 2],
-                      gv[0, 1] + gv[1, 0], gv[1, 2] + gv[2, 1], gv[0, 2] + gv[2, 0])
-        b = wp.vector(gu[0, 0], gu[1, 1], gu[2, 2],
-                      gu[0, 1] + gu[1, 0], gu[1, 2] + gu[2, 1], gu[0, 2] + gu[2, 0])
-        return (wp.dot(a, c * b) + wp.ddot(sigma, wp.transpose(gu) * gv)) * wp.determinant(F)
+        a = wp.vector(
+            gv[0, 0],
+            gv[1, 1],
+            gv[2, 2],
+            gv[0, 1] + gv[1, 0],
+            gv[1, 2] + gv[2, 1],
+            gv[0, 2] + gv[2, 0],
+        )
+        b = wp.vector(
+            gu[0, 0],
+            gu[1, 1],
+            gu[2, 2],
+            gu[0, 1] + gu[1, 0],
+            gu[1, 2] + gu[2, 1],
+            gu[0, 2] + gu[2, 0],
+        )
+        return (
+            wp.dot(a, c * b) + wp.ddot(sigma, wp.transpose(gu) * gv)
+        ) * wp.determinant(F)
 
     def point_jacobian(s: fem.Sample, u: fem.Field):
         return wp.determinant(deformation_gradient(fem.grad(u, s)))
 
     def point_stress(
-        s: fem.Sample, u: fem.Field, params: wp.array(dtype=pvec), geom: wp.array(dtype=gvec),
+        s: fem.Sample,
+        u: fem.Field,
+        params: wp.array(dtype=pvec),
+        geom: wp.array(dtype=gvec),
     ):
         F = deformation_gradient(fem.grad(u, s))
         sigma, c = stress_and_tangent(F, geom[s.element_index], params[0])
@@ -121,7 +145,11 @@ def _make_forms(bound):
 
 
 @wp.kernel
-def _gather(u: wp.array(dtype=vec3d), entry: wp.array(dtype=wp.int32), out: wp.array(dtype=vec3d)):
+def _gather(
+    u: wp.array(dtype=vec3d),
+    entry: wp.array(dtype=wp.int32),
+    out: wp.array(dtype=vec3d),
+):
     """Nodal displacements from the entries of the field table."""
     i = wp.tid()
     out[i] = u[entry[i]]
@@ -129,7 +157,9 @@ def _gather(u: wp.array(dtype=vec3d), entry: wp.array(dtype=wp.int32), out: wp.a
 
 @wp.kernel
 def _scatter_subtract(
-    f: wp.array(dtype=vec3d), entry: wp.array(dtype=wp.int32), residual: wp.array(dtype=vec3d)
+    f: wp.array(dtype=vec3d),
+    entry: wp.array(dtype=wp.int32),
+    residual: wp.array(dtype=vec3d),
 ):
     """residual -= internal force (FEBio's sign)."""
     i = wp.tid()
@@ -143,7 +173,9 @@ class FemSolidDomain(Term):
 
     internal = True
 
-    def __init__(self, name, element_type, bound, nodes, connectivity, entry, n_entries, device):
+    def __init__(
+        self, name, element_type, bound, nodes, connectivity, entry, n_entries, device
+    ):
         geometry, order, points = ELEMENTS[element_type]
         self.name = name
         self.element_type = element_type
@@ -174,10 +206,15 @@ class FemSolidDomain(Term):
         self.u = self.space.make_field()
         self.u.dof_values = wp.zeros(len(nodes), dtype=vec3d, requires_grad=True, **dev)
 
-        self.entry = wp.array(entry.astype(np.int32), dtype=wp.int32, **dev)  # node -> entry
+        self.entry = wp.array(
+            entry.astype(np.int32), dtype=wp.int32, **dev
+        )  # node -> entry
         self.geom = wp.array(bound.geometry_array(E), dtype=gvec, **dev)
         self.params = wp.array(
-            [self.pvec(*bound.param_values(0.0))], dtype=self.pvec, requires_grad=True, **dev
+            [self.pvec(*bound.param_values(0.0))],
+            dtype=self.pvec,
+            requires_grad=True,
+            **dev,
         )
         self.f = wp.zeros(len(nodes), dtype=vec3d, requires_grad=True, **dev)
         self.detF = wp.zeros(E * points, dtype=wp.float64, **dev)
@@ -219,11 +256,17 @@ class FemSolidDomain(Term):
     def update(self, state: State) -> int:
         if self.material.time_dependent:
             self.set_parameters(self.material.param_values(state.time))
-        wp.launch(_gather, dim=self.entry.shape[0], inputs=[state.u, self.entry],
-                  outputs=[self.u.dof_values], device=self.device)
+        wp.launch(
+            _gather,
+            dim=self.entry.shape[0],
+            inputs=[state.u, self.entry],
+            outputs=[self.u.dof_values],
+            device=self.device,
+        )
         # A kernel cannot throw; the worst Jacobian is read on the host.
-        fem.interpolate(self._jacobian, at=self.quadrature, fields={"u": self.u},
-                        dest=self.detF)
+        fem.interpolate(
+            self._jacobian, at=self.quadrature, fields={"u": self.u}, dest=self.detF
+        )
         det = self.detF.numpy()
         if not np.isfinite(det).all():
             return NON_FINITE
@@ -237,10 +280,17 @@ class FemSolidDomain(Term):
             values=self._values(),
             output=self.f,
         )
-        wp.launch(_scatter_subtract, dim=self.f.shape[0], inputs=[self.f, self.entry],
-                  outputs=[out], device=self.device)
+        wp.launch(
+            _scatter_subtract,
+            dim=self.f.shape[0],
+            inputs=[self.f, self.entry],
+            outputs=[out],
+            device=self.device,
+        )
 
-    def linearize(self, state: State, history: Any, exact: bool = False) -> BlockTangent:
+    def linearize(
+        self, state: State, history: Any, exact: bool = False
+    ) -> BlockTangent:
         # Always the exact derivative of the internal force.
         self._integrate_stiffness(self.K)
         wp.copy(self.vals, self.K.values, count=self.block_count)
@@ -263,6 +313,11 @@ class FemSolidDomain(Term):
         if variable != "stress":
             raise KeyError(variable)
         sigma = wp.zeros(self.count * self.points, dtype=mat33d, device=self.device)
-        fem.interpolate(self._stress, at=self.quadrature, fields={"u": self.u},
-                        values=self._values(), dest=sigma)
+        fem.interpolate(
+            self._stress,
+            at=self.quadrature,
+            fields={"u": self.u},
+            values=self._values(),
+            dest=sigma,
+        )
         return sigma.numpy().reshape(self.count, self.points, 3, 3)

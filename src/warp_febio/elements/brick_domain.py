@@ -182,7 +182,10 @@ class BrickDomain(Term):
         # Parameters live in a device array, so they can follow a load curve
         # (one write per step) and carry gradients.
         self.params = wp.array(
-            [self.pvec(*bound.param_values(0.0))], dtype=self.pvec, requires_grad=True, **dev
+            [self.pvec(*bound.param_values(0.0))],
+            dtype=self.pvec,
+            requires_grad=True,
+            **dev,
         )
         # Point data. requires_grad lets the adjoint tape pass through it.
         grad_on = dict(requires_grad=True, **dev)
@@ -203,7 +206,15 @@ class BrickDomain(Term):
         wp.launch(
             self._update,
             dim=(self.count, len(GAUSS_WEIGHTS)),
-            inputs=[self.X, self.emap, state.u, self.dN, self.gw, self.params, self.geom],
+            inputs=[
+                self.X,
+                self.emap,
+                state.u,
+                self.dN,
+                self.gw,
+                self.params,
+                self.geom,
+            ],
             outputs=[self.sigma, self.c, self.grad, self.w, self.status],
             device=self.device,
         )
@@ -219,7 +230,9 @@ class BrickDomain(Term):
             device=self.device,
         )
 
-    def linearize(self, state: State, history: Any, exact: bool = False) -> BlockTangent:
+    def linearize(
+        self, state: State, history: Any, exact: bool = False
+    ) -> BlockTangent:
         # Always the exact derivative of the internal force.
         wp.launch(
             self._stiffness,

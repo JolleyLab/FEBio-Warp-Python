@@ -52,7 +52,14 @@ def solve(A, b: wp.array, method: str = "direct", tol: float = 1e-13):
     solver = getattr(warp.optim.linear, method)
     M = warp.optim.linear.preconditioner(A, "diag")
     iterations, error, atol = solver(
-        A, b, x, tol=tol, maxiter=max(200, 60 * n), M=M, check_every=1, use_cuda_graph=False
+        A,
+        b,
+        x,
+        tol=tol,
+        maxiter=max(200, 60 * n),
+        M=M,
+        check_every=1,
+        use_cuda_graph=False,
     )
     if not np.isfinite(error) or error > max(atol, 10 * tol * bnorm):
         raise SolveError(

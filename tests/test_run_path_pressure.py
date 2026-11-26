@@ -43,7 +43,10 @@ def closed_form(E, v, p, linear=False):
         J = a * a * c
         load = p * c if linear else p * J
         return np.array(
-            [mu * (a * a - 1) + lam * np.log(J), mu * (c * c - 1) + lam * np.log(J) + load]
+            [
+                mu * (a * a - 1) + lam * np.log(J),
+                mu * (c * c - 1) + lam * np.log(J) + load,
+            ]
         )
 
     x = np.array([1.0, 1.0])
@@ -92,7 +95,9 @@ def exact_tangent_error(system, u0):
     return abs(K - fd).max() / abs(K).max(), K, Ks
 
 
-@unittest.skipUnless(HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')")
+@unittest.skipUnless(
+    HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')"
+)
 class Pressure(unittest.TestCase):
     def test_coverage(self):
         """The run path builds the load; the fixture of pull request 5 still
@@ -103,7 +108,9 @@ class Pressure(unittest.TestCase):
 
         system = build()
         self.assertTrue(system.report.runnable)
-        self.assertEqual([type(t).__name__ for t in system.terms], ["BrickDomain", "PressureLoad"])
+        self.assertEqual(
+            [type(t).__name__ for t in system.terms], ["BrickDomain", "PressureLoad"]
+        )
         self.assertIsInstance(system.terms[1], PressureLoad)
         with self.assertRaises(CoverageError):
             compile(read_feb(CASE), device="cpu")
@@ -152,10 +159,14 @@ class Pressure(unittest.TestCase):
         model = read_feb(CASE)
         set_load(model, "linear", 1)
         system = build(model)
-        self.assertIsNone(system.terms[1].linearize(system.state(), None))  # no stiffness
+        self.assertIsNone(
+            system.terms[1].linearize(system.state(), None)
+        )  # no stiffness
         s = run(system).states[-1]
         a, c = closed_form(E0, V0, P0, linear=True)
-        np.testing.assert_allclose(s.displacement[6], [a - 1, a - 1, c - 1], rtol=0, atol=1e-9)
+        np.testing.assert_allclose(
+            s.displacement[6], [a - 1, a - 1, c - 1], rtol=0, atol=1e-9
+        )
 
     def test_stiffness_forms(self):
         """exact=True is minus the derivative of the residual. FEBio's default
@@ -163,7 +174,9 @@ class Pressure(unittest.TestCase):
         that derivative."""
         rng = np.random.default_rng(1)
         system = build()
-        err, K, Ks = exact_tangent_error(system, 0.05 * rng.standard_normal((system.n, 3)))
+        err, K, Ks = exact_tangent_error(
+            system, 0.05 * rng.standard_normal((system.n, 3))
+        )
         self.assertLess(err, 1e-8)
         self.assertLess(abs(Ks - Ks.T).max() / abs(Ks).max(), 1e-12)
         self.assertGreater(abs(K - K.T).max() / abs(K).max(), 1e-3)
@@ -178,10 +191,14 @@ class Pressure(unittest.TestCase):
             with self.subTest(shell_bottom=bottom):
                 model = read_feb(os.path.join(SINGLE, "quad4_shell_neo_hookean.feb"))
                 model.mesh.surfaces["Face"] = Surface(
-                    "Face", ["quad4"], [np.array([0, 1, 2, 3], dtype=np.int32)],
+                    "Face",
+                    ["quad4"],
+                    [np.array([0, 1, 2, 3], dtype=np.int32)],
                     np.array([1], dtype=np.int32),
                 )
-                load = Record("surface_load", {"name": "P", "surface": "Face", "type": "pressure"})
+                load = Record(
+                    "surface_load", {"name": "P", "surface": "Face", "type": "pressure"}
+                )
                 load.set("pressure", 0.05)
                 load.set("shell_bottom", bottom)
                 model.loads.append(load)
@@ -192,7 +209,9 @@ class Pressure(unittest.TestCase):
                     term.emap.numpy()[0], system.fields.entries_of(variable)
                 )
                 self.assertEqual(term.factor(0.0), -1.0 if bottom else 1.0)
-                err, _, _ = exact_tangent_error(system, 0.03 * rng.standard_normal((system.n, 3)))
+                err, _, _ = exact_tangent_error(
+                    system, 0.03 * rng.standard_normal((system.n, 3))
+                )
                 self.assertLess(err, 1e-8)
 
     def test_newton_with_each_stiffness_form(self):
@@ -208,7 +227,10 @@ class Pressure(unittest.TestCase):
             results = run(build(model))
             a, c = closed_form(E0, V0, P0)
             np.testing.assert_allclose(
-                results.states[-1].displacement[6], [a - 1, a - 1, c - 1], rtol=0, atol=1e-9
+                results.states[-1].displacement[6],
+                [a - 1, a - 1, c - 1],
+                rtol=0,
+                atol=1e-9,
             )
             counts[symmetric] = sum(s.iterations for s in results.states)
         self.assertLess(counts[0], counts[1])
@@ -237,7 +259,9 @@ class Pressure(unittest.TestCase):
         gradients, _ = parameter_gradient(system, state, dJ_du)
         self.assertEqual(sorted(gradients), ["Part1.material", "TopPressure.pressure"])
         self.assertEqual(domain.parameter_names, ("E", "v"))
-        adjoint = np.array([*gradients["Part1.material"][0], gradients["TopPressure.pressure"][0]])
+        adjoint = np.array(
+            [*gradients["Part1.material"][0], gradients["TopPressure.pressure"][0]]
+        )
 
         fd, closed = np.zeros(3), np.zeros(3)
         for k in range(3):
@@ -245,7 +269,9 @@ class Pressure(unittest.TestCase):
             d = np.zeros(3)
             d[k] = h
             fd[k] = (output(base + d)[0] - output(base - d)[0]) / (2 * h)
-            closed[k] = (closed_form(*(base + d))[1] - closed_form(*(base - d))[1]) / (2 * h)
+            closed[k] = (closed_form(*(base + d))[1] - closed_form(*(base - d))[1]) / (
+                2 * h
+            )
         output(base)
 
         self.assertAlmostEqual(J, closed_form(*base)[1] - 1, delta=1e-9)
@@ -277,7 +303,11 @@ class Pressure(unittest.TestCase):
         rows = check_parameter_gradients(system, output)
         self.assertEqual(
             [(r.parameter, r.index) for r in rows],
-            [("Part1.material", (0, 0)), ("Part1.material", (0, 1)), ("TopPressure.pressure", (0,))],
+            [
+                ("Part1.material", (0, 0)),
+                ("Part1.material", (0, 1)),
+                ("TopPressure.pressure", (0,)),
+            ],
         )
         for r in rows:
             self.assertGreater(abs(r.finite_difference), 1e-2)
@@ -290,12 +320,15 @@ class Pressure(unittest.TestCase):
         from warp_febio.sensitivity.adjoint import solve_on_tape
 
         @wp.kernel
-        def design_to_pressure(theta: wp.array(dtype=wp.float64), p: wp.array(dtype=wp.float64)):
+        def design_to_pressure(
+            theta: wp.array(dtype=wp.float64), p: wp.array(dtype=wp.float64)
+        ):
             p[0] = theta[0] * theta[0]
 
         @wp.kernel
         def top_displacement(
-            u: wp.array(dtype=wp.vec3d), top: wp.array(dtype=wp.int32),
+            u: wp.array(dtype=wp.vec3d),
+            top: wp.array(dtype=wp.int32),
             out: wp.array(dtype=wp.float64),
         ):
             i = wp.tid()
@@ -303,13 +336,17 @@ class Pressure(unittest.TestCase):
 
         system = build()
         domain, load = system.terms
-        top = wp.array(system.fields.entries_of("displacement", [4, 5, 6, 7]), dtype=wp.int32)
+        top = wp.array(
+            system.fields.entries_of("displacement", [4, 5, 6, 7]), dtype=wp.int32
+        )
         theta = wp.array([np.sqrt(P0)], dtype=wp.float64, requires_grad=True)
         loss = wp.zeros(1, dtype=wp.float64, requires_grad=True)
 
         tape = wp.Tape()
         with tape:
-            wp.launch(design_to_pressure, dim=1, inputs=[theta], outputs=[load.pressure])
+            wp.launch(
+                design_to_pressure, dim=1, inputs=[theta], outputs=[load.pressure]
+            )
         state = solve_on_tape(system, tape)
         with tape:
             wp.launch(top_displacement, dim=4, inputs=[state.u, top], outputs=[loss])
@@ -321,7 +358,9 @@ class Pressure(unittest.TestCase):
         for k in range(3):
             d = np.zeros(3)
             d[k] = h * base[k]
-            closed[k] = (closed_form(*(base + d))[1] - closed_form(*(base - d))[1]) / (2 * d[k])
+            closed[k] = (closed_form(*(base + d))[1] - closed_form(*(base - d))[1]) / (
+                2 * d[k]
+            )
         self.assertAlmostEqual(loss.numpy()[0], closed_form(*base)[1] - 1, delta=1e-9)
         np.testing.assert_allclose(domain.params.grad.numpy()[0], closed[:2], rtol=1e-6)
         # The pressure array was written by the upstream kernel, so its
@@ -337,7 +376,12 @@ class Pressure(unittest.TestCase):
 
 
 PATCH = os.path.join(
-    ROOT, "references", "febio", "originals", "patchwarp", "static_pressure_and_a2",
+    ROOT,
+    "references",
+    "febio",
+    "originals",
+    "patchwarp",
+    "static_pressure_and_a2",
     "pressure_only_static",
 )
 try:
@@ -349,7 +393,9 @@ except ImportError:
     HAVE_SCIPY = False
 
 
-@unittest.skipUnless(HAVE_WARP and HAVE_SCIPY, "needs Warp, and SciPy for a sparse direct solve")
+@unittest.skipUnless(
+    HAVE_WARP and HAVE_SCIPY, "needs Warp, and SciPy for a sparse direct solve"
+)
 class PressureAgainstFEBio(unittest.TestCase):
     def test_shell_patch_under_pressure(self):
         """A FEBio 4.9 run of a 1,863-element quad4 shell patch under a
@@ -368,7 +414,11 @@ class PressureAgainstFEBio(unittest.TestCase):
         def sparse_direct(A, b, method="direct", tol=0.0):
             n, nnz = A.nrow, A.nnz_sync()
             M = scipy.sparse.bsr_matrix(
-                (A.values.numpy()[:nnz], A.columns.numpy()[:nnz], A.offsets.numpy()[: n + 1]),
+                (
+                    A.values.numpy()[:nnz],
+                    A.columns.numpy()[:nnz],
+                    A.offsets.numpy()[: n + 1],
+                ),
                 shape=(3 * n, 3 * n),
             ).tocsc()
             x = scipy.sparse.linalg.spsolve(M, b.numpy().reshape(-1))
@@ -378,13 +428,17 @@ class PressureAgainstFEBio(unittest.TestCase):
         febio = read_xplt(PATCH + ".xplt")
         U = febio.variable("displacement")
         system = build_system(model, device="cpu")
-        settings = newton.NewtonSettings.from_record(model.steps[0].control.child("solver"))
+        settings = newton.NewtonSettings.from_record(
+            model.steps[0].control.child("solver")
+        )
         settings.dtol, settings.etol = 1e-8, 1e-12
         original, newton.solve = newton.solve, sparse_direct
         try:
             state = system.state()
             for k in (1, 2, 3):
-                state, _ = newton.solve_step(system, state, float(febio.times[k]), settings)
+                state, _ = newton.solve_step(
+                    system, state, float(febio.times[k]), settings
+                )
                 u = collect(system, state).displacement
                 self.assertLess(abs(u - U[k]).max() / abs(U[k]).max(), 1e-6)
         finally:

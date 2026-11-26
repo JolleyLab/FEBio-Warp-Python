@@ -30,7 +30,9 @@ def febio_log(path, states, columns):
 def build(folder, name, solids="dedicated"):
     from warp_febio.analysis.steps import build_system
 
-    return build_system(read_feb(os.path.join(folder, name + ".feb")), device="cpu", solids=solids)
+    return build_system(
+        read_feb(os.path.join(folder, name + ".feb")), device="cpu", solids=solids
+    )
 
 
 def compare_with_febio(test, folder, name, system, tol=1e-10):
@@ -46,7 +48,9 @@ def compare_with_febio(test, folder, name, system, tol=1e-10):
     test.assertLess(abs(s - s_ref).max() / abs(s_ref).max(), tol)
 
 
-@unittest.skipUnless(HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')")
+@unittest.skipUnless(
+    HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')"
+)
 class FemSolidDomainTests(unittest.TestCase):
     def test_hex8_matches_the_dedicated_domain(self):
         """Two implementations of the same element: residual and tangent at a
@@ -75,7 +79,9 @@ class FemSolidDomainTests(unittest.TestCase):
     def test_hex8_agrees_with_febio(self):
         for folder, name in ((SINGLE, "hex8_neo_hookean"), (SMALL, "hex_block")):
             with self.subTest(name):
-                compare_with_febio(self, folder, name, build(folder, name, solids="warp.fem"))
+                compare_with_febio(
+                    self, folder, name, build(folder, name, solids="warp.fem")
+                )
 
     def test_tet4_agrees_with_febio(self):
         """tet4 comes from warp.fem alone; there is no hand-written tet."""

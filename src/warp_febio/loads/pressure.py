@@ -191,7 +191,9 @@ class PressureLoad(Term):
         else:
             emap = fields.entries_of("displacement", facets)
         if (emap < 0).any():
-            raise ValueError(f"pressure load {self.name!r}: facet nodes without the variable")
+            raise ValueError(
+                f"pressure load {self.name!r}: facet nodes without the variable"
+            )
 
         H, Gr, Gs = _shape_tables()
         dev = dict(device=device)
@@ -201,7 +203,9 @@ class PressureLoad(Term):
         self.Gr = wp.array(Gr, dtype=wp.float64, **dev)
         self.Gs = wp.array(Gs, dtype=wp.float64, **dev)
         # The parameter, on the device so it can carry a gradient.
-        self.pressure = wp.array([float(p.value)], dtype=wp.float64, requires_grad=True, **dev)
+        self.pressure = wp.array(
+            [float(p.value)], dtype=wp.float64, requires_grad=True, **dev
+        )
         self.block_count = F * 16  # written into the system's block buffer
 
     def factor(self, time: float) -> float:
@@ -217,21 +221,41 @@ class PressureLoad(Term):
         wp.launch(
             _load_vector,
             dim=(self.count, 4),
-            inputs=[self.emap, self.X, state.u, 0.0 if self.linear else 1.0,
-                    self.H, self.Gr, self.Gs, self.pressure, self.factor(state.time)],
+            inputs=[
+                self.emap,
+                self.X,
+                state.u,
+                0.0 if self.linear else 1.0,
+                self.H,
+                self.Gr,
+                self.Gs,
+                self.pressure,
+                self.factor(state.time),
+            ],
             outputs=[out],
             device=self.device,
         )
 
-    def linearize(self, state: State, history: Any, exact: bool = False) -> Optional[BlockTangent]:
+    def linearize(
+        self, state: State, history: Any, exact: bool = False
+    ) -> Optional[BlockTangent]:
         if self.linear:
             return None  # the load does not depend on the solution
         symmetric = 0 if exact else self.symmetric
         wp.launch(
             _load_stiffness,
             dim=(self.count, 4, 4),
-            inputs=[self.emap, self.X, state.u, self.H, self.Gr, self.Gs,
-                    self.pressure, self.factor(state.time), symmetric],
+            inputs=[
+                self.emap,
+                self.X,
+                state.u,
+                self.H,
+                self.Gr,
+                self.Gs,
+                self.pressure,
+                self.factor(state.time),
+                symmetric,
+            ],
             outputs=[self.rows, self.cols, self.vals],
             device=self.device,
         )

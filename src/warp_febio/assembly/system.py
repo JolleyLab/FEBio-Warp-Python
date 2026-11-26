@@ -81,7 +81,11 @@ class BlockTangent:
     def matrix(self):
         if self._matrix is None:
             self._matrix = warp.sparse.bsr_from_triplets(
-                self.n, self.n, self.rows, self.cols, self.vals,
+                self.n,
+                self.n,
+                self.rows,
+                self.cols,
+                self.vals,
                 prune_numerical_zeros=False,
             )
         return self._matrix
@@ -127,7 +131,9 @@ class Term:
     def residual(self, state: State, history: Any, out: wp.array) -> None:
         raise NotImplementedError
 
-    def linearize(self, state: State, history: Any, exact: bool = False) -> Optional[BlockTangent]:
+    def linearize(
+        self, state: State, history: Any, exact: bool = False
+    ) -> Optional[BlockTangent]:
         """The term's part of K. FEBio lets some terms give Newton a tangent
         that is not the derivative of their residual (the symmetrized
         pressure stiffness; `tangent_scale` on a material). With exact=True a
@@ -220,14 +226,18 @@ class System:
         offset = 0
         for term in terms:
             end = offset + term.block_count
-            term.bind_blocks(self.rows[offset:end], self.cols[offset:end], self.vals[offset:end])
+            term.bind_blocks(
+                self.rows[offset:end], self.cols[offset:end], self.vals[offset:end]
+            )
             offset = end
         self._A = warp.sparse.bsr_zeros(n, n, mat33d, device=device)
         self._map = None  # triplet-to-block map, built at the first assembly
 
     def state(self, requires_grad: bool = False) -> State:
         """A zero state. The call mirrors Newton's `Model.state(requires_grad=...)`."""
-        u = wp.zeros(self.n, dtype=vec3d, device=self.device, requires_grad=requires_grad)
+        u = wp.zeros(
+            self.n, dtype=vec3d, device=self.device, requires_grad=requires_grad
+        )
         return State(time=0.0, u=u)
 
     # -- the three passes of an iteration -----------------------------------
@@ -239,13 +249,17 @@ class System:
             status = term.update(state)
             if status != OK:
                 kind = (
-                    "negative Jacobian" if status == NEGATIVE_JACOBIAN else "non-finite stress"
+                    "negative Jacobian"
+                    if status == NEGATIVE_JACOBIAN
+                    else "non-finite stress"
                 )
                 raise SolveError(f"{kind} in {term.name!r}")
 
     def residual(self, state: State, requires_grad: bool = False) -> wp.array:
         """R = F_external - F_internal at the last `update`."""
-        R = wp.zeros(self.n, dtype=vec3d, device=self.device, requires_grad=requires_grad)
+        R = wp.zeros(
+            self.n, dtype=vec3d, device=self.device, requires_grad=requires_grad
+        )
         for term in self.terms:
             term.residual(state, None, R)
         return R
@@ -273,12 +287,18 @@ class System:
         )
         if self._map is None:
             self._map = warp.sparse.bsr_set_from_triplets(
-                self._A, self.rows, self.cols, self.constrained_vals,
-                prune_numerical_zeros=False, build_mapping=True,
+                self._A,
+                self.rows,
+                self.cols,
+                self.constrained_vals,
+                prune_numerical_zeros=False,
+                build_mapping=True,
             )
             self._A.nnz_sync()
         else:
-            warp.sparse.bsr_set_from_mapped_values(self._A, self._map, self.constrained_vals)
+            warp.sparse.bsr_set_from_mapped_values(
+                self._A, self._map, self.constrained_vals
+            )
         return self._A
 
     def apply_tangent(self, x: wp.array, y: wp.array, alpha: float = 1.0) -> None:
@@ -297,7 +317,11 @@ class System:
         For checks; the solve does not need it."""
         total = self.block_count
         return warp.sparse.bsr_from_triplets(
-            self.n, self.n, self.rows[:total], self.cols[:total], self.vals[:total],
+            self.n,
+            self.n,
+            self.rows[:total],
+            self.cols[:total],
+            self.vals[:total],
             prune_numerical_zeros=False,
         )
 

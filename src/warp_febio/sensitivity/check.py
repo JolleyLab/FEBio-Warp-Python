@@ -35,8 +35,9 @@ class GradientRow:
         return abs(self.adjoint - self.finite_difference) / scale
 
 
-def check_parameter_gradients(system, output, rel_step: float = 1e-5,
-                              linear_solver: str = "direct") -> list:
+def check_parameter_gradients(
+    system, output, rel_step: float = 1e-5, linear_solver: str = "direct"
+) -> list:
     """Adjoint against central differences for every parameter of `system`.
 
     output(u) -> (J, dJ_du), with u and dJ_du as (n_entries, 3) host arrays:
@@ -65,7 +66,12 @@ def check_parameter_gradients(system, output, rel_step: float = 1e-5,
                 values.append(output(final().u.numpy())[0])
             array.assign(base)
             rows.append(
-                GradientRow(key, index, float(base[index]), float(gradients[key][index]),
-                            (values[0] - values[1]) / (2 * h))
+                GradientRow(
+                    key,
+                    index,
+                    float(base[index]),
+                    float(gradients[key][index]),
+                    (values[0] - values[1]) / (2 * h),
+                )
             )
     return rows

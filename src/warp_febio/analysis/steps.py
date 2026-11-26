@@ -77,8 +77,14 @@ def select_domain(model, block, fields, directors, device, solids="dedicated"):
     if dom.kind == "SolidDomain":
         if block.febio_type != "hex8" or solids == "warp.fem":
             return FemSolidDomain(
-                block.name, block.febio_type, bound, nodes, conn,
-                fields.entries_of("displacement"), fields.count, device,
+                block.name,
+                block.febio_type,
+                bound,
+                nodes,
+                conn,
+                fields.entries_of("displacement"),
+                fields.count,
+                device,
             )
         X = nodes[conn]  # (E, 8, 3)
         emap = fields.entries_of("displacement", conn)
@@ -89,11 +95,16 @@ def select_domain(model, block, fields, directors, device, solids="dedicated"):
         front = nodes[conn]
         X = np.concatenate([front - directors[conn], front], axis=1)
         emap = np.concatenate(
-            [fields.entries_of("shell displacement", conn), fields.entries_of("displacement", conn)],
+            [
+                fields.entries_of("shell displacement", conn),
+                fields.entries_of("displacement", conn),
+            ],
             axis=1,
         )
         febio_type = "elastic-shell"
-    return BrickDomain(block.name, febio_type, bound, X, emap, fields.count, model, device)
+    return BrickDomain(
+        block.name, febio_type, bound, X, emap, fields.count, model, device
+    )
 
 
 # Loads this run path can build: FEBio type -> module with inspect_load and a Term.
@@ -127,7 +138,8 @@ def build_system(model, device=None, solids: str = "dedicated") -> System:
     fields = build_field_table(model)
     directors = shell_directors(model)
     terms = [
-        select_domain(model, b, fields, directors, device, solids) for b in model.mesh.blocks
+        select_domain(model, b, fields, directors, device, solids)
+        for b in model.mesh.blocks
     ]
     for record in model.loads:
         terms.append(select_load(record, model, fields, directors, device))
@@ -171,12 +183,18 @@ def collect(system: System, state: State, iterations: int = 0) -> StateResult:
         # FEBio's order xx, yy, zz, xy, yz, xz; plain mean over points, as
         # FEBio's plot variable "stress".
         out.stress[term.name] = np.stack(
-            [mean[:, i, j] for i, j in ((0, 0), (1, 1), (2, 2), (0, 1), (1, 2), (0, 2))], axis=1
+            [
+                mean[:, i, j]
+                for i, j in ((0, 0), (1, 1), (2, 2), (0, 1), (1, 2), (0, 2))
+            ],
+            axis=1,
         )
     return out
 
 
-def run(system: System, log=None, linear_solver: str = "direct", keep_states: bool = False):
+def run(
+    system: System, log=None, linear_solver: str = "direct", keep_states: bool = False
+):
     """Run the model's step. Returns Results (the states FEBio would plot);
     with keep_states=True, also the list of converged device States."""
     say = log or (lambda *_: None)
@@ -191,7 +209,9 @@ def run(system: System, log=None, linear_solver: str = "direct", keep_states: bo
     eps = tend * 1e-12
     must_only = str(control.get("plot_level", "PLOT_MAJOR_ITRS")) == "PLOT_MUST_POINTS"
     stepper = control.child("time_stepper")
-    controller = TimeStepController(stepper, model, dt0, tend) if stepper is not None else None
+    controller = (
+        TimeStepController(stepper, model, dt0, tend) if stepper is not None else None
+    )
 
     state = system.state()
     results = Results()
@@ -211,7 +231,9 @@ def run(system: System, log=None, linear_solver: str = "direct", keep_states: bo
         except SolveError as err:
             if controller is not None and controller.retries < controller.max_retries:
                 dt = controller.retry(dt)
-                say(f"step to time {new_time:g} failed ({err}); retrying with dt {dt:g}")
+                say(
+                    f"step to time {new_time:g} failed ({err}); retrying with dt {dt:g}"
+                )
                 continue
             raise
         at_must = controller.at_must if controller is not None else True

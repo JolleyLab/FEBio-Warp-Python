@@ -25,25 +25,33 @@ model = read_feb(os.path.join(REF, NAME + ".feb"))
 
 # 2. Build the system: a field table and a list of terms, on the device.
 system = build_system(model, device="cpu")
-print(f"entries (node, variable): {system.n}, 3x3 blocks; "
-      f"free components: {int(system.fields.free.sum())}")
+print(
+    f"entries (node, variable): {system.n}, 3x3 blocks; "
+    f"free components: {int(system.fields.free.sum())}"
+)
 for term in system.terms:
-    print(f"term: {term.name}  {term.febio_type}  {term.element_type}  "
-          f"{term.material.febio_type}  parameters {term.parameter_names}")
+    print(
+        f"term: {term.name}  {term.febio_type}  {term.element_type}  "
+        f"{term.material.febio_type}  parameters {term.parameter_names}"
+    )
 
 # 3. Run the step: time stepping, Newton iterations, linear solves.
 results, states = run(system, log=print, keep_states=True)
+
 
 # 4. Compare with FEBio's log data for the same input.
 def febio_log(path, n, columns):
     rows = [line.split() for line in open(path) if not line.startswith("*")]
     return np.array(rows, dtype=float)[:, 1:].reshape(n, -1, columns)
 
+
 n = len(results.states)
 u_ref = febio_log(os.path.join(REF, "febio", NAME + "_nodes.txt"), n, 3)
 u = np.stack([s.displacement for s in results.states])
-print(f"largest relative difference from FEBio, displacement: "
-      f"{abs(u - u_ref).max() / abs(u_ref).max():.1e}")
+print(
+    f"largest relative difference from FEBio, displacement: "
+    f"{abs(u - u_ref).max() / abs(u_ref).max():.1e}"
+)
 
 # 5. Write the plot file FEBio Studio reads.
 out = os.path.join(HERE, NAME + "_run_path.xplt")

@@ -89,8 +89,14 @@ def _apply_increment(system: System, u: wp.array, du: wp.array) -> None:
     wp.launch(_add, dim=system.n, inputs=[u, du], device=system.device)
 
 
-def solve_step(system: System, state0: State, time: float, settings: NewtonSettings,
-               linear_solver: str = "direct", say=None):
+def solve_step(
+    system: System,
+    state0: State,
+    time: float,
+    settings: NewtonSettings,
+    linear_solver: str = "direct",
+    say=None,
+):
     """One time step from the converged `state0` to `time`.
 
     Returns (state, iterations). Raises SolveError if the step fails; the
@@ -103,10 +109,20 @@ def solve_step(system: System, state0: State, time: float, settings: NewtonSetti
     state = State(time, u)
 
     # Prescribed components: target values at this time, and their increment.
-    target = wp.array(fields.prescribed_values(system.model, time), dtype=vec3d, device=device)
-    pmask = wp.array((fields.bc == PRESCRIBED).astype(np.float64), dtype=vec3d, device=device)
+    target = wp.array(
+        fields.prescribed_values(system.model, time), dtype=vec3d, device=device
+    )
+    pmask = wp.array(
+        (fields.bc == PRESCRIBED).astype(np.float64), dtype=vec3d, device=device
+    )
     du_p = wp.zeros(n, dtype=vec3d, device=device)
-    wp.launch(_prescribed_increment, dim=n, inputs=[u, target, pmask], outputs=[du_p], device=device)
+    wp.launch(
+        _prescribed_increment,
+        dim=n,
+        inputs=[u, target, pmask],
+        outputs=[du_p],
+        device=device,
+    )
     any_prescribed = bool(fields.prescribed)
 
     Ui = wp.zeros(n, dtype=vec3d, device=device)  # total increment of this step
@@ -156,4 +172,6 @@ def solve_step(system: System, state0: State, time: float, settings: NewtonSetti
             return state, it + 1
     for term in system.terms:
         term.rollback()
-    raise SolveError(f"no convergence at time {time:g} in {settings.max_refs} reformations")
+    raise SolveError(
+        f"no convergence at time {time:g} in {settings.max_refs} reformations"
+    )
