@@ -38,7 +38,7 @@ directory exists as a place for the work and holds no code yet.
 | Area | Package | Scope for the first targets | Status |
 |---|---|---|---|
 | Materials | `materials/` | Common material interface; neo-Hookean, HGO, Ogden, Lee-Sacks, nitinol | Draft ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)), under redesign |
-| Contact | `contact/` | Potential-based contact for leaflets and devices; sliding contact later | Draft (branch `contact-potential`) |
+| Contact | `contact/` | Potential-based contact for leaflets and devices; sliding contact later | Draft ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)) |
 | Assembly | `assembly/` | Full assembly of residual and tangent on the GPU | Design |
 | Elements | `elements/` | Shells, solids, beams, springs | Not started |
 | Mesh and discretization | `mesh/`, `discretization/` | Mesh types, degree-of-freedom maps, quadrature | Not started |
@@ -46,10 +46,15 @@ directory exists as a place for the work and holds no code yet.
 | Solvers | `solvers/` | Newton with line search; iterative linear solvers and preconditioners | Not started |
 | Analysis | `analysis/` | Static and implicit dynamic steps, load stepping, staged procedures | Not started |
 | Sensitivity | `sensitivity/` | Gradients through equilibrium and through trajectories | Not started |
-| Input and output | `io/` | FEBio input and plot files, building on [pyfebio](https://github.com/febiosoftware/pyfebio) | Design |
-| Verification | `tests/`, `references/` | Harness built on the FEBio test and verification suites, plus the driving applications | Design |
+| Central model, input and output | `model/`, `io/` | One model object holding what a FEBio input defines; FEBio input (`.feb`) and plot (`.xplt`) files read and written here; VTKHDF output and a VTK adapter for 3D Slicer | Draft ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)) |
+| Verification | `tests/`, `references/` | FEBio-Warp run on FEBio input files and compared with pinned FEBio references; cases from the FEBio test suite and the driving applications | Draft ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)), tabled until input and output |
 
 Design notes live in [`docs/design/`](docs/design/README.md).
+
+The four drafts are reviewed separately. They are also merged, and made consistent where they
+meet, on the branch
+[`mattjolley/integration-base`](https://github.com/JolleyLab/FEBio-Warp-Python/tree/mattjolley/integration-base);
+its note `docs/design/integration.md` says what that involved and what is left open.
 
 ### Relation to FEBio's structure
 
