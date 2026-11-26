@@ -15,6 +15,30 @@ Make it easy to validate FEBio-Warp against FEBio.
 
 It does not check FEBio against anything. The first draft did (FEBio against closed forms and against the test suite's stored values), and that has been removed. What was built along the way and serves steps 1 and 2 is kept below.
 
+## At a glance
+
+The harness, and what each comparison level needs from FEBio-Warp.
+
+```mermaid
+flowchart TB
+    input([".feb input<br/>suite problem, small input, or open application model"])
+    input --> febio["Pinned FEBio build<br/>run once"]
+    febio --> ref[("Stored reference<br/>logged data, FEBio version, build, input hash")]
+    input --> fw["FEBio-Warp<br/>reads and runs the same file"]
+    ref --> cmp{"Compare at a stated tolerance"}
+    fw --> cmp
+    cmp --> pass["Pass"]
+    cmp --> known["Known difference"]
+    cmp --> notyet["Not yet runnable"]
+```
+
+```mermaid
+flowchart LR
+    mp["<b>Material point</b><br/>stress and tangent<br/>needs: a material model"] --> el["<b>Element</b><br/>nodal forces on a patch<br/>adds: reader, element"]
+    el --> sp["<b>Suite problem</b><br/>displacements, stresses, reactions, contact<br/>adds: loads, contact, solver"]
+    sp --> app["<b>Application</b><br/>open valve and device models<br/>needs everything"]
+```
+
 ## What has to come first
 
 Step 3 needs FEBio-Warp to read and run a FEBio input file. On this branch it cannot: `src/warp_febio/io/` is a stub, and elements, loads and solvers are not started. A draft reader and central model are now in pull request #5, written in this repository and not on pyfebio, with a minimal path that runs single-element and small-mesh inputs. Input and output comes ahead of this harness, and the harness will be rebased on it.
