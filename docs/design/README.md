@@ -4,6 +4,8 @@ One note per development area. A note states the formulation, the FEBio source i
 interfaces it adds to `src/warp_febio/`, and how the implementation will be verified. A note is
 added or updated in the same pull request as the code it describes, or ahead of it for discussion.
 
+Start with the [design overview](overview.md): one page on how the pieces fit, what state each is in, and what is only a first template.
+
 | Area | Note | Status |
 |---|---|---|
 | Materials | [materials.md](materials.md), with [PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2) | Draft, under redesign |

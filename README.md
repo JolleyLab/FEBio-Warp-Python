@@ -29,6 +29,29 @@ The first targets set the scope. Capabilities are added because one of these nee
 | Self-expanding nitinol devices (transcatheter pulmonary valve replacement, septal occluders) | Beam frames, nitinol material, device-to-vessel contact, hyperelastic vessel wall |
 | Patch and material verification problems | Small problems with known or FEBio reference solutions, used to verify each component |
 
+## Design at a glance
+
+```mermaid
+flowchart LR
+    feb([".feb"]) --> model["Model and I/O"]
+    model --> system["System on the device<br/>domains, materials, loads, contact"]
+    system --> run["Run path<br/>steps, Newton, linear solve"]
+    run --> results([".xplt, VTKHDF"])
+    run -.-> grad["Gradients"]
+    febio["FEBio, same input"] -.->|verification| results
+```
+
+| Piece | In one line | State |
+|---|---|---|
+| Model and I/O | One model object for what a FEBio input defines; reads and writes FEBio files; says whether an input can run | Draft ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)) |
+| Materials | FEBio's material structure, compiled into one Warp kernel per material tree | Draft ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)) |
+| Contact | Point-based contact potential with pair search on the device | Draft ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)) |
+| Run path | From a model to a result on small cases, with adjoint gradients | Template |
+| Verification | The same inputs run in FEBio and compared | Draft ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)) |
+
+The [design overview](docs/design/overview.md) shows how these fit together, where the design
+follows FEBio and where it differs, and what is only a first template. It is the place to start.
+
 ## Development areas
 
 Status as of November 2026. "Design" means a design note is in progress. "Draft" means code
