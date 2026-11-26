@@ -23,6 +23,49 @@ Draft v0.3, November 24, 2026. For Steve Maas, Jeff Weiss, Ryan Black, the Warp 
 
 **Most useful feedback.** The questions at the end are grouped by reviewer. Each was checked against the FEBio source, the FEBio test suite, the Warp source and documentation, or the project papers before being asked, and what we found is stated with it. The two that most affect what is built next are 1 (composition at kernel build time) and 2 (geometry fields for fibers).
 
+## At a glance
+
+How a FEBio material becomes one Warp kernel, and who uses it.
+
+```mermaid
+flowchart TB
+    feb(["FEBio material block<br/>type, parameters, mat_axis, fiber, nested solids"])
+    feb --> floats["<b>Float parameters p</b><br/>FEBio tags and ranges<br/>array by region, differentiable"]
+    feb --> options["<b>Options</b><br/>integers, flags, enumerations<br/>for example pressure_model"]
+    feb --> geom["<b>Geometry g</b><br/>material axes and fibers<br/>named fields per point"]
+    feb --> dens["Density<br/>on the Material, for domains"]
+    options --> compose["<b>Composition in Python, before compilation</b><br/>model functions, solid_mixture, uncoupled split"]
+    compose --> kernel["<b>One compiled kernel per material tree</b><br/>no branch on material type"]
+    floats --> kernel
+    geom --> kernel
+    kernel --> elem["Element kernels<br/>Cauchy stress and 6x6 tangent"]
+    kernel --> fem["warp.fem integrands<br/>first Piola stress and tangent action"]
+    kernel --> mfem["MFEM exchange<br/>Cauchy stress and tens4ds tangent"]
+    kernel -.-> tape["wp.Tape<br/>gradients to p, F and g"]
+```
+
+What happens at one material point in a launch, and how a failure reaches the solver.
+
+```mermaid
+flowchart TB
+    start(["Point: F, g, p, committed history"]) --> jcheck{"J > 0 ?"}
+    jcheck -- no --> bad["Write status: failed<br/>write zeros"]
+    jcheck -- yes --> eval["Evaluate the model<br/>energy, cauchy, tangent action<br/>or stress_and_tangent in one pass"]
+    eval --> finite{"Result finite ?"}
+    finite -- no --> bad
+    finite -- yes --> write["Write stress, tangent<br/>and trial history"]
+    bad --> host["Host reads the worst status<br/>after the launch"]
+    write --> host
+    host -- any failure --> cut["Treat as FEBio treats its exception:<br/>reject the step, discard trial history"]
+    host -- all good --> conv["On convergence:<br/>swap trial history in"]
+```
+
+| Model kind | Input to output | Used by | Models so far |
+|---|---|---|---|
+| Solid | F to energy, Cauchy stress, tangent | Solid and shell elements | Neo-Hookean, isotropic elastic, isotropic Lee-Sacks, HGO unconstrained, HGO uncoupled (deviatoric part) |
+| Uniaxial | Axial strain and committed history to stress, tangent, trial history | Chordae springs, trusses, beam fibers | Nonlinear spring, linear truss, superelastic nitinol (interface only) |
+| Schedule on a parameter | Time to parameter value | Any model | Effective-modulus nitinol (step curve on E) |
+
 ## Recommendation
 
 Adopt FEBio's way of structuring materials, and keep the list of implemented models short.
