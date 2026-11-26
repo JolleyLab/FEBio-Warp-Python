@@ -286,6 +286,11 @@ def _chunks(buf, start, end):
     pos = start
     while pos + 8 <= end:
         cid, size = struct.unpack_from("<II", buf, pos)
+        if pos + 8 + size > end:
+            raise ValueError(
+                f"plot file is truncated or corrupt: chunk 0x{cid:08X} at byte "
+                f"{pos} runs past the end of its section"
+            )
         yield cid, pos + 8, pos + 8 + size
         pos += 8 + size
 

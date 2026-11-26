@@ -141,6 +141,8 @@ class ElementBlock:
     febio_type: str
     connectivity: np.ndarray  # (E, k) int32
     ids: np.ndarray  # (E,) int32
+    # Attributes of <Elements> other than type and name, kept as written.
+    attrs: dict = field(default_factory=dict)
 
     @property
     def count(self) -> int:
@@ -340,6 +342,8 @@ class Step:
     loads: list = field(default_factory=list)
     contact: list = field(default_factory=list)
     other: list = field(default_factory=list)  # sections not interpreted yet
+    # Attributes of <step> other than id and name, kept as written.
+    attrs: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -422,7 +426,13 @@ class Model:
         return None
 
     def equals(self, other: "Model") -> bool:
-        """Deep equality of everything the reader stores. Used by round-trip tests."""
+        """Deep equality of everything the reader stores. Used by round-trip tests.
+
+        Carried top-level sections are compared tag by tag, in file order
+        within a tag. Their order relative to each other is not compared,
+        because the writer places sections where FEBio Studio writes them
+        and not where the input had them.
+        """
         a, b = self.mesh, other.mesh
         if not (
             np.array_equal(a.nodes, b.nodes)
@@ -438,6 +448,7 @@ class Model:
             if not (
                 x.name == y.name
                 and x.febio_type == y.febio_type
+                and x.attrs == y.attrs
                 and np.array_equal(x.connectivity, y.connectivity)
                 and np.array_equal(x.ids, y.ids)
             ):
@@ -457,6 +468,13 @@ class Model:
 
         def recs(p, q):
             return len(p) == len(q) and all(x.equals(y) for x, y in zip(p, q))
+
+        def by_tag(p, q):
+            tags = [r.tag for r in p]
+            return sorted(tags) == sorted(r.tag for r in q) and all(
+                recs([r for r in p if r.tag == t], [r for r in q if r.tag == t])
+                for t in set(tags)
+            )
 
         def opt(p, q):
             return (p is None and q is None) or (
@@ -478,7 +496,7 @@ class Model:
             and recs(self.boundary, other.boundary)
             and recs(self.loads, other.loads)
             and recs(self.contact, other.contact)
-            and recs(self.other_sections, other.other_sections)
+            and by_tag(self.other_sections, other.other_sections)
             and len(self.materials) == len(other.materials)
             and len(self.domains) == len(other.domains)
             and len(self.load_controllers) == len(other.load_controllers)
@@ -502,7 +520,8 @@ class Model:
                 return False
         for x, y in zip(self.steps, other.steps):
             if not (
-                x.control.equals(y.control)
+                (x.id, x.name, x.attrs) == (y.id, y.name, y.attrs)
+                and x.control.equals(y.control)
                 and recs(x.boundary, y.boundary)
                 and recs(x.loads, y.loads)
                 and recs(x.contact, y.contact)
