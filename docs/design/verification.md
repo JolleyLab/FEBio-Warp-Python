@@ -17,7 +17,7 @@ It does not check FEBio against anything. The first draft did (FEBio against clo
 
 ## What has to come first
 
-Step 3 needs FEBio-Warp to read and run a FEBio input file. It cannot yet: `src/warp_febio/io/` is a stub, and elements, loads and solvers are not started. Input and output is the next focus and comes ahead of this harness.
+Step 3 needs FEBio-Warp to read and run a FEBio input file. On this branch it cannot: `src/warp_febio/io/` is a stub, and elements, loads and solvers are not started. A draft reader and central model are now in pull request #5, written in this repository and not on pyfebio, with a minimal path that runs single-element and small-mesh inputs. Input and output comes ahead of this harness, and the harness will be rebased on it.
 
 Comparisons become possible in this order, each needing more of FEBio-Warp than the one before:
 
@@ -116,7 +116,7 @@ One measured guide: the suite stores its values separately for Linux, macOS and 
 
 ## What is needed
 
-- The input reader, first.
+- The input reader, first (draft in pull request #5).
 - An official FEBio release with Pardiso that the harness can use to generate references.
 - For the two open application models to start with (`P2Prolapse_Mitral.feb` and `RVOT1_TPV25.feb`): the FEBio version they were run with, and one completed run of each to check a reference against.
 
@@ -128,6 +128,6 @@ One measured guide: the suite stores its values separately for Linux, macOS and 
 
 ## Next steps
 
-1. Input and output: read a FEBio input file into FEBio-Warp, building on pyfebio.
+1. Input and output: read a FEBio input file into FEBio-Warp (draft in pull request #5).
 2. Then steps 3 and 4 of the harness, starting with the simplest suite inputs FEBio-Warp can run.
 3. Regenerate the stored references on an official FEBio release.
