@@ -38,7 +38,7 @@ Adopt FEBio's way of structuring materials, and keep the list of implemented mod
 
 | Steve's point | What this draft does |
 |---|---|
-| 1. Models exist in several representations | Reference formulas moved to `tests/febio_closed_forms.py`, test-only. The pilot files (`lee_sacks.py`, `neo_hookean.py`, `stvk.py`) are still used as an independent comparison and should be removed once their callers are migrated. |
+| 1. Models exist in several representations | Reference formulas moved to `tests/febio_closed_forms.py`, test-only. The pilot files (`lee_sacks.py`, `neo_hookean.py`, `stvk.py`) have since moved to `pilots/` on `main`; here they serve only as an independent comparison in `tests/test_material_interface.py`. |
 | 2. Parameters are floats only | Three kinds of parameter, by what they do. Floats stay in the parameter array, with FEBio's range checks applied when they are packed. Integers, flags and enumerations (for example `pressure_model`) select code, so they are options fixed when the kernel is built. Vectors and frames are geometry (row 5). |
 | 3. Density | A property of the `Material` object, read from the input file and available to domains. It never enters a constitutive kernel. |
 | 4. Tangent action versus full tensor | Measured, and Steve's concern holds for a representative material. For HGO, stress plus six tangent actions took 191 ms per million points on CPU; one pass that shares intermediates took 89 ms, with identical results. A model can now supply `stress_and_tangent`, returning the Cauchy stress and the 6x6 together, written with helpers that mirror FEBio's `dyad1s` and `dyad4s`. The action stays for matrix-free use and as the fallback, and the two are compared in the tests. The same holds one level up: inside `warp.fem`, a tangent form that uses the stored one-pass result assembled in about 210 to 260 ms, against about 650 ms for a form that calls the action (see Relation to warp.fem). A GPU measurement is still needed. |
@@ -119,7 +119,7 @@ The paper's text gives the law as isotropic elastic and its Table 1 as neo-Hooke
 
 ## What has been checked
 
-59 tests run on CPU: 57 pass, and two GPU tests skip without a CUDA device. No GPU run has been made yet; GPU access for this workflow is being set up, and CPU is adequate for the design and correctness questions here. The comparisons with FEBio in this pull request are against closed forms transcribed from its source. Comparisons with FEBio runs are in the verification draft (pull request 4): one hexahedron under FEBio's `prescribed deformation` condition, with FEBio's logged stress and tangent stored as the reference. Neo-Hookean, isotropic elastic, isotropic Lee-Sacks, HGO unconstrained and HGO uncoupled (both HGO forms with material axes in and away from the global frame) agree with those runs to about 1e-12 in both, on twelve cases.
+52 tests run on CPU: 51 pass, and one GPU test skips without a CUDA device (the count was 59 before the pilot tests moved to `pilots/`). No GPU run has been made yet; GPU access for this workflow is being set up, and CPU is adequate for the design and correctness questions here. The comparisons with FEBio in this pull request are against closed forms transcribed from its source. Comparisons with FEBio runs are in the verification draft (pull request 4): one hexahedron under FEBio's `prescribed deformation` condition, with FEBio's logged stress and tangent stored as the reference. Neo-Hookean, isotropic elastic, isotropic Lee-Sacks, HGO unconstrained and HGO uncoupled (both HGO forms with material axes in and away from the global frame) agree with those runs to about 1e-12 in both, on twelve cases.
 
 **Models against the FEBio source, and their derivatives** (relative error over 66 deformation states, FP64):
 
@@ -241,10 +241,6 @@ Each question was checked before being asked: against the FEBio source (develop,
 12. `warp.fem` for nonlinear solids. With the material evaluated once per point and stored, `fem.integrate` assembled the tangent in 210 to 260 ms on CPU against 55 to 70 ms for a dedicated hexahedron kernel (table above); no GPU numbers yet. Is storing point data and indexing it by `s.qp_index` the intended way to avoid re-evaluating a material per trial function, and is there a faster route within `warp.fem` that we missed?
 13. Shells in `warp.fem`. The valve models use four-node quadrilateral shells with thickness (0.396 mm), and FEBio's elastic shell domain carries a second displacement per node for the back face (`sx`, `sy`, `sz`) with integration through the thickness. `warp.fem` 1.19.0 has surface meshes embedded in 3D (`Quadmesh3D`, `Trimesh3D`) but no shell abstraction that we could find: no thickness, director or through-thickness rule. In a short check outside this PR, a `Quadmesh3D` with two `vec3d` fields, the surface gradient, the surface normal and a hand-written two-point rule through the thickness compiled and integrated in FP64. Is that the route you would take for shells, with the shell kinematics written in the integrand, or is a shell element type planned or better placed in `warp.fem` itself? Is there shell work elsewhere (Newton, for example) that we should build on instead?
 
-**Seda**
-
-14. In this repository the pilot files `lee_sacks.py`, `neo_hookean.py` and `stvk.py` are imported only by `tests/test_material.py`, `tests/test_neo_hookean.py`, `tests/test_stvk.py` and `examples/material_point/run.py`. Does any work outside the repository depend on them before they are removed?
-
 ## Next steps
 
 1. Verification harness (separate draft).
@@ -252,5 +248,4 @@ Each question was checked before being asked: against the FEBio source (develop,
 3. A three-field element, so the uncoupled HGO can run (element work).
 4. A discrete spring domain and, after question 7, a truss element (element work).
 5. A GPU run of the tests and of the timings, once GPU access is in place.
-6. Remove the pilot material files once their callers are migrated.
-7. Later, as dedicated work: the superelastic law.
+6. Later, as dedicated work: the superelastic law.

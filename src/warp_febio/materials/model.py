@@ -1,4 +1,4 @@
-"""Material model architecture (draft v0.3; see docs/MATERIALS.md).
+"""Material model architecture (draft v0.3; see docs/design/materials.md).
 
 What a constitutive model is here
 ---------------------------------
