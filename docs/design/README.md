@@ -12,4 +12,6 @@ added or updated in the same pull request as the code it describes, or ahead of 
 | Verification | [verification.md](verification.md) | Draft, tabled until input and output |
 | Central model, input and output | [model.md](model.md), with [PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5) | Draft |
 
+[integration.md](integration.md) says how these drafts fit together on the combined branch and what is left open.
+
 Notes describing the pilot phase are in [`pilots/docs/`](../../pilots/docs/).
