@@ -55,7 +55,7 @@ These belong to the next design, elements and assembly, and were not decided her
 
 ## How it was checked
 
-CPU only, Warp 1.19.0, on Python 3.11 and 3.13. 113 tests run: 111 pass and 2 skip (both need a GPU). Without VTK installed, as in the test workflow, the two VTK adapter tests skip as well.
+CPU only, Warp 1.19.0, on Python 3.11 and 3.13. 118 tests run: 116 pass and 2 skip (both need a GPU). Without VTK installed, as in the test workflow, the two VTK adapter tests skip as well.
 
 - The comparisons of pull request 5 with FEBio (single hex8, single quad4 shell, 8-element block, 9-element shell patch, displacement and stress to 1e-10) pass with materials taken from the material layer through the binding.
 - The nine coupled material-point cases of pull request 4 agree with their stored FEBio references to 1e-10, in stress and tangent, when the input is read with `read_feb`, bound with `bind_material`, and evaluated through the one-pass function an element calls. They include isotropic elastic, which has no one-pass function of its own, and HGO with material axes away from the global frame.
