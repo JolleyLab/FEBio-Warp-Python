@@ -4,6 +4,48 @@ Point-based contact for valve leaflets and self-expanding devices: an initial
 exploration, built on Kamensky et al. (2018) and FEBio's `FEContactPotential`.
 This page is the code map and the list of what is and is not equivalent to FEBio.
 
+## At a glance
+
+The pieces of the module and how they connect to the rest of FEBio-Warp.
+
+```mermaid
+flowchart TB
+    quad["Quad4 and Tri3 facets<br/>leaflets, vessel, device surface"] --> points
+    seg["2-node segments<br/>chordae, beam centerlines"] --> points
+    nodes["Nodes as points"] --> points
+    points["<b>ContactPoints</b><br/>node-weighted points: weight, area, radius, body, source element"]
+    block(["FEBio contact potential block"]) --> params["<b>PotentialParams</b><br/>kc, p, R_in, R_out, scale per pair class<br/>from_febio_block"]
+    points --> search["<b>PairSearch</b><br/>wp.HashGrid, count and fill on the device<br/>exclusions, R0_min, w_tol, pair classes"]
+    search --> pot["<b>Potential</b><br/>pair energy, force, Hessian blocks<br/>full or PSD-projected"]
+    params --> pot
+    pot --> term["<b>ContactPotentialTerm</b><br/>residual, ContactTangent, results"]
+    term --> solver["Newton solve<br/>with domains and loads"]
+    term --> metrics["Contact area and contact fraction"]
+    term -.-> grad["Gradients<br/>wp.Tape, parameter adjoint,<br/>energy_and_gradient for PyTorch and JAX"]
+    iface["ContactInterface, ContactSet<br/>seam for sliding, sticky, tied"] -.- term
+```
+
+One Newton iteration with contact, and what the adjoint reuses.
+
+```mermaid
+flowchart TB
+    x(["Current positions"]) --> upd["Update point positions<br/>and, in current weight mode, weights"]
+    upd --> pairs["build_pairs<br/>hash grid, exclusions, gates"]
+    pairs --> force["Pair energy and force<br/>scattered to nodes through the point weights"]
+    force --> hess["Pair Hessian blocks<br/>full tangent first"]
+    hess --> tang["ContactTangent<br/>matrix-free action or hessian_bsr"]
+    tang --> over{"check_overflow<br/>the only host read"}
+    over -- list incomplete --> grow["Rebuild the pair list"] --> pairs
+    over -- complete --> solve["Linear solve with the other terms"]
+    solve --> desc{"Solver rule:<br/>descent direction ?"}
+    desc -- no --> proj["Use the PSD-projected tangent"] --> solve
+    desc -- yes --> guard{"Solver rule:<br/>no nodal move above R_out,<br/>no collision ?"}
+    guard -- no --> cutstep["Cut the step"]
+    guard -- yes --> conv{"Converged ?"}
+    conv -- no --> x
+    conv -- yes --> adj["Converged state:<br/>pairs frozen for the adjoint"]
+```
+
 ## What is implemented
 
 | File | Content |
