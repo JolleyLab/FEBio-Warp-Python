@@ -7,9 +7,9 @@ added or updated in the same pull request as the code it describes, or ahead of 
 | Area | Note | Status |
 |---|---|---|
 | Materials | With [PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2) | Draft, under redesign |
-| Contact | To be added with the contact pull request | Draft |
+| Contact | With [PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1) | Draft |
 | Assembly | To be added | Design |
-| Verification | [verification.md](verification.md) | Draft, tabled until input and output |
-| Input and output | To be added | Design |
+| Verification | [verification.md](verification.md), with [PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4) | Draft, tabled until input and output |
+| Central model, input and output | With [PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5) | Draft |
 
 Notes describing the pilot phase are in [`pilots/docs/`](../../pilots/docs/).
