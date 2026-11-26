@@ -116,7 +116,7 @@ The paper's text gives the law as isotropic elastic and its Table 1 as neo-Hooke
 
 ## What has been checked
 
-44 tests run on CPU: 42 pass, and two GPU tests skip without a CUDA device. No GPU run has been made yet; GPU access for this workflow is being set up, and CPU is adequate for the design and correctness questions here. The comparisons with FEBio in this pull request are against closed forms transcribed from its source. Comparisons with FEBio runs are in the verification draft (pull request 4): one hexahedron under FEBio's `prescribed deformation` condition, with FEBio's logged stress and tangent stored as the reference. Neo-Hookean, isotropic elastic, isotropic Lee-Sacks and HGO unconstrained (with material axes in and away from the global frame) agree with those runs to about 1e-12 in both, on eight cases.
+44 tests run on CPU: 42 pass, and two GPU tests skip without a CUDA device. No GPU run has been made yet; GPU access for this workflow is being set up, and CPU is adequate for the design and correctness questions here. The comparisons with FEBio in this pull request are against closed forms transcribed from its source. Comparisons with FEBio runs are in the verification draft (pull request 4): one hexahedron under FEBio's `prescribed deformation` condition, with FEBio's logged stress and tangent stored as the reference. Neo-Hookean, isotropic elastic, isotropic Lee-Sacks and HGO unconstrained (with material axes in and away from the global frame) agree with those runs to about 1e-12 in both, on nine cases.
 
 **Models against the FEBio source, and their derivatives** (relative error over 66 deformation states, FP64):
 
