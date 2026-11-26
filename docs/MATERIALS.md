@@ -4,7 +4,7 @@ Draft v0.3, November 24, 2026. For Steve Maas, Jeff Weiss, Ryan Black, the Warp 
 
 ## For reviewers
 
-**In brief.** Materials follow FEBio's structure (typed parameters with ranges, separate material axes and fibers, solid mixtures, the uncoupled split, history), expressed so that Warp compiles each material tree into one kernel. Four solid models are implemented and checked against FEBio's source and against every parameter set the FEBio test suite uses for them. Gradients are tested for every model. Everything so far was run on CPU, which is adequate for design and correctness checks at this stage; GPU access for this workflow is being set up for the team, and the timings will be repeated there. Nothing has been compared against a FEBio run yet.
+**In brief.** Materials follow FEBio's structure (typed parameters with ranges, separate material axes and fibers, solid mixtures, the uncoupled split, history), expressed so that Warp compiles each material tree into one kernel. Four solid models are implemented and checked against FEBio's source and against every parameter set the FEBio test suite uses for them. Gradients are tested for every model. Everything so far was run on CPU, which is adequate for design and correctness checks at this stage; GPU access for this workflow is being set up for the team, and the timings will be repeated there. The four solid models have since been compared with FEBio runs, through the material-point cases of the verification draft (pull request 4): stress and tangent agree to the 12 digits FEBio prints.
 
 **Where to look.**
 
@@ -93,22 +93,30 @@ FEBio throws on a non-positive Jacobian and the solver cuts the step. A kernel c
 | Isotropic elastic | `isotropic elastic` | Device (level 1, alternative), patch | Implemented |
 | Isotropic Lee-Sacks | `isotropic Lee-Sacks` | Valve leaflets | Implemented |
 | HGO, unconstrained | `HGO unconstrained` | Outflow tract wall, coupled form | Implemented |
-| Nitinol, effective modulus | elastic law with a load curve on `E` | Published TPVR device model | Implemented |
+| Nitinol, effective modulus | `isotropic elastic` with a step load curve on `E` | Published TPVR device model | Implemented |
 | Nitinol, superelastic, uniaxial | none | Beam-element devices | Shell: interface and tests in place, law to be refined later |
 | HGO, uncoupled, with three-field element | `Holzapfel-Gasser-Ogden` | Outflow tract as published | Next, with the element |
-| Chordae | FEBio nonlinear spring | Valve chordae, tension only, under the uniaxial kind | Next |
+| Chordae | `nonlinear spring`; later a truss | Valve chordae, tension only, under the uniaxial kind | Next |
 
 Deferred until a project needs them: Ogden, anisotropic Lee-Sacks, fiber components and continuous fiber distributions, a three-dimensional superelastic law.
 
 ## Nitinol at two levels
 
-**Level 1, effective modulus.** The model in Zelonis et al. (arXiv 2507.06337) and the sensitivity study (arXiv 2601.05410): an elastic solid with a step load curve on Young's modulus between compression and release. With parameters in an array this needs no constitutive code. `effective_modulus_nitinol` pairs an existing elastic model with a schedule. It has no hysteresis and no plateau. One point to settle from the published input files: the paper's text gives the law as isotropic elastic, its Table 1 as neo-Hookean. Both are available until that is checked. The load curve values are not printed in the paper and must come from the input files.
+**Level 1, effective modulus.** The model in Zelonis et al. (arXiv 2507.06337) and the sensitivity study (arXiv 2601.05410): an elastic solid with a step load curve on Young's modulus between compression and release. With parameters in an array this needs no constitutive code. `effective_modulus_nitinol` pairs an existing elastic model with a schedule. It has no hysteresis and no plateau.
+
+The paper's text gives the law as isotropic elastic and its Table 1 as neo-Hookean, and does not print the load curve. The six open input files in the FEBio model repository (files 3598 to 3603) settle both, and agree with each other:
+
+- The frame is `isotropic elastic` with E = 4.0e7, v = 0.33 and density 6.45e-6. The two crimping tubes are `neo-Hookean` shells with the same constants and no load curve.
+- The load curve on E is a STEP curve through (0.998063, 1) and (1, 0.75) with constant extension. By FEBio's step rule (below) E is 4.0e7 through t = 0.998063 and 3.0e7 after it.
+- The vessel is `Holzapfel-Gasser-Ogden` (uncoupled) with the published constants, k = 1500, `pressure_model` set to `default`, and material axes given per element as mesh data.
+
+`published_tpvr_frame` returns the frame material exactly as in those files.
 
 **Level 2, superelastic, for beams: a shell for now.** What is in place is the interface a superelastic law plugs into: a uniaxial model with committed and trial history, a consistent tangent, and gradients through the history. It carries a simple law (one internal variable, linear kinetic rules of the kind in Auricchio and Taylor, 1997) so the interface can be exercised. Refining the law is separate, dedicated work and is not attempted here. It should not be used for device results. FEBio has no shape-memory material, and adding one there is deferred, so verification will rest on the primary papers and published uniaxial data.
 
 ## What has been checked
 
-43 tests pass on CPU. Two GPU tests skip without a CUDA device. No GPU run has been made yet; GPU access for this workflow is being set up, and CPU is adequate for the design and correctness questions here. FEBio itself has not been run: comparisons with FEBio are against closed forms transcribed from its source.
+44 tests run on CPU: 42 pass, and two GPU tests skip without a CUDA device. No GPU run has been made yet; GPU access for this workflow is being set up, and CPU is adequate for the design and correctness questions here. The comparisons with FEBio in this pull request are against closed forms transcribed from its source. Comparisons with FEBio runs are in the verification draft (pull request 4): one hexahedron under FEBio's `prescribed deformation` condition, with FEBio's logged stress and tangent stored as the reference. Neo-Hookean, isotropic elastic, isotropic Lee-Sacks and HGO unconstrained (with material axes in and away from the global frame) agree with those runs to about 1e-12 in both, on eight cases.
 
 **Models against the FEBio source, and their derivatives** (relative error over 66 deformation states, FP64):
 
@@ -143,6 +151,8 @@ Deferred until a project needs them: Ogden, anisotropic Lee-Sacks, fiber compone
 
 - Reverse-mode gradients through a history were wrong when the new state was made by copying the committed vector and overwriting one component. Forward values were correct. This is our error, not Warp's: Warp's differentiability guide says a vector component may be assigned only once, and the adjoint of the overwritten value is not cleared. No warning is raised, so it is easy to write. Building the state with a constructor fixed it, a test covers it, and `examples/material_interface/warp_component_write_gradient.py` shows it in a few lines.
 - The gradient check itself failed for the suite's smallest moduli (1e-12) because its step was absolute. It is now relative.
+
+- The step load curve was evaluated the wrong way round. FEBio's STEP rule returns the value of the first point whose time is greater than t, so between two points the later value already applies; this code held the earlier value until the next point. A FEBio 4.13 run confirmed FEBio's rule (a STEP curve through (0.25, 1), (0.5, 0.6), (0.75, 0.3) gave 1 at t = 0.25, 0.6 at t = 0.375 and 0.3 at t = 0.5). For the published TPVR frame the difference is whether the modulus drops just after t = 0.998 or at t = 1. Corrected, with those values in the tests.
 
 **Things the tests corrected in this document:** an earlier statement that HGO is nearly isotropic at the published kappa = 0.33 was too strong. Changing the material axes changes the stress by up to 4.5 percent there, against about 90 percent at kappa = 0.1.
 
@@ -189,7 +199,7 @@ Unchanged in substance. The exchange kernel returns Cauchy stress and the 6x6 sp
 - The pilot implementations are not the basis for the design (MJ, Steve).
 - Superelastic nitinol for beams, kept as a shell for now; no shape-memory material in FEBio for now (MJ).
 - A non-finite result is handled like a negative Jacobian. FEBio retries the step in both cases, so this needed no question.
-- Chordae follow the published valve models (Wu et al. 2022; arXiv 2509.22865): tension-only two-node springs with zero force until the elongation passes a threshold (5 mm in those papers) and a linear response beyond it, modeled with FEBio's nonlinear spring. No new constitutive law is needed. It will be added under the uniaxial kind and checked against the suite's nonlinear spring problems (`di04`, `oi05`).
+- Chordae follow the published valve models (Wu et al. 2022; arXiv 2509.22865): tension-only two-node springs with zero force until the elongation passes a threshold and a linear response beyond it, modeled with FEBio's `nonlinear spring`. The repository's mitral input has eight such groups, with thresholds of 2 to 12 mm. No new constitutive law is needed. Trusses for chordae are of interest in the medium term (question 7).
 
 ## Questions for reviewers
 
@@ -202,33 +212,35 @@ Each question was checked before being asked: against the FEBio source (develop,
 3. Build-time options. FEBio's load controllers can drive integer and boolean parameters as well as real ones (`FEModel.cpp`). In the test suite, the material parameters under a load curve are all real-valued (seven names, 29 uses). Is it safe to fix integer, boolean and enumeration parameters when the kernel is built, or is there a case where one changes during a run?
 4. Lee-Sacks ranges. `FEIsotropicLeeSacks` and its uncoupled form declare no parameter ranges. We added non-negativity for c0, c1, c2 and k. Is that right? The suite has no Lee-Sacks problem; would one be welcome there?
 5. HGO at k2 = 0. In `FEHolzapfelUnconstrained.cpp` the range for k2 allows zero, and the strain energy divides by k2 (stress and tangent do not). Is that worth changing in FEBio? Here the energy uses a form that is finite at k2 = 0.
-6. A FEBio reference at a material point. From the source, two routes look possible: the material test diagnostic (`FEBioTest/FEMaterialTest`, uni-axial and simple shear scenarios), or one element under `FEBCPrescribedDeformation` with the log variables `Fxx` to `Fzz` and `sx` to `sxz`, which average over the element's integration points. We have run neither, because we have had no FEBio binary in this environment. Which would you recommend, and is the diagnostic maintained?
+6. A FEBio reference at a material point. The verification draft (pull request 4) now uses one element under `FEBCPrescribedDeformation` with FEBio's element log variables for the deformation gradient, stress and tangent, which average over the element's integration points; with a uniform deformation those are point values, and the models here agree with them (see What has been checked). FEBio also has a material test diagnostic (`FEBioTest/FEMaterialTest`, uni-axial and simple shear scenarios), which we have not used. Is the prescribed-deformation route the one you would recommend, and is the diagnostic maintained?
+
+7. Trusses for chordae. FEBio has two truss domains. `linear-truss` uses the `linear truss` material (Kirchhoff stress E ln(lambda)) with the scalar stiffness V/l^2 (E - 2 tau). `elastic-truss` evaluates any solid material at F = diag(lambda, lambda^-v, lambda^-v), which is what a hyperelastic chord would need; in `FEElasticTrussDomain::ElementStiffness` the scalar stiffness is `k = E`, with the linear-truss expression commented out. In a one-element test here (neo-Hookean, E = 1000, v = 0.3, about 5 percent stretch, FEBio 4.13 built from source without MKL), with full Newton (`max_ups` 0) the elastic-truss domain took 172 iterations at a cross-sectional area of 1 and did not converge at an area of 0.001, where the linear-truss domain took 30 in both. With the default BFGS settings and tolerances both domains took about 30, and the elastic-truss displacements at the two areas differed in the fourth digit, where they should be equal. The test suite uses `linear-truss` in three problems and `elastic-truss` in none. Is the elastic-truss domain still in progress, and is it what you would recommend for chordae with a hyperelastic material? If so, what should its tangent be?
 
 **Jeff**
 
-7. The published outflow tract model (Zelonis et al., Table 1) uses uncoupled HGO with c = 200 kPa and k = 1500 kPa, a bulk to shear ratio of 7.5, well under the ratio of about 100 you gave as the threshold. Should that case be run as coupled going forward? The unconstrained model here allows it with the same parameters.
+8. The published outflow tract model (Zelonis et al., Table 1, and the six open input files) uses uncoupled HGO with c = 200 kPa and k = 1500 kPa, a bulk to shear ratio of 7.5, well under the ratio of about 100 you gave as the threshold. Should that case be run as coupled going forward? The unconstrained model here allows it with the same parameters.
 
 **Ryan**
 
-8. The plugin's immersed elastic domain calls `Stress` and `SolidTangent`, takes the tangent as a `tens4dmm`, and has switches for secant stress and secant tangent. The exchange kernel here returns Cauchy stress and a full 6x6 in the same pair order (11, 22, 33, 12, 23, 13), stored by rows where `tens4dmm` stores by columns. Is the secant form needed from the Warp side, and is there anything else the domain reads from the material point?
+9. The plugin's immersed elastic domain calls `Stress` and `SolidTangent`, takes the tangent as a `tens4dmm`, and has switches for secant stress and secant tangent. The exchange kernel here returns Cauchy stress and a full 6x6 in the same pair order (11, 22, 33, 12, 23, 13), stored by rows where `tens4dmm` stores by columns. Is the secant form needed from the Warp side, and is there anything else the domain reads from the material point?
 
 **Warp team (Eric, Kay)**
 
-9. Kernels per material tree. The code generation guide describes building kernels from captured functions, which is what is done here, with one `module="unique"` kernel per material tree. Measured cost is under Kernel build cost above. For a library of this shape, would you keep one module per tree, or group a model's kernels in a named module, and is ahead-of-time compilation the intended route for deployment?
-10. Precision. Single precision loses the stress at small strain (table above), so stiff parts need FP64 while tissue does not. In 1.19.0, `wp.Mesh` and `wp.Bvh` accept only `vec3` (FP32) points and bounds, while `wp.HashGrid` accepts FP64. For contact between FP64 bodies, is casting positions to FP32 for the queries the intended pattern, and is mixed precision by domain reasonable to plan for?
-11. `warp.fem` for nonlinear solids. With the material evaluated once per point and stored, `fem.integrate` assembled the tangent in 210 to 260 ms on CPU against 55 to 70 ms for a dedicated hexahedron kernel (table above); no GPU numbers yet. Is storing point data and indexing it by `s.qp_index` the intended way to avoid re-evaluating a material per trial function, and is there a faster route within `warp.fem` that we missed?
-12. Shells in `warp.fem`. The valve models use four-node quadrilateral shells with thickness (0.396 mm), and FEBio's elastic shell domain carries a second displacement per node for the back face (`sx`, `sy`, `sz`) with integration through the thickness. `warp.fem` 1.19.0 has surface meshes embedded in 3D (`Quadmesh3D`, `Trimesh3D`) but no shell abstraction that we could find: no thickness, director or through-thickness rule. In a short check outside this PR, a `Quadmesh3D` with two `vec3d` fields, the surface gradient, the surface normal and a hand-written two-point rule through the thickness compiled and integrated in FP64. Is that the route you would take for shells, with the shell kinematics written in the integrand, or is a shell element type planned or better placed in `warp.fem` itself? Is there shell work elsewhere (Newton, for example) that we should build on instead?
+10. Kernels per material tree. The code generation guide describes building kernels from captured functions, which is what is done here, with one `module="unique"` kernel per material tree. Measured cost is under Kernel build cost above. For a library of this shape, would you keep one module per tree, or group a model's kernels in a named module, and is ahead-of-time compilation the intended route for deployment?
+11. Precision. Single precision loses the stress at small strain (table above), so stiff parts need FP64 while tissue does not. In 1.19.0, `wp.Mesh` and `wp.Bvh` accept only `vec3` (FP32) points and bounds, while `wp.HashGrid` accepts FP64. For contact between FP64 bodies, is casting positions to FP32 for the queries the intended pattern, and is mixed precision by domain reasonable to plan for?
+12. `warp.fem` for nonlinear solids. With the material evaluated once per point and stored, `fem.integrate` assembled the tangent in 210 to 260 ms on CPU against 55 to 70 ms for a dedicated hexahedron kernel (table above); no GPU numbers yet. Is storing point data and indexing it by `s.qp_index` the intended way to avoid re-evaluating a material per trial function, and is there a faster route within `warp.fem` that we missed?
+13. Shells in `warp.fem`. The valve models use four-node quadrilateral shells with thickness (0.396 mm), and FEBio's elastic shell domain carries a second displacement per node for the back face (`sx`, `sy`, `sz`) with integration through the thickness. `warp.fem` 1.19.0 has surface meshes embedded in 3D (`Quadmesh3D`, `Trimesh3D`) but no shell abstraction that we could find: no thickness, director or through-thickness rule. In a short check outside this PR, a `Quadmesh3D` with two `vec3d` fields, the surface gradient, the surface normal and a hand-written two-point rule through the thickness compiled and integrated in FP64. Is that the route you would take for shells, with the shell kinematics written in the integrand, or is a shell element type planned or better placed in `warp.fem` itself? Is there shell work elsewhere (Newton, for example) that we should build on instead?
 
 **Seda**
 
-13. In this repository the pilot files `lee_sacks.py`, `neo_hookean.py` and `stvk.py` are imported only by `tests/test_material.py`, `tests/test_neo_hookean.py`, `tests/test_stvk.py` and `examples/material_point/run.py`. Does any work outside the repository depend on them before they are removed?
+14. In this repository the pilot files `lee_sacks.py`, `neo_hookean.py` and `stvk.py` are imported only by `tests/test_material.py`, `tests/test_neo_hookean.py`, `tests/test_stvk.py` and `examples/material_point/run.py`. Does any work outside the repository depend on them before they are removed?
 
 ## Next steps
 
 1. Verification harness (separate draft).
 2. Assembly: assembled against matrix-free, `warp.fem` against dedicated kernels (separate draft).
 3. HGO, uncoupled, with a three-field element.
-4. Chordae as FEBio's nonlinear spring under the uniaxial kind.
+4. Chordae as FEBio's nonlinear spring under the uniaxial kind; a truss later, after question 7.
 5. A GPU run of the tests and of the timings, once GPU access is in place.
 6. Remove the pilot material files once their callers are migrated.
 7. Later, as dedicated work: the superelastic law.

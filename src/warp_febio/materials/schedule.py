@@ -18,12 +18,23 @@ import numpy as np
 
 @dataclass(frozen=True)
 class LoadCurve:
-    """Piecewise load curve through (time, value) points.
+    """Piecewise load curve through (time, value) points, as FEBio evaluates it.
 
-    interpolate: "linear" or "step". A step curve holds each value until the
-    next point is reached. Outside the
-    points the end values are held. Check both against the FEBio load controller
-    before relying on them for a FEBio comparison.
+    Follows PointCurve::value
+    (https://github.com/febiosoftware/FEBio/blob/develop/FECore/PointCurve.cpp)
+    for the two interpolation modes the applications use, with the CONSTANT
+    extension: outside the points the end values are held.
+
+    interpolate "linear": straight lines between points.
+    interpolate "step":   the value of the first point whose time is greater
+        than t. The first point's value holds up to and including its time;
+        after that the curve already has the value of the next point, and at an
+        interior point it has the value of the point after it. So a step curve
+        through (0.998, 1.0) and (1.0, 0.75) is 1.0 up to and including
+        t = 0.998 and 0.75 after it. This is the reverse of holding each value
+        until the next point. Confirmed by FEBio 4.13 runs: a STEP curve through
+        (0.25, 1), (0.5, 0.6), (0.75, 0.3) gave 1 at t = 0.25, 0.6 at t = 0.375
+        and 0.3 at t = 0.5.
     """
 
     times: tuple
@@ -41,5 +52,11 @@ class LoadCurve:
     def __call__(self, time):
         if self.interpolate == "linear":
             return float(np.interp(time, self.times, self.values))
-        index = int(np.searchsorted(self.times, time, side="right")) - 1
-        return float(self.values[max(index, 0)])
+        if time <= self.times[0]:
+            return float(self.values[0])
+        if time >= self.times[-1]:
+            return float(self.values[-1])
+        # PointCurve's binarySearch: the first point whose time is greater
+        # than `time`.
+        index = int(np.searchsorted(self.times, time, side="right"))
+        return float(self.values[index])

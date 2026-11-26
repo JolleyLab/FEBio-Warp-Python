@@ -23,6 +23,7 @@ from warp_febio.materials.model import GeometryField, Material, from_spatial
 from warp_febio.materials.models.nitinol import (
     NITINOL_SUPERELASTIC_UNIAXIAL,
     effective_modulus_nitinol,
+    published_tpvr_frame,
 )
 from warp_febio.materials.schedule import LoadCurve
 from warp_febio.materials.uniaxial import integrate, make_update_kernel
@@ -632,8 +633,21 @@ class ScheduleTests(unittest.TestCase):
         self.assertAlmostEqual(ramp(1.0), 2.0)
         self.assertAlmostEqual(ramp(5.0), 3.0)
         step = LoadCurve((0.0, 1.0), (1.0, 0.25), interpolate="step")
+        # FEBio's STEP rule: between two points the later point's value applies.
         self.assertEqual(
-            [step(t) for t in (0.0, 0.99, 1.0, 2.0)], [1.0, 1.0, 0.25, 0.25]
+            [step(t) for t in (0.0, 0.99, 1.0, 2.0)], [1.0, 0.25, 0.25, 0.25]
+        )
+        # Values from FEBio 4.13 runs of STEP curves through these points, at
+        # output times that fall on the points and between them.
+        two = LoadCurve((0.35, 0.65), (1.0, 0.75), interpolate="step")
+        self.assertEqual(
+            [two(t) for t in (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 1.0)],
+            [1.0, 1.0, 1.0, 0.75, 0.75, 0.75, 0.75, 0.75],
+        )
+        three = LoadCurve((0.25, 0.5, 0.75), (1.0, 0.6, 0.3), interpolate="step")
+        self.assertEqual(
+            [three(t) for t in (0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0)],
+            [1.0, 1.0, 0.6, 0.3, 0.3, 0.3, 0.3, 0.3],
         )
         with self.assertRaises(ValueError):
             LoadCurve((0.0, 0.0), (1.0, 2.0))
@@ -661,6 +675,15 @@ class ScheduleTests(unittest.TestCase):
             np.testing.assert_allclose(
                 after["cauchy"], 0.5 * before["cauchy"], rtol=1e-12, atol=1e-6
             )
+
+    def test_published_tpvr_frame(self):
+        """The frame material and load curve of the six open TPVR inputs."""
+        frame = published_tpvr_frame()
+        self.assertEqual(frame.model.febio_type, "isotropic elastic")
+        self.assertEqual(frame.params_at(0.5)["E"], 4.0e7)
+        self.assertEqual(frame.params_at(0.998063)["E"], 4.0e7)
+        self.assertEqual(frame.params_at(0.999)["E"], 3.0e7)
+        self.assertEqual(frame.params_at(3.0)["E"], 3.0e7)
 
 
 class SuperelasticUniaxialTests(unittest.TestCase):

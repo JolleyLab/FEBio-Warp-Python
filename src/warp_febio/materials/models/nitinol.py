@@ -12,10 +12,18 @@ matches what the published FEBio input files do.
 It needs no constitutive code of its own: it is an existing elastic model plus
 a parameter schedule. `effective_modulus_nitinol` builds that pairing.
 
-Open point: the paper's text describes the device law as FEBio "isotropic
-elastic" (its Eq. 4) while its Table 1 lists neo-Hookean. The published input
-files (FEBio model repository, project 136) settle which was run. Both are
-available here through the `law` argument until that is checked.
+The paper's text describes the device law as FEBio "isotropic elastic" (its
+Eq. 4) while its Table 1 lists neo-Hookean. The six open input files in the
+FEBio model repository (files 3598 to 3603) settle it: the frame is
+"isotropic elastic" with E = 4.0e7, v = 0.33, density = 6.45e-6 and a load
+curve on E, and the two crimping tubes are "neo-Hookean" shells with the same
+constants and no load curve. The load curve is the same in all six files:
+
+    <interpolate>STEP</interpolate> <extend>CONSTANT</extend>
+    <points> <pt>0.998063,1</pt> <pt>1,0.75</pt> </points>
+
+so E is 4.0e7 through t = 0.998063 and 3.0e7 after it (see schedule.LoadCurve
+for FEBio's step rule). `published_tpvr_frame` returns exactly that.
 
 Level 2: superelastic, uniaxial, for beam cross-sections (SHELL)
 ----------------------------------------------------------------
@@ -76,26 +84,43 @@ from . import isotropic_elastic, neo_hookean
 
 
 def effective_modulus_nitinol(
-    E, v, density, release_time, release_factor, law="neo-Hookean"
+    E, v, density, release_time, release_factor, law="isotropic elastic"
 ):
     """Level 1 nitinol: an elastic law with a step load curve on E.
 
-    E, v, density: as in the FEBio input (Zelonis et al. Table 1 lists
-        E = 4.0e7 kPa, v = 0.33, density = 6.45e-6 kg/mm^3).
-    release_time: time at which the frame passes from compression to release.
-    release_factor: multiplier applied to E from release_time on. The paper does
-        not print the load curve values, so this must come from the input file.
-    law: "neo-Hookean" or "isotropic elastic" (see the open point above).
+    E, v, density: as in the FEBio input.
+    release_time: E keeps its value through this time.
+    release_factor: multiplier applied to E after release_time.
+    law: "isotropic elastic" (what the open TPVR inputs use for the frame) or
+        "neo-Hookean".
     """
     model = {
         "neo-Hookean": neo_hookean.NEO_HOOKEAN,
         "isotropic elastic": isotropic_elastic.ISOTROPIC_ELASTIC,
     }[law]
+    # A FEBio STEP curve takes the later point's value between two points, so
+    # the second point only has to lie after release_time.
     curve = LoadCurve(
-        times=(0.0, release_time), values=(1.0, release_factor), interpolate="step"
+        times=(release_time, release_time + 1.0),
+        values=(1.0, release_factor),
+        interpolate="step",
     )
     return Material(
         model=model, params={"E": E, "v": v}, density=density, schedules={"E": curve}
+    )
+
+
+def published_tpvr_frame():
+    """The device frame material of the six open TPVR inputs (kPa, mm, kg/mm^3)."""
+    return Material(
+        model=isotropic_elastic.ISOTROPIC_ELASTIC,
+        params={"E": 4.0e7, "v": 0.33},
+        density=6.45e-6,
+        schedules={
+            "E": LoadCurve(
+                times=(0.998063, 1.0), values=(1.0, 0.75), interpolate="step"
+            )
+        },
     )
 
 

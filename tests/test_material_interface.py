@@ -15,10 +15,22 @@ import warp as wp
 import febio_closed_forms
 from warp_febio.materials import model as model_api
 from warp_febio.materials import models  # noqa: F401  (registers the models)
-from warp_febio.materials import neo_hookean as legacy_nh
-from warp_febio.materials import stvk as legacy_stvk
 from warp_febio.materials.conformance import check_model, sample_states
-from warp_febio.materials.lee_sacks import evaluate as legacy_lee_sacks
+
+# The pilot implementations are an independent comparison. The input and output
+# draft (pull request 5) moves them from warp_febio.materials to the
+# warp_febio_pilot package under pilots/; support both locations.
+try:
+    from warp_febio.materials import neo_hookean as legacy_nh
+    from warp_febio.materials import stvk as legacy_stvk
+    from warp_febio.materials.lee_sacks import evaluate as legacy_lee_sacks
+except ImportError:
+    import sys
+
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "pilots"))
+    from warp_febio_pilot.materials import neo_hookean as legacy_nh
+    from warp_febio_pilot.materials import stvk as legacy_stvk
+    from warp_febio_pilot.materials.lee_sacks import evaluate as legacy_lee_sacks
 
 # Parameter sets. Lee-Sacks: adult mitral values (kPa) from the valve deck in
 # references/febio/originals/cardiofem/valve_pressurization. The others match
