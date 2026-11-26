@@ -39,6 +39,7 @@ from ..compiled import inspect, shell_directors
 from ..coverage import CoverageError
 from ..discretization.fields import build_field_table
 from ..elements.brick_domain import BrickDomain
+from ..loads import pressure
 from ..materials.febio import bind_material
 from ..results import Results, StateResult
 from ..solvers.nonlinear.newton import NewtonSettings, solve_step
@@ -74,21 +75,38 @@ def select_domain(model, block, fields, directors, device):
     return BrickDomain(block.name, febio_type, bound, X, emap, fields.count, model, device)
 
 
+# Loads this run path can build: FEBio type -> module with inspect_load and a Term.
+LOADS = {pressure.TYPE: pressure}
+
+
+def load_support(record, model):
+    """Coverage of one load record, for the coverage report."""
+    module = LOADS.get(record.type)
+    return module.inspect_load(record, model) if module is not None else None
+
+
+def select_load(record, model, fields, directors, device):
+    """The term for one load record (FEBio: the FEModelLoad class by type)."""
+    return pressure.PressureLoad(record, model, fields, directors, device)
+
+
 def build_system(model, device=None) -> System:
     """Check coverage, then build the field table and the term list.
 
     Raises CoverageError, carrying the report, if the model needs a feature
     that is not supported. The coverage rules are those of pull request 5.
     """
-    report = inspect(model)
+    report = inspect(model, load_support=load_support)
     if not report.runnable:
         raise CoverageError(report)
     device = wp.get_device(device)
     fields = build_field_table(model)
     directors = shell_directors(model)
     terms = [select_domain(model, b, fields, directors, device) for b in model.mesh.blocks]
-    # Loads, discrete elements and contact interfaces are appended here as
-    # further terms; none is implemented in this template.
+    for record in model.loads:
+        terms.append(select_load(record, model, fields, directors, device))
+    # Discrete elements and contact interfaces are appended here as further
+    # terms; neither is implemented in this template.
     system = System(model, fields, terms, device)
     system.report = report
     return system

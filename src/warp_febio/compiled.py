@@ -52,8 +52,13 @@ DOF_NAMES = ("x", "y", "z", "sx", "sy", "sz")
 PLOT_VARIABLES = {"displacement", "stress"}
 
 
-def inspect(model: Model) -> CoverageReport:
-    """Coverage report for a Model. Allocates nothing on the device."""
+def inspect(model: Model, load_support=None) -> CoverageReport:
+    """Coverage report for a Model. Allocates nothing on the device.
+
+    load_support: optional function (record, model) -> (status, note) or None,
+    through which a run path says which loads it can build. Without it every
+    load is reported as not supported, as this fixture has none.
+    """
     rep = CoverageReport()
     for issue in model.issues:
         rep.add("input", issue.where, NOT_SUPPORTED, issue.where, issue.message)
@@ -206,7 +211,9 @@ def inspect(model: Model) -> CoverageReport:
     for r in model.boundary + [b for s in model.steps for b in s.boundary]:
         _inspect_bc(r, model, rep)
     for r in model.loads:
-        rep.add("load", r.type or r.tag, NOT_SUPPORTED, r.name or "")
+        known = load_support(r, model) if load_support is not None else None
+        status, note = known if known is not None else (NOT_SUPPORTED, "")
+        rep.add("load", r.type or r.tag, status, r.name or "", note)
     for r in model.contact:
         rep.add("contact", r.type or r.tag, NOT_SUPPORTED, r.name or "")
     for r in model.other_sections:

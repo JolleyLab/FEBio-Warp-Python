@@ -135,7 +135,12 @@ class Term:
     def residual(self, state: State, history: Any, out: wp.array) -> None:
         raise NotImplementedError
 
-    def linearize(self, state: State, history: Any) -> Optional[BlockTangent]:
+    def linearize(self, state: State, history: Any, exact: bool = False) -> Optional[BlockTangent]:
+        """The term's part of K. FEBio lets some terms give Newton a tangent
+        that is not the derivative of their residual (the symmetrized
+        pressure stiffness; `tangent_scale` on a material). With exact=True a
+        term must return the true derivative, which is what the adjoint
+        needs. A term whose tangent is always exact ignores the flag."""
         return None
 
     def commit(self, trial_history: Any) -> None:
@@ -229,11 +234,12 @@ class System:
             term.residual(state, None, R)
         return R
 
-    def tangent(self, state: State):
-        """K = -dR/du at the last `update`, unconstrained, as triplets."""
+    def tangent(self, state: State, exact: bool = False):
+        """K at the last `update`, unconstrained, as triplets. With
+        exact=True, K = -dR/du exactly (see Term.linearize)."""
         triplets = Triplets()
         for term in self.terms:
-            op = term.linearize(state, None)
+            op = term.linearize(state, None, exact)
             if op is not None:
                 op.assemble(triplets)
         return triplets.arrays(self.device)

@@ -10,6 +10,12 @@ start from a small end-to-end example.
 | `hex8_neo_hookean.feb` | one hex8, `neo-Hookean`, mildly distorted | lateral displacement of the moved face (8) |
 | `quad4_shell_neo_hookean.feb` | one quad4 `elastic-shell`, `neo-Hookean`, thickness 0.1 | in-plane y and back-face displacement of the moved edge (8) |
 
+A third input, `hex8_pressure.feb`, is the gradient check case of the run path
+template: one unit hex8, `neo-Hookean`, symmetry conditions on three faces and a
+follower pressure on the top face. Its solution is homogeneous and has a closed
+form (see `tests/test_run_path_pressure.py`). No FEBio result is stored for it
+yet; run it in FEBio and add the outputs to `febio/` as for the other two.
+
 Both use `max_ups` 0 (full Newton) and tolerances tighter than FEBio's defaults,
 so each code converges well below the comparison tolerance.
 

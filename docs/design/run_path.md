@@ -1,21 +1,22 @@
 # Run path: from a compiled model to a result
 
-Draft v0.1 for discussion, November 26, 2026. For Steve Maas, Jeff Weiss, Ryan Black and the Warp team. The code is a local template on branch `mattjolley/run-path-template`, stacked on `mattjolley/integration-base`. Nothing is merged or pushed.
+Draft v0.2 for discussion, November 26, 2026. For Steve Maas, Jeff Weiss, Ryan Black and the Warp team. The code is a local template on branch `mattjolley/run-path-template`, stacked on `mattjolley/integration-base`. Nothing is merged or pushed.
 
-**Scope.** The structure that takes a model and drives it through steps to a result: unknowns, terms, the Newton step, the step driver, and gradients. It is shown on the basic example Steve suggested (one element, one material, prescribed nodal displacements, with free unknowns and a Newton solve).
+**Scope.** The structure that takes a model and drives it through steps to a result: unknowns, terms, the Newton step, the step driver, and gradients. It is shown on the basic example Steve suggested (one element, one material, prescribed nodal displacements, with free unknowns and a Newton solve), and on the same kind of element under a pressure load, which is the standing case for checking gradients.
 
-**Not in scope.** New elements, loads, dynamics, contact in a run, performance. Each has a marked place to attach and no implementation.
+**Not in scope.** New elements, loads other than pressure, dynamics, contact in a run, performance. Each has a marked place to attach and no implementation.
 
 **What it replaces.** The test fixture of pull request 5 (`compiled.py`, `analysis/static.py`), which ran the same example in one piece. The model, reader, writers, material layer and contact are used unchanged.
 
 ## 1. Summary
 
-- **The solver sees a field table and a list of terms, and nothing else.** A domain, a load, a set of springs and a contact interface would all be terms.
+- **The solver sees a field table and a list of terms, and nothing else.** A domain and a pressure load are terms today; a set of springs and a contact interface would be too.
 - **It follows FEBio's structure.** The same passes as `FESolidSolver2`, FEBio's residual sign, FEBio's treatment of prescribed displacements, FEBio's convergence tests and time step controller.
 - **It departs from FEBio in three places, each for Warp.** Unknowns are numbered by (node, variable) so every matrix block is 3x3. Each domain is a batch with flat point data. State is separate from the model.
 - **Gradients are part of the structure.** A gradient with respect to material parameters costs one extra linear solve and one reverse pass of the residual, using the same kernels as the forward solve.
-- **It reproduces the fixture and FEBio** on the four inputs that run today (section 6).
-- **Three points need Steve's view** (section 7).
+- **It reproduces the fixture and FEBio** on the four inputs the fixture ran, and agrees with a stored FEBio run of a shell patch under pressure (section 6).
+- **Newton and the adjoint do not always want the same tangent.** FEBio's default pressure stiffness is a symmetrized form. Newton uses it; the adjoint asks each term for its exact tangent (section 5).
+- **Four points need Steve's view** (section 7).
 
 ## 2. The path
 
@@ -26,7 +27,7 @@ flowchart TB
 
     subgraph system["System, on the device"]
         fields["<b>FieldTable</b><br/>entries = (node, variable)<br/>free, fixed, prescribed<br/><i>discretization/fields.py</i>"]
-        terms["<b>Terms</b><br/>BrickDomain today<br/>loads, springs, contact next<br/><i>assembly/system.py</i>"]
+        terms["<b>Terms</b><br/>BrickDomain, PressureLoad today<br/>springs, contact next<br/><i>assembly/system.py</i>"]
     end
     build --> fields & terms
     mat["Material layer<br/><i>pull request 2</i>"] --> terms
@@ -44,6 +45,7 @@ flowchart TB
 | `FieldTable` | `DOFS`, `FESolver::InitEquations` | Variable names; free, fixed, prescribed | Numbered by (node, variable); constrained components masked, not removed |
 | `Term` | `FEElasticDomain`, `FEModelLoad`, `FEContactInterface` | What each computes; the sign | One contract for all of them |
 | `BrickDomain` | `FEElasticSolidDomain`, `FEElasticShellDomain` | Update, internal force, stiffness; integration points | Flat point data; one kernel set per material tree |
+| `PressureLoad` | `FEPressureLoad`, `FESurface::LoadVector`, `LoadStiffness` | Parameters and defaults; load vector; both stiffness forms; 2x2 Gauss on quad4 facets; shell front and back face | The pressure is a device array; an exact tangent on request |
 | `System` | `FEModel` as `FESolidSolver2` uses it | The three passes | Holds no application knowledge |
 | `solve_step` | `FENewtonSolver::SolveStep`, `FESolidSolver2::Quasin` | Prescribed displacements; `dtol`, `etol`, `rtol`, `min_residual`, `max_refs` | Full Newton, no line search yet |
 | `run` | `FEAnalysis`, `FETimeStepController` | Control settings; retries; must points | A step maps one State to the next |
@@ -133,6 +135,24 @@ flowchart LR
 - **One implementation of the element.** The reverse pass runs the forward `update` and `residual` kernels under `wp.Tape`. This is why those two are written for reverse mode (fixed loop bounds, no array element written twice) and `linearize` is kept separate.
 - **Parameters are device arrays.** Each term lists its own (`Term.parameters()`), which is what the material layer already provides. A term with a closed-form derivative can supply it instead, as contact does with `residual_parameter_vjp`.
 
+### Pressure, and the tangent the adjoint needs
+
+`PressureLoad` follows `FEPressureLoad`: the same four parameters and defaults, the same load vector on the current facet geometry, and both of FEBio's stiffness forms.
+
+FEBio's default (`symmetric_stiffness = 1`) is a symmetrized stiffness. On a facet with free edges it is not the derivative of the load vector. That is acceptable for Newton, which only needs a direction, and it keeps the matrix symmetric. It is not acceptable for the adjoint, whose formula holds only for the true derivative.
+
+So `linearize` takes an `exact` flag. Newton calls it as the input file asks. The adjoint calls it with `exact=True`, and a term must then return the true derivative. For pressure that is FEBio's own non-symmetric form. The same flag is where `tangent_scale` on the leaflet material will be handled.
+
+Measured on the single-element pressure case:
+
+| | FEBio's default form | Exact form |
+| --- | --- | --- |
+| Newton iterations over four load steps | 7, 9, 11, 13 | 3, 3, 3, 3 |
+| Converged solution | Same to 1e-9 | Same to 1e-9 |
+| Adjoint gradient of the top displacement with respect to Poisson's ratio | 0.0020 (wrong sign) | -0.0350 (matches the closed form) |
+
+The slow convergence in the first column comes from the symmetrized form on a single facet with free edges under full Newton. FEBio has not been run on this input, so its iteration counts there are not known.
+
 ## 6. The basic example, and what was checked
 
 `examples/run_path/basic_example.py` runs the path on `hex8_neo_hookean.feb` in six numbered stages: read, build, run, compare with FEBio, write a plot file, compute a gradient.
@@ -147,6 +167,8 @@ flowchart LR
 | `solve(A, b, method)` | `solvers/linear/warp_linear.py` | CG, BiCGSTAB, GMRES on the device; dense on the host for checks |
 | `run(system)` | `analysis/steps.py` | The step, with the time step controller |
 | `parameter_gradient(system, state, dJ_du)` | `sensitivity/adjoint.py` | Adjoint gradient |
+| `PressureLoad`, `inspect_load` | `loads/pressure.py` | The pressure term and its coverage rule |
+| `check_parameter_gradients(system, output)` | `sensitivity/check.py` | Adjoint against finite differences for every parameter of every term |
 
 Results, CPU only, Warp 1.19.0, double precision:
 
@@ -159,9 +181,37 @@ Results, CPU only, Warp 1.19.0, double precision:
 | Adjoint gradient against central differences of complete runs | Single hex8, single quad4 shell, 8-element block | Agree to 1e-6 relative for Poisson's ratio; zero for the modulus in both |
 | An input needing unsupported features is refused with the coverage report | Open mitral closure input | Refused |
 
-The gradient check has a limit worth stating. These inputs are displacement-driven, so the modulus has no effect on the displacements and only Poisson's ratio gives a nonzero gradient. A load-driven case is needed to exercise both.
+The gradient check on these four inputs has a limit. They are displacement-driven, so the modulus has no effect on the displacements and only Poisson's ratio gives a nonzero gradient. The pressure case exercises all parameters.
 
-The whole test suite on this branch: 125 tests, 121 pass and 4 skip (two need a GPU, two need VTK and h5py).
+### The gradient check case
+
+`references/single_element/hex8_pressure.feb`: one unit hex8, neo-Hookean, symmetry conditions on three faces, follower pressure on the top face. The deformation is homogeneous uniaxial stress with Cauchy stress equal to minus the pressure, so there is a closed-form solution, and it depends on the modulus, Poisson's ratio and the pressure. `examples/run_path/gradient_check_case.py` runs it.
+
+| Check | Result |
+| --- | --- |
+| Displacement and stress against the closed form, four load steps | 1e-9 absolute |
+| The same with `linear = 1` (load on the reference area) | 1e-9 absolute |
+| Exact pressure tangent against finite differences of the residual: hex8 face, shell front face, shell back face | 1e-8 relative |
+| Adjoint gradient of the top displacement with respect to E, v and pressure, against the closed form | 2e-9 relative |
+| The same against central differences of complete runs | 2e-8 relative |
+
+| Parameter | Value | Adjoint | Central difference |
+| --- | --- | --- | --- |
+| E | 1 | 0.178478623 | 0.178478623 |
+| v | 0.3 | -0.034977172 | -0.034977172 |
+| pressure | 0.2 | -0.892393115 | -0.892393116 |
+
+`check_parameter_gradients` is written to be reused as terms are added. It walks every parameter array that any term exposes, so a new term is covered by the same call on this case or a small extension of it.
+
+### Against FEBio on a real mesh
+
+The repository holds a FEBio 4.9 run of a 1,863-element quad4 shell patch under a follower pressure (static, `isotropic elastic`), from the pilot phase. Using only the FEBio input and FEBio's plot file, the run path agrees with FEBio's displacements at all 17 output times to 8e-8 relative, which is the precision of the single-precision plot file. The test in the suite checks the first three times.
+
+That comparison used a sparse direct solve from SciPy on the host. With Warp's CG and a block-diagonal preconditioner the first load step took 470 to 990 iterations per solve, so a better preconditioner or a direct solver on the device is needed before shell models of this size are practical.
+
+No FEBio result is stored yet for `hex8_pressure.feb` itself. FEBio was not built in this session, so the closed form stands in for it.
+
+The whole test suite on this branch: 134 tests, 130 pass and 4 skip (two need a GPU, two need VTK and h5py).
 
 ## 7. Points for review
 
@@ -170,13 +220,14 @@ Each was checked against the FEBio source (`e4df3f8`), Warp 1.19.0 and the code 
 1. **Numbering by (node, variable).** FEBio numbers each free degree of freedom and removes constrained ones. Here every entry is a 3-vector and constrained components are masked. Does this lose anything FEBio relies on that we should plan for now, for example linear constraints or rigid bodies, which this template does not have?
 2. **One contract for domains, loads and contact.** FEBio keeps these as separate class families that the solver calls in turn. Here they share `Term`. Is there a case in FEBio where the order or the separation of those passes matters to the result?
 3. **Residual sign.** The template uses FEBio's (external minus internal). The contact draft documents the opposite. The proposal is to change contact to FEBio's.
+4. **Approximate tangents.** The symmetrized pressure stiffness and `tangent_scale` are two places where FEBio gives Newton a tangent that is not the derivative of the residual. The adjoint needs to know every such place. Are there others in the features the valve and device models use, for example in the contact potential or the shell formulation?
 
 ## 8. Where the next features attach
 
 | Feature | Attaches as | In |
 | --- | --- | --- |
 | tet4, penta6, tri3 domains; three-field domain | A branch of `select_domain` returning another `Term` | `analysis/steps.py`, `elements/` |
-| `pressure`, `mass damping` | A `Term` appended in `build_system` | `loads/` |
+| `mass damping`; `pressure` on tri3 facets | A `Term` appended in `build_system`, as `pressure` is | `loads/` |
 | Chordae (`Discrete`, nonlinear spring) | A `Term` on the uniaxial law of the material layer | `elements/` |
 | Contact potential | The contact draft's interface as a `Term`, with its blocks kept in their own matrix | `contact/` |
 | Several steps, per-step activation | A loop in `run` that switches terms and conditions | `analysis/steps.py` |
@@ -185,8 +236,8 @@ Each was checked against the FEBio source (`e4df3f8`), Warp 1.19.0 and the code 
 
 ## 9. Limits
 
-- Static analysis, one step, hex8 solids and quad4 shells, the materials the binding accepts, fixed and prescribed displacements. This is exactly what the fixture ran.
-- No loads, so no load-driven case and no follower stiffness.
+- Static analysis, one step, hex8 solids and quad4 shells, the materials the binding accepts, fixed and prescribed displacements, and pressure on quad4 facets given as one number with a load curve.
+- One small change outside the new files: `inspect` in `compiled.py` takes an optional function through which a run path says which loads it can build. The fixture's behavior is unchanged.
 - No history, so `commit` and `rollback` are called and do nothing.
 - CPU only. No timing was taken, and none would mean much at this size.
 - The first-iteration handling of prescribed displacements and the convergence tests were carried over from the fixture, which was compared with FEBio; they were not re-derived from the FEBio source for this note.

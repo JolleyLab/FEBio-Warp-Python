@@ -41,19 +41,23 @@ from ..solvers.linear.warp_linear import solve
 
 
 def parameter_gradient(system: System, state: State, dJ_du: np.ndarray,
-                       linear_solver: str = "direct"):
+                       linear_solver: str = "direct", exact: bool = True):
     """dJ/dp for every parameter array of the system, at a converged state.
 
     dJ_du: (n_entries, 3) derivative of the output with respect to the
     solution. Returns (gradients, lambda): a dict keyed like
     `system.parameters()`, and the adjoint solution on the host.
+    exact=False uses the tangent Newton uses; it exists only so a test can
+    show that the gradient is then wrong.
     """
     device = system.device
-    # Adjoint solve with the transpose of the constrained tangent. Constrained
+    # Adjoint solve with the transpose of the constrained tangent, in its
+    # exact form: a tangent that Newton may approximate (FEBio's symmetrized
+    # pressure stiffness) would give a wrong gradient here. Constrained
     # components carry no sensitivity through equilibrium: their rows are
     # identity and the right-hand side is masked.
     system.update(state)
-    A = system.constrained_matrix(system.tangent(state))
+    A = system.constrained_matrix(system.tangent(state, exact=exact))
     rhs = wp.array(dJ_du * system.fields.free, dtype=wp.vec3d, device=device)
     lam, _ = solve(warp.sparse.bsr_transposed(A), rhs, linear_solver)
     system.mask(lam)

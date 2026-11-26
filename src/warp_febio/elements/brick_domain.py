@@ -218,7 +218,8 @@ class BrickDomain(Term):
             device=self.device,
         )
 
-    def linearize(self, state: State, history: Any) -> BlockTangent:
+    def linearize(self, state: State, history: Any, exact: bool = False) -> BlockTangent:
+        # Always the exact derivative of the internal force.
         wp.launch(
             self._stiffness,
             dim=(self.count, 8, 8),
