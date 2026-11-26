@@ -1,0 +1,43 @@
+{
+  "status": "prepared; awaiting externally executed FEBio outputs",
+  "cases": [
+    {
+      "name": "pressure_only_static",
+      "source": "reference/febio/patch.feb",
+      "source_sha256": "1e7abe284e5c5fe4c9cd7ff111aaf04fb370dd1f34378ae7b4cfce27a2d9d9ae",
+      "input": "pressure_only_static.feb",
+      "sha256": "a3f376ddc0c272b16ac928e4a8896086fad2f3c55fb7602ddfd1ebdbc39c73e4"
+    },
+    {
+      "name": "a2_point_load_static",
+      "source": "validation/diagnostics/a2_point_load/patch_a2_point_load.feb",
+      "source_sha256": "7be4dfba8c80fdf529c8f405e4f41de8680f94b970cbc503ea0e1382c4af7c2f",
+      "input": "a2_point_load_static.feb",
+      "sha256": "812b75829b4da026ba8009e757e4a7ff3b9bd2dcc474bb697183e3d69f9bcff5"
+    }
+  ],
+  "units": "mm-N-s-MPa-tonnes",
+  "analysis": "STATIC",
+  "pseudo_time_final": 0.1,
+  "pressure_MPa": 0.0133,
+  "point_force_N": [
+    0.011326936604683965,
+    0.0037435717224098483,
+    0.09928588106026276
+  ],
+  "loaded_febio_node_id": 1868,
+  "changes": {
+    "Control/analysis": [
+      "DYNAMIC",
+      "STATIC"
+    ],
+    "Control/solver/rtol": [
+      0,
+      1e-12
+    ],
+    "Output/logfile/element_data/@file": "case-specific portable names"
+  },
+  "residual_tolerance_semantics": "squared norm(R) <= 1e-12 * initial squared norm(R); norm ratio <=1e-6",
+  "source_review": "https://github.com/febiosoftware/FEBio/blob/develop/FEBioMech/FESolidSolver2.cpp",
+  "warning": "No final comparison can be claimed until both returned runs converge and residuals are inspected."
+}
