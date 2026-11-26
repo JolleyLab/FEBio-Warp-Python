@@ -26,3 +26,14 @@ before relying on these beyond this draft.
 
 To regenerate: `febio4 -i hex8_neo_hookean.feb` and the same for the shell, in
 this folder, then move the outputs into `febio/`.
+
+## FEBio-Warp results in `febio_warp/`
+
+`*_warp.xplt`: the plot files FEBio-Warp writes for the same two inputs, kept
+here so they can be opened in FEBio Studio next to FEBio's own. They have not
+been opened in FEBio Studio yet. Read back with `read_xplt`, they match
+FEBio's files in dictionary, nodes and state times; the files differ in size
+by the length of the software name.
+
+To regenerate: `python -m warp_febio run hex8_neo_hookean.feb -o
+febio_warp/hex8_neo_hookean_warp.xplt`, and the same for the shell.
