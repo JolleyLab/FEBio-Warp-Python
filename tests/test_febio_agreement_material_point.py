@@ -13,7 +13,11 @@ volumetric terms exactly as FEUncoupledMaterial::Stress and ::Tangent do, with
 the model's pressure model. That sum is made here for the comparison only; in
 FEBio-Warp the two parts are meant to be combined by a multi-field element.
 
-This is the one comparison of FEBio-Warp with FEBio that needs no input
+The chord case (``ch_chord_slack_tension``) is compared the same way: FEBio
+logged the elongation and force of one nonlinear spring through slack and
+tension, and the FEBio-Warp spring is evaluated at the logged elongations.
+
+These are the comparisons of FEBio-Warp with FEBio that need no input
 reader or solver. It is skipped where the material interface
 (``warp_febio.materials.model``) is not present, and for FEBio material
 types FEBio-Warp does not implement.
@@ -168,6 +172,60 @@ class MaterialPointAgreementTest(unittest.TestCase):
                 self.assertLess(relative(tangent, c_febio), TOLERANCE)
                 compared += 1
         self.assertGreater(compared, 0)
+
+
+@unittest.skipIf(api is None, "FEBio-Warp material interface not present")
+class ChordAgreementTest(unittest.TestCase):
+    def test_spring_force_matches_febio(self):
+        try:
+            import warp as wp
+            from warp_febio.materials.models.nonlinear_spring import nonlinear_spring
+            from warp_febio.materials.uniaxial import make_update_kernel
+        except ImportError:
+            self.skipTest("no FEBio-Warp model of type 'nonlinear spring'")
+        ref = json.loads((CASES / "febio" / "ch_chord_slack_tension.json").read_text())
+        deck = CASES / ref["input"]
+        self.assertEqual(
+            hashlib.sha256(deck.read_bytes()).hexdigest(),
+            ref["input_sha256"],
+            "reference was not generated from this input file",
+        )
+        mat = ET.parse(deck).getroot().find("Discrete/discrete_material")
+        self.assertEqual(mat.get("type"), "nonlinear spring")
+        points = [
+            tuple(float(x) for x in pt.text.split(","))
+            for pt in mat.find("force/points")
+        ]
+        model = nonlinear_spring(
+            len(points), mat.findtext("measure"), mat.findtext("force/extend")
+        )
+        values = {"scale": float(mat.findtext("scale"))}
+        for k, (x, y) in enumerate(points):
+            values[f"x{k}"] = x
+            values[f"y{k}"] = y
+        record = [r for r in ref["records"] if "discrete element force" in r["data"]][0]
+        logged = np.array(record["values"])[:, 0, :]
+        elongation = logged[:, record["data"].index("discrete element elongation")]
+        force = logged[:, record["data"].index("discrete element force")]
+        # The reference must cover both branches of the spring.
+        self.assertGreater((force == 0.0).sum(), 3)
+        self.assertGreater((force > 0.0).sum(), 3)
+
+        n = len(elongation)
+        pvec, svec = model.param_vector(), model.state_vector()
+        out = wp.zeros(n, dtype=wp.float64)
+        wp.launch(
+            make_update_kernel(model),
+            dim=n,
+            inputs=[
+                wp.array(elongation, dtype=wp.float64),
+                wp.zeros(n, dtype=int),
+                wp.array([model.pack(**values)], dtype=pvec),
+                wp.zeros(n, dtype=svec),
+            ],
+            outputs=[out, wp.zeros(n, dtype=wp.float64), wp.zeros(n, dtype=svec)],
+        )
+        self.assertLess(np.abs(out.numpy() - force).max() / force.max(), TOLERANCE)
 
 
 if __name__ == "__main__":
