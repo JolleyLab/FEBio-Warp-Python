@@ -73,6 +73,7 @@ def evaluate(cm: CompiledModel, state: State, tangent: bool = True):
     vals = wp.zeros(total, dtype=wp.float64, device=device)
     offset = 0
     for d in cm.domains:
+        d.update_parameters(state.time)
         wp.launch(
             d.kernel,
             dim=d.count,

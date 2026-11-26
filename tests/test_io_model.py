@@ -230,8 +230,11 @@ class Coverage(unittest.TestCase):
         )
         report = inspect(model)
         missing = {e.febio_name for e in report.missing()}
+        # The material layer has isotropic Lee-Sacks; what it lacks for this
+        # input is FEBio's tangent_scale parameter (10 here), which multiplies
+        # c0 in the tangent only (FEIsotropicLeeSacks::Tangent).
         for name in (
-            "isotropic Lee-Sacks",
+            "isotropic Lee-Sacks.tangent_scale",
             "contact potential",
             "nonlinear spring",
             "pressure",
@@ -247,16 +250,16 @@ class Coverage(unittest.TestCase):
 class SingleElement(unittest.TestCase):
     """Read a FEBio input, solve in Warp, write results, compare with FEBio."""
 
-    def solve(self, name, backend="minimal", folder=SINGLE, linear_solver="direct"):
+    def solve(self, name, folder=SINGLE, linear_solver="direct"):
         from warp_febio.analysis.static import run
         from warp_febio.compiled import compile
 
         model = read_feb(os.path.join(folder, name + ".feb"))
-        compiled = compile(model, device="cpu", material_backend=backend)
+        compiled = compile(model, device="cpu")
         return model, run(compiled, linear_solver=linear_solver)
 
-    def compare(self, name, backend, folder=SINGLE, linear_solver="direct"):
-        model, results = self.solve(name, backend, folder, linear_solver)
+    def compare(self, name, folder=SINGLE, linear_solver="direct"):
+        model, results = self.solve(name, folder, linear_solver)
         n = len(results.states)
         u_ref = febio_log(os.path.join(folder, "febio", name + "_nodes.txt"), n, 3)
         s_ref = febio_log(os.path.join(folder, "febio", name + "_elements.txt"), n, 6)
@@ -270,7 +273,7 @@ class SingleElement(unittest.TestCase):
     def test_agrees_with_febio(self):
         for name in CASES:
             with self.subTest(name):
-                self.compare(name, "minimal")
+                self.compare(name)
 
     def test_agrees_with_febio_using_warp_linear_solvers(self):
         """The same comparison with Warp's iterative solvers on the device."""
@@ -282,24 +285,13 @@ class SingleElement(unittest.TestCase):
                 ("shell_patch", SMALL),
             ):
                 with self.subTest(method=method, name=name):
-                    self.compare(name, "minimal", folder, method)
+                    self.compare(name, folder, method)
 
     def test_small_meshes_agree_with_febio(self):
         """Eight hexahedra, and nine shells on a curved surface."""
         for name in ("hex_block", "shell_patch"):
             with self.subTest(name):
-                self.compare(name, "minimal", SMALL)
-
-    def test_agrees_with_febio_using_the_material_layer(self):
-        from warp_febio.materials.minimal import interface_kernel
-
-        if interface_kernel("neo-Hookean") is None:
-            self.skipTest(
-                "the material layer of draft pull request #2 is not installed"
-            )
-        for name in CASES:
-            with self.subTest(name):
-                self.compare(name, "interface")
+                self.compare(name, SMALL)
 
     def test_plot_file_has_febio_structure(self):
         """Our plot file matches FEBio's for the same input in everything but

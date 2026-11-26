@@ -43,7 +43,7 @@ from .coverage import (
     CoverageReport,
 )
 from .elements.brick8 import GAUSS_WEIGHTS, make_brick_kernel, shape_derivatives
-from .materials.minimal import interface_kernel, minimal_kernel
+from .materials.febio import bind_material
 from .model import Model
 
 # Degrees of freedom per node, FEBio names
@@ -52,24 +52,7 @@ DOF_NAMES = ("x", "y", "z", "sx", "sy", "sz")
 PLOT_VARIABLES = {"displacement", "stress"}
 
 
-def material_kernel(febio_type: str, backend: str):
-    """The material functions for a FEBio material type.
-
-    backend "minimal"   : the self-contained neo-Hookean in materials/minimal.py
-    backend "interface" : the material layer of draft pull request #2
-    """
-    if backend == "minimal":
-        return minimal_kernel(febio_type)
-    if backend == "interface":
-        return interface_kernel(febio_type)
-    raise ValueError(f"unknown material backend {backend!r}")
-
-
-# ---------------------------------------------------------------------------
-# coverage
-
-
-def inspect(model: Model, material_backend: str = "minimal") -> CoverageReport:
+def inspect(model: Model) -> CoverageReport:
     """Coverage report for a Model. Allocates nothing on the device."""
     rep = CoverageReport()
     for issue in model.issues:
@@ -138,54 +121,26 @@ def inspect(model: Model, material_backend: str = "minimal") -> CoverageReport:
                 "material", dom.material, NOT_SUPPORTED, where, "material not found"
             )
             continue
-        kern = material_kernel(mat.type, material_backend)
-        if kern is None:
+        # One interpretation of a FEBio material, shared with the tests and
+        # with compile: materials/febio.py. A solid mixture is reported with
+        # its children's parameters under FEBio-style names (solid[0].E).
+        _, issues = bind_material(mat, model)
+        for issue in issues:
             rep.add(
-                "material",
-                mat.type,
-                NOT_SUPPORTED,
+                issue.category,
+                issue.febio_name,
+                issue.status,
                 f"material {mat.name}",
-                f"backend {material_backend}",
+                issue.note,
             )
-            continue
-        rep.add(
-            "material",
-            mat.type,
-            IMPLEMENTED,
-            f"material {mat.name}",
-            f"backend {material_backend}",
-        )
-        for c in mat.params.children:
-            if c.tag in kern.param_names:
-                if "lc" in c.attrs:
-                    rep.add(
-                        "material parameter",
-                        c.tag,
-                        NOT_SUPPORTED,
-                        f"material {mat.name}",
-                        "load curve on a material parameter",
-                    )
-            elif c.tag == "density":
-                rep.add(
-                    "material parameter",
-                    "density",
-                    NO_EFFECT,
-                    f"material {mat.name}",
-                    "static analysis",
-                )
-            else:
-                rep.add(
-                    "material parameter", c.tag, NOT_SUPPORTED, f"material {mat.name}"
-                )
-        for name in kern.param_names:
-            if mat.params.child(name) is None:
-                rep.add(
-                    "material parameter",
-                    name,
-                    NOT_SUPPORTED,
-                    f"material {mat.name}",
-                    "missing; FEBio defaults are not applied yet",
-                )
+        if mat.params.child("density") is not None:
+            rep.add(
+                "material parameter",
+                "density",
+                NO_EFFECT,
+                f"material {mat.name}",
+                "static analysis",
+            )
 
     # Shells that share nodes with solid elements. FEBio then ties the solid to
     # the shell's back face (FESSIShellDomain::FindSSI), which is not done here.
@@ -414,9 +369,20 @@ def _inspect_bc(r, model, rep):
 class CompiledDomain:
     """One part on the device: brick geometry, maps, material and work arrays."""
 
+    def update_parameters(self, time: float):
+        """Material parameters at `time`, for parameters on a load curve.
+
+        FEBio evaluates load curves at the time of the step being solved and
+        multiplies the parameter by the curve value. Parameters live in a
+        device array here, so this is one small host-to-device write per step.
+        """
+        if self.material.time_dependent:
+            pvec = self.material.model.param_vector(wp.float64)
+            self.params.assign([pvec(*self.material.param_values(time))])
+
     name: str
     kind: str  # "SolidDomain" or "ShellDomain"
-    material: Any  # MaterialKernel
+    material: Any  # BoundMaterial (materials/febio.py)
     kernel: Any
     count: int
     X: wp.array  # (E, 8) vec3d reference positions of the brick nodes
@@ -539,15 +505,13 @@ def shell_thickness(model: Model, block) -> np.ndarray:
     raise ValueError(f"shell part {block.name!r} has no thickness")
 
 
-def compile(
-    model: Model, device=None, material_backend: str = "minimal"
-) -> CompiledModel:
+def compile(model: Model, device=None) -> CompiledModel:
     """Check coverage, then build the device representation of a Model.
 
     Raises CoverageError, carrying the report, if the model needs a feature
     that is not yet supported.
     """
-    report = inspect(model, material_backend)
+    report = inspect(model)
     if not report.runnable:
         raise CoverageError(report)
     device = wp.get_device(device)
@@ -572,7 +536,9 @@ def compile(
     for block in mesh.blocks:
         dom = model.domain_of(block.name)
         mat = model.material(dom.material)
-        kern = material_kernel(mat.type, material_backend)
+        bound, _ = bind_material(mat, model)
+        pvec = bound.model.param_vector(wp.float64)
+        gvec = bound.model.geometry_vector(wp.float64)
         conn = block.connectivity
         E = block.count
         if dom.kind == "SolidDomain":
@@ -588,28 +554,24 @@ def compile(
             dofmap = np.concatenate(
                 [dof_index[conn][:, :, 3:], dof_index[conn][:, :, :3]], axis=1
             ).reshape(E, 24)
-        values = [float(mat.value(name)) for name in kern.param_names]
         nq = len(GAUSS_WEIGHTS)
-        gsize = kern.geometry_vector._length_
-        # Material axes default to the identity where a model declares them.
-        g0 = np.zeros(gsize)
-        if gsize == 9:
-            g0[:] = np.eye(3).ravel()
+        # One geometry row per element: material axes from the input's
+        # mat_axis (identity where a model declares axes and the input has
+        # none). Per-element axes from mesh data are not read yet.
+        geometry = bound.geometry_array(E)
         domains.append(
             CompiledDomain(
                 name=block.name,
                 kind=dom.kind,
-                material=kern,
-                kernel=make_brick_kernel(kern),
+                material=bound,
+                kernel=make_brick_kernel(bound),
                 count=E,
                 X=wp.array(X, dtype=wp.vec3d, device=device),
                 dofmap=wp.array(dofmap.astype(np.int32), dtype=wp.int32, device=device),
                 params=wp.array(
-                    [kern.param_vector(*values)], dtype=kern.param_vector, device=device
+                    [pvec(*bound.param_values(0.0))], dtype=pvec, device=device
                 ),
-                geom=wp.array(
-                    np.tile(g0, (E, 1)), dtype=kern.geometry_vector, device=device
-                ),
+                geom=wp.array(geometry, dtype=gvec, device=device),
                 fe=wp.zeros((E, 24), dtype=wp.float64, device=device),
                 ke=wp.zeros((E, 24, 24), dtype=wp.float64, device=device),
                 sigma=wp.zeros((E, nq), dtype=wp.mat33d, device=device),

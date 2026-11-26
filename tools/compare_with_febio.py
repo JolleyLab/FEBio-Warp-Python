@@ -19,7 +19,7 @@ import time
 import numpy as np
 
 
-def compare(path, febio, work, linear_solver, materials, timeout):
+def compare(path, febio, work, linear_solver, timeout):
     from warp_febio.analysis.static import SolveError, run
     from warp_febio.compiled import compile
     from warp_febio.coverage import CoverageError
@@ -30,7 +30,7 @@ def compare(path, febio, work, linear_solver, materials, timeout):
     row = {"input": name}
     model = read_feb(path)
     try:
-        compiled = compile(model, device="cpu", material_backend=materials)
+        compiled = compile(model, device="cpu")
     except CoverageError as err:
         row["status"] = "not yet runnable"
         row["missing"] = sorted(
@@ -105,12 +105,11 @@ def main():
     p.add_argument("--febio", required=True)
     p.add_argument("--work", required=True)
     p.add_argument("--linear-solver", default="cg")
-    p.add_argument("--materials", default="minimal")
     p.add_argument("--timeout", type=float, default=300)
     a = p.parse_args()
     os.makedirs(a.work, exist_ok=True)
     for path in a.inputs:
-        row = compare(path, a.febio, a.work, a.linear_solver, a.materials, a.timeout)
+        row = compare(path, a.febio, a.work, a.linear_solver, a.timeout)
         print(row, flush=True)
 
 
