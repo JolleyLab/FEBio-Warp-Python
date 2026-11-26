@@ -6,10 +6,10 @@ added or updated in the same pull request as the code it describes, or ahead of 
 
 | Area | Note | Status |
 |---|---|---|
-| Materials | With [PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2) | Draft, under redesign |
-| Contact | With [PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1) | Draft |
+| Materials | [materials.md](materials.md), with [PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2) | Draft, under redesign |
+| Contact | [contact.md](contact.md), with [PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1) | Draft |
 | Assembly | To be added | Design |
-| Verification | With [PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4) | Draft, tabled until input and output |
+| Verification | [verification.md](verification.md) | Draft, tabled until input and output |
 | Central model, input and output | [model.md](model.md), with [PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5) | Draft |
 
 Notes describing the pilot phase are in [`pilots/docs/`](../../pilots/docs/).
