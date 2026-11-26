@@ -40,6 +40,11 @@ class UniaxialModel:
     update: Callable
     initial_state: tuple  # state of virgin material
     source: str = ""
+    febio_type: str = ""  # FEBio type string, when FEBio has this model
+    options: tuple = ()  # build-time choices as (name, value) pairs
+
+    def option(self, name, default=None):
+        return dict(self.options).get(name, default)
 
     def param_vector(self, dtype=wp.float64):
         return wp.types.vector(length=len(self.param_names), dtype=dtype)

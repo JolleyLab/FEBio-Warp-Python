@@ -102,3 +102,80 @@ CLOSED_FORMS = {
     "neo_hookean": neo_hookean,
     "isotropic_elastic": isotropic_elastic,
 }
+
+
+# ---------------------------------------------------------------------------
+# Discrete springs (FEBioMech/FENonlinearSpring.cpp, FECore/PointCurve.cpp)
+# ---------------------------------------------------------------------------
+
+
+def point_curve_linear(t, points, extend="extrapolate"):
+    """PointCurve::value for LINEAR interpolation, CONSTANT or EXTRAPOLATE extension."""
+    pts = np.asarray(points, dtype=float)
+    x, y = pts[:, 0], pts[:, 1]
+    last = len(x) - 1
+    if t == x[0]:
+        return y[0]
+    if t == x[last]:
+        return y[last]
+    if t < x[0] or t > x[last]:  # PointCurve::ExtendValue
+        if extend == "constant":
+            return y[0] if t < x[0] else y[last]
+        a, b = (0, 1) if t < x[0] else (last - 1, last)
+        return y[a] + (y[b] - y[a]) * (t - x[a]) / (x[b] - x[a])
+    n = int(np.searchsorted(x, t, side="right"))  # binarySearch in PointCurve.cpp
+    return y[n - 1] + (y[n] - y[n - 1]) * (t - x[n - 1]) / (x[n] - x[n - 1])
+
+
+def point_curve_linear_slope(t, points, extend="extrapolate"):
+    """Exact slope of the active segment, with the segment to the right at a knot.
+
+    FEBio's PointCurve::derive uses a finite difference of value() for linear
+    curves; this is the slope that difference approximates.
+    """
+    pts = np.asarray(points, dtype=float)
+    x, y = pts[:, 0], pts[:, 1]
+    last = len(x) - 1
+    if extend == "constant" and (t < x[0] or t > x[last]):
+        return 0.0
+    n = int(np.clip(np.searchsorted(x, t, side="right"), 1, last))
+    return (y[n] - y[n - 1]) / (x[n] - x[n - 1])
+
+
+def febio_point_curve_derive(t, points, extend="extrapolate"):
+    """PointCurve::derive for a LINEAR curve: differences of value(), as FEBio does."""
+    pts = np.asarray(points, dtype=float)
+    span = pts[-1, 0] - pts[0, 0]
+    dt = span * 1e-9
+    value = lambda s: point_curve_linear(s, points, extend)  # noqa: E731
+    if t >= pts[-1, 0]:
+        return (value(t - 2 * dt) - 4 * value(t - dt) + 3 * value(t)) / (2 * dt)
+    if t < pts[0, 0]:
+        return (-value(t + 2 * dt) + 4 * value(t + dt) - 3 * value(t)) / (2 * dt)
+    return (value(t + dt) - value(t - dt)) / (2 * dt)
+
+
+def nonlinear_spring(r0, rt, scale, points, measure="elongation", extend="extrapolate"):
+    """Force vector, 3x3 stiffness and deformation measure of FENonlinearSpringMaterial.
+
+    The stiffness uses the exact slope of the point function (see
+    point_curve_linear_slope).
+    """
+    r0 = np.asarray(r0, dtype=float)
+    rt = np.asarray(rt, dtype=float)
+    L0 = np.linalg.norm(r0)
+    Lt = np.linalg.norm(rt)
+    DL = Lt - L0
+    s, ds = {
+        "elongation": (DL, 1.0),
+        "strain": (DL / L0, 1.0 / L0),
+        "stretch": (Lt / L0, 1.0 / L0),
+    }[measure]
+    F = scale * point_curve_linear(s, points, extend)
+    E = scale * point_curve_linear_slope(s, points, extend) * ds
+    if Lt == 0.0:
+        F, Lt, e = 0.0, 1.0, np.ones(3)
+    else:
+        e = rt / Lt
+    K = (E - F / Lt) * np.outer(e, e) + (F / Lt) * np.eye(3)
+    return F * e, K, s

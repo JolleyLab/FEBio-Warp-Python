@@ -627,6 +627,20 @@ class VolumetricTests(unittest.TestCase):
                 np.testing.assert_allclose(rest[0], [0.0, 0.0, k], atol=1e-9)
 
 
+class UncoupledModelTests(unittest.TestCase):
+    def test_uncoupled_model_is_not_accepted_by_solid_mixture(self):
+        """Deviatoric-only models must not be summed like coupled ones."""
+        from warp_febio.materials.compose import solid_mixture
+
+        uncoupled = model_api.get("hgo_uncoupled")
+        self.assertEqual(uncoupled.formulation, "uncoupled")
+        self.assertEqual(dict(uncoupled.options)["pressure_model"], "Abaqus (GOH)")
+        with self.assertRaises(ValueError):
+            solid_mixture(
+                "bad", [("a", model_api.get("neo_hookean")), ("b", uncoupled)]
+            )
+
+
 class ScheduleTests(unittest.TestCase):
     def test_load_curves(self):
         ramp = LoadCurve((0.0, 2.0), (1.0, 3.0))

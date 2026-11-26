@@ -4,7 +4,7 @@ Draft v0.3, November 24, 2026. For Steve Maas, Jeff Weiss, Ryan Black, the Warp 
 
 ## For reviewers
 
-**In brief.** Materials follow FEBio's structure (typed parameters with ranges, separate material axes and fibers, solid mixtures, the uncoupled split, history), expressed so that Warp compiles each material tree into one kernel. Four solid models are implemented and checked against FEBio's source and against every parameter set the FEBio test suite uses for them. Gradients are tested for every model. Everything so far was run on CPU, which is adequate for design and correctness checks at this stage; GPU access for this workflow is being set up for the team, and the timings will be repeated there. The four solid models have since been compared with FEBio runs, through the material-point cases of the verification draft (pull request 4): stress and tangent agree to the 12 digits FEBio prints.
+**In brief.** Materials follow FEBio's structure (typed parameters with ranges, separate material axes and fibers, solid mixtures, the uncoupled split, history), expressed so that Warp compiles each material tree into one kernel. Four coupled solid models are implemented and checked against FEBio's source and against every parameter set the FEBio test suite uses for them. Added on November 25 for the valve and TPVR inputs: the chordae spring, the linear truss law, and the deviatoric part of uncoupled HGO. Gradients are tested for every model. Everything so far was run on CPU, which is adequate for design and correctness checks at this stage; GPU access for this workflow is being set up for the team, and the timings will be repeated there. The solid models and the spring have since been compared with FEBio runs, through the small problems of the verification draft (pull request 4): stress and tangent, and the spring force, agree to the 12 digits FEBio prints.
 
 **Where to look.**
 
@@ -14,6 +14,8 @@ Draft v0.3, November 24, 2026. For Steve Maas, Jeff Weiss, Ryan Black, the Warp 
 | What a model looks like next to its FEBio source | `src/warp_febio/materials/models/hgo_unconstrained.py` |
 | The interface, parameter ranges, failure rule | `materials/model.py`, `materials/status.py` |
 | Mixtures | `materials/compose.py` |
+| An uncoupled model (deviatoric part only) | `materials/models/hgo_uncoupled.py` |
+| Chordae spring and truss law | `materials/models/nonlinear_spring.py`, `materials/models/linear_truss.py`, `tests/test_material_springs.py` |
 | FEBio's fourth-order tensor helpers for 6x6 storage | `materials/voigt.py` |
 | The checks every model passes | `materials/conformance.py`, `tests/test_material_interface.py` |
 | FEBio closed forms used for comparison (test-only) | `tests/febio_closed_forms.py` |
@@ -83,7 +85,7 @@ FEBio throws on a non-positive Jacobian and the solver cuts the step. A kernel c
 ### Model kinds
 
 - **Solid:** a function of F. Used by solid and shell elements.
-- **Uniaxial:** axial strain to axial stress, with history: `update(strain, p, committed) -> (stress, tangent, trial)`. Used by the fibers of a beam cross-section, trusses and chordae. The trial array is swapped in on convergence and discarded on a rejected step.
+- **Uniaxial:** axial strain to axial stress, with history: `update(strain, p, committed) -> (stress, tangent, trial)`. Used by the fibers of a beam cross-section, trusses and chordae. The trial array is swapped in on convergence and discarded on a rejected step. The chordae spring and the truss law are uniaxial models without history: for the spring the "strain" is FEBio's deformation measure and the "stress" is the force; for the truss they are the logarithmic stretch and the Kirchhoff stress.
 
 ## Library for the first projects
 
@@ -95,8 +97,9 @@ FEBio throws on a non-positive Jacobian and the solver cuts the step. A kernel c
 | HGO, unconstrained | `HGO unconstrained` | Outflow tract wall, coupled form | Implemented |
 | Nitinol, effective modulus | `isotropic elastic` with a step load curve on `E` | Published TPVR device model | Implemented |
 | Nitinol, superelastic, uniaxial | none | Beam-element devices | Shell: interface and tests in place, law to be refined later |
-| HGO, uncoupled, with three-field element | `Holzapfel-Gasser-Ogden` | Outflow tract as published | Next, with the element |
-| Chordae | `nonlinear spring`; later a truss | Valve chordae, tension only, under the uniaxial kind | Next |
+| HGO, uncoupled | `Holzapfel-Gasser-Ogden` | Outflow tract as published | Deviatoric part implemented; needs a three-field element to run |
+| Chordae spring | `nonlinear spring` | Valve and patch chordae, tension only | Implemented |
+| Linear truss | `linear truss` | Chordae as trusses, medium term | Law implemented; truss element not started |
 
 Deferred until a project needs them: Ogden, anisotropic Lee-Sacks, fiber components and continuous fiber distributions, a three-dimensional superelastic law.
 
@@ -116,7 +119,7 @@ The paper's text gives the law as isotropic elastic and its Table 1 as neo-Hooke
 
 ## What has been checked
 
-44 tests run on CPU: 42 pass, and two GPU tests skip without a CUDA device. No GPU run has been made yet; GPU access for this workflow is being set up, and CPU is adequate for the design and correctness questions here. The comparisons with FEBio in this pull request are against closed forms transcribed from its source. Comparisons with FEBio runs are in the verification draft (pull request 4): one hexahedron under FEBio's `prescribed deformation` condition, with FEBio's logged stress and tangent stored as the reference. Neo-Hookean, isotropic elastic, isotropic Lee-Sacks and HGO unconstrained (with material axes in and away from the global frame) agree with those runs to about 1e-12 in both, on nine cases.
+59 tests run on CPU: 57 pass, and two GPU tests skip without a CUDA device. No GPU run has been made yet; GPU access for this workflow is being set up, and CPU is adequate for the design and correctness questions here. The comparisons with FEBio in this pull request are against closed forms transcribed from its source. Comparisons with FEBio runs are in the verification draft (pull request 4): one hexahedron under FEBio's `prescribed deformation` condition, with FEBio's logged stress and tangent stored as the reference. Neo-Hookean, isotropic elastic, isotropic Lee-Sacks, HGO unconstrained and HGO uncoupled (both HGO forms with material axes in and away from the global frame) agree with those runs to about 1e-12 in both, on twelve cases.
 
 **Models against the FEBio source, and their derivatives** (relative error over 66 deformation states, FP64):
 
@@ -147,11 +150,19 @@ The paper's text gives the law as isotropic elastic and its Table 1 as neo-Hooke
 - **From an element's point of view.** A single eight-node hexahedron in an updated Lagrangian form, written in NumPy for the test, takes Cauchy stress and the 6x6 tangent from the material layer. Its stiffness (material plus initial-stress terms) equals the finite-difference derivative of its internal force to 1e-7 and is symmetric, for all four models and for a mixture of neo-Hookean and HGO. A rigid motion produces no force. This checks the 6x6 index order and shear convention where an element would use them.
 - HGO: fibers carry no compression; the two families are symmetric in the angle; the model is isotropic at kappa = 1/3; its energy and the derivative with respect to k2 are finite at k2 = 0, where FEBio's energy expression divides by zero.
 
+**Chordae spring, truss law and uncoupled HGO** (added November 25):
+
+- **Spring.** `nonlinear spring` with a linear point function, the three deformation measures, and constant or extrapolated extension. The number of points, the measure and the extension are fixed when the kernel is built; the scale and the point coordinates are float parameters. The eight chord groups of the mitral input (100 springs) therefore share one kernel, and the slack length is differentiable. Force and 3x3 stiffness match a transcription of `FENonlinearSpringMaterial` to 1e-13; the stiffness equals the finite-difference derivative of the force; tape gradients with respect to the scale and the points match finite differences.
+- **Spring against FEBio runs.** The chord case of the verification draft (elongation and force logged by FEBio through slack and tension) agrees to round-off. Five further one-off runs, covering the three measures, both extensions and a five-point curve, also agreed to round-off; those are not stored.
+- **A difference from FEBio in the spring tangent.** FEBio differentiates the point curve numerically (`PointCurve::derive`), which is accurate to about 1e-7 away from a knot and returns the mean slope at one. Here the slope of the active segment is exact.
+- **Linear truss.** The law (Kirchhoff stress E ln(lambda)) and the force and stiffness of `FELinearTrussDomain` for one element. The stiffness equals the finite-difference derivative of the force. FEBio's converged displacements for three one-element problems satisfy this force law to 1e-12 (one-off runs, not stored). There is no truss element here yet.
+- **Uncoupled HGO.** The deviatoric energy, stress and tangent of `FEHolzapfelGasserOgden`. It passes the same consistency and gradient checks as the coupled models. Against FEBio runs, with the volumetric terms added as `FEUncoupledMaterial` does: three stored cases with the suite's `ma34` constants, and a one-off run with the TPVR vessel constants, `pressure_model` set to `default` and rotated axes (stress and tangent 2e-12, energy 8e-13). In that run, using the global axes would change the stress by 7 percent and using the material's class-default pressure model by 9 percent, so both must come from the input.
+- **A property of uncoupled HGO.** Under a pure volume change the deviatoric deformation is a rotation, so both fiber strains are exactly zero, which is where the fibers switch on. The stress is continuous there and the tangent is not. FEBio takes the active branch at zero strain and so does this code; the finite-difference check leaves those states out.
+
 **Defects found by these tests and fixed:**
 
 - Reverse-mode gradients through a history were wrong when the new state was made by copying the committed vector and overwriting one component. Forward values were correct. This is our error, not Warp's: Warp's differentiability guide says a vector component may be assigned only once, and the adjoint of the overwritten value is not cleared. No warning is raised, so it is easy to write. Building the state with a constructor fixed it, a test covers it, and `examples/material_interface/warp_component_write_gradient.py` shows it in a few lines.
 - The gradient check itself failed for the suite's smallest moduli (1e-12) because its step was absolute. It is now relative.
-
 - The step load curve was evaluated the wrong way round. FEBio's STEP rule returns the value of the first point whose time is greater than t, so between two points the later value already applies; this code held the earlier value until the next point. A FEBio 4.13 run confirmed FEBio's rule (a STEP curve through (0.25, 1), (0.5, 0.6), (0.75, 0.3) gave 1 at t = 0.25, 0.6 at t = 0.375 and 0.3 at t = 0.5). For the published TPVR frame the difference is whether the modulus drops just after t = 0.998 or at t = 1. Corrected, with those values in the tests.
 
 **Things the tests corrected in this document:** an earlier statement that HGO is nearly isotropic at the published kappa = 0.33 was too strong. Changing the material axes changes the stress by up to 4.5 percent there, against about 90 percent at kappa = 0.1.
@@ -199,7 +210,7 @@ Unchanged in substance. The exchange kernel returns Cauchy stress and the 6x6 sp
 - The pilot implementations are not the basis for the design (MJ, Steve).
 - Superelastic nitinol for beams, kept as a shell for now; no shape-memory material in FEBio for now (MJ).
 - A non-finite result is handled like a negative Jacobian. FEBio retries the step in both cases, so this needed no question.
-- Chordae follow the published valve models (Wu et al. 2022; arXiv 2509.22865): tension-only two-node springs with zero force until the elongation passes a threshold and a linear response beyond it, modeled with FEBio's `nonlinear spring`. The repository's mitral input has eight such groups, with thresholds of 2 to 12 mm. No new constitutive law is needed. Trusses for chordae are of interest in the medium term (question 7).
+- Chordae follow the published valve models (Wu et al. 2022; arXiv 2509.22865): tension-only two-node springs with zero force until the elongation passes a threshold and a linear response beyond it, modeled with FEBio's `nonlinear spring`. The repository's mitral input has eight such groups, with thresholds of 2 to 12 mm. This is now implemented. Trusses for chordae are of interest in the medium term; the linear truss law is in place and the elastic-truss route waits on question 7.
 
 ## Questions for reviewers
 
@@ -213,12 +224,11 @@ Each question was checked before being asked: against the FEBio source (develop,
 4. Lee-Sacks ranges. `FEIsotropicLeeSacks` and its uncoupled form declare no parameter ranges. We added non-negativity for c0, c1, c2 and k. Is that right? The suite has no Lee-Sacks problem; would one be welcome there?
 5. HGO at k2 = 0. In `FEHolzapfelUnconstrained.cpp` the range for k2 allows zero, and the strain energy divides by k2 (stress and tangent do not). Is that worth changing in FEBio? Here the energy uses a form that is finite at k2 = 0.
 6. A FEBio reference at a material point. The verification draft (pull request 4) now uses one element under `FEBCPrescribedDeformation` with FEBio's element log variables for the deformation gradient, stress and tangent, which average over the element's integration points; with a uniform deformation those are point values, and the models here agree with them (see What has been checked). FEBio also has a material test diagnostic (`FEBioTest/FEMaterialTest`, uni-axial and simple shear scenarios), which we have not used. Is the prescribed-deformation route the one you would recommend, and is the diagnostic maintained?
-
 7. Trusses for chordae. FEBio has two truss domains. `linear-truss` uses the `linear truss` material (Kirchhoff stress E ln(lambda)) with the scalar stiffness V/l^2 (E - 2 tau). `elastic-truss` evaluates any solid material at F = diag(lambda, lambda^-v, lambda^-v), which is what a hyperelastic chord would need; in `FEElasticTrussDomain::ElementStiffness` the scalar stiffness is `k = E`, with the linear-truss expression commented out. In a one-element test here (neo-Hookean, E = 1000, v = 0.3, about 5 percent stretch, FEBio 4.13 built from source without MKL), with full Newton (`max_ups` 0) the elastic-truss domain took 172 iterations at a cross-sectional area of 1 and did not converge at an area of 0.001, where the linear-truss domain took 30 in both. With the default BFGS settings and tolerances both domains took about 30, and the elastic-truss displacements at the two areas differed in the fourth digit, where they should be equal. The test suite uses `linear-truss` in three problems and `elastic-truss` in none. Is the elastic-truss domain still in progress, and is it what you would recommend for chordae with a hyperelastic material? If so, what should its tangent be?
 
 **Jeff**
 
-8. The published outflow tract model (Zelonis et al., Table 1, and the six open input files) uses uncoupled HGO with c = 200 kPa and k = 1500 kPa, a bulk to shear ratio of 7.5, well under the ratio of about 100 you gave as the threshold. Should that case be run as coupled going forward? The unconstrained model here allows it with the same parameters.
+8. The published outflow tract model (Zelonis et al., Table 1, and the six open input files) uses uncoupled HGO with c = 200 kPa and k = 1500 kPa, a bulk to shear ratio of 7.5, well under the ratio of about 100 you gave as the threshold. Should that case be run as coupled going forward? Both forms are now implemented at the material level and agree with FEBio runs; the uncoupled one needs a three-field element before it can run.
 
 **Ryan**
 
@@ -239,8 +249,8 @@ Each question was checked before being asked: against the FEBio source (develop,
 
 1. Verification harness (separate draft).
 2. Assembly: assembled against matrix-free, `warp.fem` against dedicated kernels (separate draft).
-3. HGO, uncoupled, with a three-field element.
-4. Chordae as FEBio's nonlinear spring under the uniaxial kind; a truss later, after question 7.
+3. A three-field element, so the uncoupled HGO can run (element work).
+4. A discrete spring domain and, after question 7, a truss element (element work).
 5. A GPU run of the tests and of the timings, once GPU access is in place.
 6. Remove the pilot material files once their callers are migrated.
 7. Later, as dedicated work: the superelastic law.

@@ -44,12 +44,25 @@ PARAMETERS = {
     "hgo_unconstrained": dict(
         c=200.0, k1=13480.0, k2=1.06, kappa=0.33, gamma=18.85, k=1500.0
     ),
+    # The same values with the uncoupled form the paper names. Only the
+    # deviatoric part is checked here; k does not enter it.
+    "hgo_uncoupled": dict(
+        c=200.0, k1=13480.0, k2=1.06, kappa=0.33, gamma=18.85, k=1500.0
+    ),
 }
 
 # Material axes for models that need them: an arbitrary rotation, so that no
 # test passes only because the axes line up with the global ones.
 AXES = np.array([[0.36, 0.48, -0.8], [-0.8, 0.6, 0.0], [0.48, 0.64, 0.6]])
-GEOMETRY = {"hgo_unconstrained": {"mat_axis": AXES.reshape(9)}}
+GEOMETRY = {
+    "hgo_unconstrained": {"mat_axis": AXES.reshape(9)},
+    "hgo_uncoupled": {"mat_axis": AXES.reshape(9)},
+}
+
+# Models compared with FEBio through stored FEBio runs
+# (tests/test_febio_agreement_material_point.py) and not through a formula
+# transcribed from the FEBio source.
+CHECKED_AGAINST_FEBIO_RUNS = ("hgo_uncoupled",)
 
 # Models that have a pilot implementation to compare against.
 PILOT = ("lee_sacks_isotropic", "neo_hookean", "isotropic_elastic")
@@ -141,17 +154,30 @@ class MaterialInterfaceTests(unittest.TestCase):
     def test_conformance(self):
         for model in model_api.all_models():
             with self.subTest(model=model.name):
+                states = None
+                if model.name == "hgo_uncoupled":
+                    # Under a pure volume change the deviatoric deformation is a
+                    # rotation, so both fiber strains are exactly zero: the
+                    # point where the fibers switch on. The stress is continuous
+                    # there and the tangent is not, so a finite difference
+                    # across it is not a test of the tangent. Those states are
+                    # left out for this model.
+                    F = sample_states()
+                    Ft = F * np.linalg.det(F)[:, None, None] ** (-1.0 / 3.0)
+                    C = np.einsum("nki,nkj->nij", Ft, Ft)
+                    states = F[np.abs(C - np.eye(3)).max(axis=(1, 2)) > 1e-9]
                 metrics = check_model(
                     model,
                     PARAMETERS[model.name],
                     closed_form_for(model.name),
                     geometry=GEOMETRY.get(model.name),
+                    states=states,
                 )
                 for name, limit in LIMITS.items():
                     if name in metrics:
                         self.assertLess(metrics[name], limit, f"{model.name}: {name}")
                 # Every model must be checked against FEBio where FEBio has it.
-                if model.febio_type:
+                if model.febio_type and model.name not in CHECKED_AGAINST_FEBIO_RUNS:
                     self.assertIn("cauchy_vs_febio", metrics, model.name)
                     self.assertIn("tangent_vs_febio", metrics, model.name)
 

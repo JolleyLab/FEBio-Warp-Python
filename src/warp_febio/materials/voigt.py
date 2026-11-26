@@ -11,6 +11,7 @@ so a model's tangent can be transcribed term by term:
     add_dyad1s(c, a, w)      c += w * dyad1s(a)        (a (x) a)_ijkl = a_ij a_kl
     add_identity4s(c, w)     c += w * dyad4s(I)        the symmetric identity
     add_identity_dyad(c, w)  c += w * dyad1s(I)        I (x) I
+    add_dyad1s_pair(c, a, b, w)  c += w * dyad1s(a, b)   a (x) b + b (x) a
 """
 
 from typing import Any
@@ -55,6 +56,17 @@ def add_identity_dyad(c: Any, w: Any):
     for r in range(3):
         for q in range(3):
             c[r, q] = c[r, q] + w
+    return c
+
+
+@wp.func
+def add_dyad1s_pair(c: Any, a: Any, b: Any, w: Any):
+    """c += w (a (x) b + b (x) a), FEBio's dyad1s(a, b) for symmetric a and b."""
+    for r in range(6):
+        ar = a[VI[r], VJ[r]]
+        br = b[VI[r], VJ[r]]
+        for q in range(6):
+            c[r, q] = c[r, q] + w * (ar * b[VI[q], VJ[q]] + br * a[VI[q], VJ[q]])
     return c
 
 
