@@ -10,8 +10,78 @@ requires-python = ">=3.10"
 dependencies = ["warp-lang==1.19.0", "numpy>=1.24,<3"]
 
 [project.optional-dependencies]
-dev = ["black==26.1.0"]
+# Test-only dependencies go here. Ruff is not listed: it runs through pre-commit.
+dev = []
 pilots = ["matplotlib>=3.9,<4"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff]
+# Settings follow Warp and Newton so that code moves between the projects without reformatting.
+line-length = 120
+indent-width = 4
+# Pilot code and FEBio reference material are kept as contributed.
+extend-exclude = ["pilots", "references"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "I",   # isort
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "NPY", # NumPy-specific rules
+    "PLC", # pylint convention
+    "PLE", # pylint error
+    "PLW", # pylint warning
+    "UP",  # pyupgrade
+    "RUF", # Ruff-specific rules
+]
+ignore = [
+    "E501",   # line length is handled by the formatter
+    "E741",   # l is a common variable name in kernels
+    "F811",   # allow Warp kernel and function overloads
+    "UP018",  # Warp kernels use float(val) and int(val)
+    "RUF046", # Warp kernels use int(val)
+    # Optional dependencies (Warp, h5py, VTK) are imported where they are used,
+    # so the model and file readers work without them.
+    "PLC0415",
+    # Findings present in the draft pull requests when Ruff was adopted. They
+    # need a decision per case, not an automatic rewrite. Review each rule and
+    # remove it from this list as the drafts are merged.
+    "B023",    # function definition uses a loop variable
+    "B905",    # zip() without strict=
+    "C408",    # dict() or tuple() call instead of a literal
+    "C419",    # list comprehension inside any() or all()
+    "E731",    # lambda assigned to a name
+    "PLW0108", # lambda that only forwards its arguments
+    "PLW1510", # subprocess.run without check=
+    "RUF005",  # concatenation instead of unpacking
+    "RUF012",  # mutable class attribute default
+    "RUF015",  # list(...)[0] instead of next(iter(...))
+    "RUF059",  # unpacked variable never used
+]
+
+[tool.ruff.lint.isort]
+# Stated explicitly so imports sort the same way on every branch, whether or
+# not a given submodule exists there yet.
+known-first-party = ["warp_febio"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.typos]
+files.extend-exclude = ["pilots", "references", "*.feb", "*.xplt", "*.json", "*.csv"]
+
+[tool.typos.default.extend-words]
+# Variable names and journal abbreviations, not misspellings.
+Comput = "Comput"
+Nd = "Nd"
+pn = "pn"

@@ -46,16 +46,17 @@ See the [README](README.md) for installation:
 ```bash
 git clone git@github.com:<username>/FEBio-Warp-Python.git
 cd FEBio-Warp-Python
-python3 -m venv .venv
-.venv/bin/python -m pip install -e .
+uv sync --extra dev
 ```
 
-Python 3.10 or newer is supported, and 3.11 is the tested version. Warp is pinned to an exact version in `pyproject.toml`. Do not change the pin as part of an unrelated pull request.
+The project uses [uv](https://docs.astral.sh/uv/) to manage the environment. `uv sync` creates `.venv` from `uv.lock`, and `uv run` runs a command inside it. If uv is not available, a virtual environment with `pip install -e .` works as a fallback.
+
+Python 3.10 or newer is supported, and 3.11 is the tested version (set in `.python-version`). Warp is pinned to an exact version in `pyproject.toml`. Do not change the pin as part of an unrelated pull request. If a change does alter dependencies, commit the updated `uv.lock` with it.
 
 Run the test suite before you start to confirm your environment works:
 
 ```bash
-.venv/bin/python -m unittest discover -s tests -v
+uv run -m unittest discover -s tests -v
 ```
 
 ## Writing code
@@ -88,14 +89,21 @@ Comments should be reasonably verbose. Many readers will be checking the code ag
 - Link to the relevant FEBio documentation or source where it helps a reader verify the math.
 - Note units, reference versus current configuration, and any sign conventions.
 
-### Formatting
+### Formatting and linting
 
-Python is formatted with [Black](https://black.readthedocs.io/), pinned in the `dev` extra. Format before you commit:
+[Ruff](https://docs.astral.sh/ruff/) is the linter and formatter for Python code, with settings in `pyproject.toml` that follow Warp. It runs through [pre-commit](https://pre-commit.com/), together with a spelling check and a check that `uv.lock` is current. Run it before you commit:
 
 ```bash
-.venv/bin/python -m pip install -e ".[dev]"
-.venv/bin/python -m black src tests examples
+uvx pre-commit run --all-files
 ```
+
+To run the checks automatically on every commit:
+
+```bash
+uvx pre-commit install
+```
+
+Some lint findings cannot be fixed automatically and need a manual change. The same checks run on every pull request. Code under `pilots/` and `references/` is excluded.
 
 ## Testing
 
@@ -125,10 +133,10 @@ Tests use `unittest` and live in `tests/`.
 
 ```bash
 # full suite
-.venv/bin/python -m unittest discover -s tests -v
+uv run -m unittest discover -s tests -v
 
 # a subset
-.venv/bin/python -m unittest discover -s tests -p 'test_material*.py' -v
+uv run -m unittest discover -s tests -p 'test_material*.py' -v
 ```
 
 - Run kernel tests on CPU and, where available, on CUDA. Pass the device explicitly, through `wp.ScopedDevice(device)` or `device=device`, instead of relying on the default device.

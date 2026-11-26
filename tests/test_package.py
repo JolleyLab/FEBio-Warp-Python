@@ -4,8 +4,19 @@ import importlib
 import unittest
 
 SUBPACKAGES = (
-    "analysis", "assembly", "constraints", "contact", "discretization", "elements",
-    "io", "loads", "materials", "mesh", "sensitivity", "solvers.linear", "solvers.nonlinear",
+    "analysis",
+    "assembly",
+    "constraints",
+    "contact",
+    "discretization",
+    "elements",
+    "io",
+    "loads",
+    "materials",
+    "mesh",
+    "sensitivity",
+    "solvers.linear",
+    "solvers.nonlinear",
 )
 
 

@@ -96,15 +96,20 @@ verified benchmarks until then.
 
 ## Install
 
+The project uses [uv](https://docs.astral.sh/uv/) for environments and
+[Ruff](https://docs.astral.sh/ruff/) for linting and formatting, as Warp does.
+
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -e .
-.venv/bin/python -m unittest discover -s tests -v
+uv sync --extra dev
+uv run -m unittest discover -s tests -v
 ```
 
-Python 3.10 or later; 3.11 is the tested version. On Windows use `.venv\Scripts\python.exe`.
-Warp is pinned to 1.19.0; see the
+`uv sync` creates `.venv` with the versions recorded in `uv.lock`. Python 3.10 or later; 3.11 is
+the tested version and the one uv selects from `.python-version`. Warp is pinned to 1.19.0; see the
 [Warp installation guide](https://nvidia.github.io/warp/v1.19/user_guide/installation.html).
+
+A plain `pip install -e .` in a virtual environment also works. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for formatting and the pre-commit hooks.
 
 ## Acknowledgments
 
