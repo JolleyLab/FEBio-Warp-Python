@@ -189,10 +189,9 @@ class BrickDomain(Term):
         self.grad = wp.zeros((E, Q, 8), dtype=vec3d, **grad_on)
         self.w = wp.zeros((E, Q), dtype=wp.float64, **grad_on)
         self.status = wp.zeros((E, Q), dtype=wp.int32, **dev)
-        # Stiffness blocks: fixed size and fixed (row, column) for the mesh.
-        self.rows = wp.zeros(E * 64, dtype=wp.int32, **dev)
-        self.cols = wp.zeros(E * 64, dtype=wp.int32, **dev)
-        self.vals = wp.zeros(E * 64, dtype=mat33d, **dev)
+        # Stiffness blocks: fixed count and fixed (row, column) for the mesh.
+        # The system hands the term its slice of the block buffer.
+        self.block_count = E * 64
 
     # -- Term ----------------------------------------------------------------
 

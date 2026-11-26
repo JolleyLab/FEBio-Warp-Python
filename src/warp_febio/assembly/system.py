@@ -20,6 +20,14 @@ Different, and why
     append 3x3 blocks to one triplet list; the matrix is built once from
     those on the device (full assembly).
 
+Built for the device
+    The block list has a fixed size and fixed (row, column) pairs for a given
+    mesh, so the system owns one buffer and every term writes its blocks
+    into its own slice of it; nothing is gathered on the host. The sparsity
+    is analysed once: warp.sparse builds a map from triplets to matrix
+    blocks (bsr_set_from_triplets, build_mapping) and each later iteration
+    only refills values through it (bsr_set_from_mapped_values).
+
 What a term must keep to for differentiation
     `update` and `residual` are launched under a `wp.Tape` by the adjoint
     (sensitivity/adjoint.py). Kernels they launch must therefore be written
@@ -61,41 +69,14 @@ class State:
     u: wp.array  # (n_entries,) vec3d
 
 
-class Triplets:
-    """Blocks of the global matrix as (row entry, column entry, 3x3 value)."""
-
-    def __init__(self):
-        self.rows, self.cols, self.vals = [], [], []
-
-    def add(self, rows: wp.array, cols: wp.array, vals: wp.array):
-        self.rows.append(rows)
-        self.cols.append(cols)
-        self.vals.append(vals)
-
-    def arrays(self, device):
-        if not self.rows:
-            z = lambda t: wp.zeros(0, dtype=t, device=device)
-            return z(wp.int32), z(wp.int32), z(mat33d)
-        if len(self.rows) == 1:
-            return self.rows[0], self.cols[0], self.vals[0]
-        cat = lambda parts, t: wp.array(
-            np.concatenate([p.numpy() for p in parts]), dtype=t, device=device
-        )
-        # Template: concatenation through the host. A device-side copy into
-        # one preallocated buffer per term replaces this.
-        return cat(self.rows, wp.int32), cat(self.cols, wp.int32), cat(self.vals, mat33d)
-
-
 class BlockTangent:
-    """A term's tangent as 3x3 blocks: the TangentOperator of contracts.py,
-    with `assemble`. Contact's ContactTangent has the same three calls."""
+    """A term's tangent as 3x3 blocks: the TangentOperator of contracts.py.
+    The arrays are the term's slice of the system's block buffer, so the
+    blocks are already where the global matrix is built from."""
 
     def __init__(self, n: int, rows: wp.array, cols: wp.array, vals: wp.array):
         self.n, self.rows, self.cols, self.vals = n, rows, cols, vals
         self._matrix = None
-
-    def assemble(self, dest: Triplets) -> None:
-        dest.add(self.rows, self.cols, self.vals)
 
     def matrix(self):
         if self._matrix is None:
@@ -125,6 +106,14 @@ class Term:
     """
 
     name: str = ""
+    #: Number of 3x3 blocks the term contributes to the tangent. Fixed for
+    #: the life of the system, with fixed (row, column) pairs.
+    block_count: int = 0
+
+    def bind_blocks(self, rows: wp.array, cols: wp.array, vals: wp.array) -> None:
+        """Receive the term's slice of the system's block buffer. `linearize`
+        writes its blocks there."""
+        self.rows, self.cols, self.vals = rows, cols, vals
 
     def update(self, state: State) -> int:
         """Bring the term's own data to `state` (point data for a domain,
@@ -171,24 +160,31 @@ def _constrain_blocks(
     vals: wp.array(dtype=mat33d),
     free: wp.array(dtype=vec3d),
     count: int,
-    out_rows: wp.array(dtype=wp.int32),
-    out_cols: wp.array(dtype=wp.int32),
     out_vals: wp.array(dtype=mat33d),
 ):
-    """Blocks of the constrained system: each block with its constrained rows
-    and columns zeroed, followed by one diagonal block per entry with a unit
-    entry for each constrained component. Constrained unknowns solve to zero
-    and a symmetric matrix stays symmetric."""
+    """Values of the constrained system: each term block with its constrained
+    rows and columns zeroed, followed by one diagonal block per entry with a
+    unit entry for each constrained component. Constrained unknowns solve to
+    zero and a symmetric matrix stays symmetric."""
     k = wp.tid()
     if k < count:
-        out_rows[k] = rows[k]
-        out_cols[k] = cols[k]
         out_vals[k] = wp.diag(free[rows[k]]) * vals[k] * wp.diag(free[cols[k]])
     else:
-        i = k - count
-        out_rows[k] = i
-        out_cols[k] = i
-        out_vals[k] = wp.diag(vec3d(1.0, 1.0, 1.0) - free[i])
+        out_vals[k] = wp.diag(vec3d(1.0, 1.0, 1.0) - free[k - count])
+
+
+@wp.kernel
+def _apply_blocks(
+    rows: wp.array(dtype=wp.int32),
+    cols: wp.array(dtype=wp.int32),
+    vals: wp.array(dtype=mat33d),
+    x: wp.array(dtype=vec3d),
+    alpha: wp.float64,
+    y: wp.array(dtype=vec3d),
+):
+    """y += alpha K x, straight from the blocks."""
+    k = wp.tid()
+    wp.atomic_add(y, rows[k], alpha * (vals[k] * x[cols[k]]))
 
 
 # ---------------------------------------------------------------------------
@@ -206,8 +202,25 @@ class System:
         self.fields = fields
         self.terms = terms
         self.device = device
-        self.n = fields.count
+        self.n = n = fields.count
         self.free = wp.array(fields.free, dtype=vec3d, device=device)
+
+        # One block buffer for the whole system: a slice per term, then one
+        # diagonal block per entry for the constraints.
+        self.block_count = total = sum(t.block_count for t in terms)
+        rows = np.zeros(total + n, dtype=np.int32)
+        rows[total:] = np.arange(n)
+        self.rows = wp.array(rows, dtype=wp.int32, device=device)
+        self.cols = wp.array(rows, dtype=wp.int32, device=device)
+        self.vals = wp.zeros(total + n, dtype=mat33d, device=device)
+        self.constrained_vals = wp.zeros(total + n, dtype=mat33d, device=device)
+        offset = 0
+        for term in terms:
+            end = offset + term.block_count
+            term.bind_blocks(self.rows[offset:end], self.cols[offset:end], self.vals[offset:end])
+            offset = end
+        self._A = warp.sparse.bsr_zeros(n, n, mat33d, device=device)
+        self._map = None  # triplet-to-block map, built at the first assembly
 
     def state(self, requires_grad: bool = False) -> State:
         """A zero state. The call mirrors Newton's `Model.state(requires_grad=...)`."""
@@ -234,40 +247,55 @@ class System:
             term.residual(state, None, R)
         return R
 
-    def tangent(self, state: State, exact: bool = False):
-        """K at the last `update`, unconstrained, as triplets. With
-        exact=True, K = -dR/du exactly (see Term.linearize)."""
-        triplets = Triplets()
+    def tangent(self, state: State, exact: bool = False) -> None:
+        """Every term writes its blocks of K at the last `update` into the
+        system's buffer. With exact=True, K = -dR/du exactly (see
+        Term.linearize)."""
         for term in self.terms:
-            op = term.linearize(state, None, exact)
-            if op is not None:
-                op.assemble(triplets)
-        return triplets.arrays(self.device)
+            if term.linearize(state, None, exact) is None and term.block_count:
+                term.vals.zero_()
 
     # -- matrices ------------------------------------------------------------
 
-    def matrix(self, triplets):
-        rows, cols, vals = triplets
-        return warp.sparse.bsr_from_triplets(
-            self.n, self.n, rows, cols, vals, prune_numerical_zeros=False
-        )
-
-    def constrained_matrix(self, triplets):
-        rows, cols, vals = triplets
-        m = rows.shape[0]
-        out = [
-            wp.zeros(m + self.n, dtype=t, device=self.device)
-            for t in (wp.int32, wp.int32, mat33d)
-        ]
+    def constrained_matrix(self):
+        """The matrix the linear solve uses, from the last `tangent`. The
+        sparsity is analysed at the first call; later calls refill values."""
+        total = self.block_count
         wp.launch(
             _constrain_blocks,
-            dim=m + self.n,
-            inputs=[rows, cols, vals, self.free, m],
-            outputs=out,
+            dim=total + self.n,
+            inputs=[self.rows, self.cols, self.vals, self.free, total],
+            outputs=[self.constrained_vals],
             device=self.device,
         )
+        if self._map is None:
+            self._map = warp.sparse.bsr_set_from_triplets(
+                self._A, self.rows, self.cols, self.constrained_vals,
+                prune_numerical_zeros=False, build_mapping=True,
+            )
+            self._A.nnz_sync()
+        else:
+            warp.sparse.bsr_set_from_mapped_values(self._A, self._map, self.constrained_vals)
+        return self._A
+
+    def apply_tangent(self, x: wp.array, y: wp.array, alpha: float = 1.0) -> None:
+        """y += alpha K x with the unconstrained K of the last `tangent`."""
+        total = self.block_count
+        wp.launch(
+            _apply_blocks,
+            dim=total,
+            inputs=[self.rows, self.cols, self.vals, x, alpha],
+            outputs=[y],
+            device=self.device,
+        )
+
+    def matrix(self):
+        """The unconstrained K of the last `tangent` as a matrix of its own.
+        For checks; the solve does not need it."""
+        total = self.block_count
         return warp.sparse.bsr_from_triplets(
-            self.n, self.n, *out, prune_numerical_zeros=False
+            self.n, self.n, self.rows[:total], self.cols[:total], self.vals[:total],
+            prune_numerical_zeros=False,
         )
 
     def mask(self, x: wp.array) -> None:

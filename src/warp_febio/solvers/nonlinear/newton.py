@@ -33,7 +33,6 @@ from dataclasses import dataclass
 
 import numpy as np
 import warp as wp
-import warp.sparse
 
 from ...assembly.system import SolveError, State, System
 from ...discretization.fields import PRESCRIBED, UPDATE_RULE
@@ -115,13 +114,13 @@ def solve_step(system: System, state0: State, time: float, settings: NewtonSetti
     R = system.residual(state)
     normRi = normEi = 0.0
     for it in range(settings.max_refs + 1):
-        triplets = system.tangent(state)
+        system.tangent(state)
         rhs = R
         if it == 0 and any_prescribed:
             # FEBio moves K * (prescribed increment) to the right-hand side.
-            warp.sparse.bsr_mv(system.matrix(triplets), du_p, rhs, alpha=-1.0, beta=1.0)
+            system.apply_tangent(du_p, rhs, alpha=-1.0)
         system.mask(rhs)
-        A = system.constrained_matrix(triplets)
+        A = system.constrained_matrix()
         du, linear_iterations = solve(A, rhs, linear_solver)
         system.mask(du)
         if it == 0:

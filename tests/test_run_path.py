@@ -120,7 +120,8 @@ class RunPath(unittest.TestCase):
                     return state, system.residual(state).numpy().reshape(-1)
 
                 state, _ = residual(u0)
-                K = dense(system.matrix(system.tangent(state)))
+                system.tangent(state)
+                K = dense(system.matrix())
                 h, fd = 1e-6, np.zeros_like(K)
                 for j in range(3 * system.n):
                     e = np.zeros(3 * system.n)

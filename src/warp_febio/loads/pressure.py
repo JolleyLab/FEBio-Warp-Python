@@ -202,9 +202,7 @@ class PressureLoad(Term):
         self.Gs = wp.array(Gs, dtype=wp.float64, **dev)
         # The parameter, on the device so it can carry a gradient.
         self.pressure = wp.array([float(p.value)], dtype=wp.float64, requires_grad=True, **dev)
-        self.rows = wp.zeros(F * 16, dtype=wp.int32, **dev)
-        self.cols = wp.zeros(F * 16, dtype=wp.int32, **dev)
-        self.vals = wp.zeros(F * 16, dtype=mat33d, **dev)
+        self.block_count = F * 16  # written into the system's block buffer
 
     def factor(self, time: float) -> float:
         f = 1.0

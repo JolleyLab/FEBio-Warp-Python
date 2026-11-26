@@ -39,6 +39,8 @@ from ..compiled import inspect, shell_directors
 from ..coverage import CoverageError
 from ..discretization.fields import build_field_table
 from ..elements.brick_domain import BrickDomain
+from ..elements.fem_domain import ELEMENTS as FEM_ELEMENTS
+from ..elements.fem_domain import FemSolidDomain
 from ..loads import pressure
 from ..materials.febio import bind_material
 from ..results import Results, StateResult
@@ -46,19 +48,38 @@ from ..solvers.nonlinear.newton import NewtonSettings, solve_step
 from .static import TimeStepController
 
 
-def select_domain(model, block, fields, directors, device):
+def domain_support(kind, element_type, domain_type) -> bool:
+    """Element types this run path has beyond the fixture's hex8 and quad4."""
+    return (
+        kind == "SolidDomain"
+        and element_type in FEM_ELEMENTS
+        and domain_type in (None, "elastic-solid")
+    )
+
+
+def select_domain(model, block, fields, directors, device, solids="dedicated"):
     """The domain term for one element block.
 
     FEBio counterpart: FESolidDomainFactory, which picks the domain class
     from the element shape, the material class and the domain settings.
-    Two cases exist here; tet4, penta6, tri3, three-field and discrete
-    domains are further branches that return other Terms.
+
+        quad4 shell   BrickDomain (warp.fem has no thick shell)
+        hex8 solid    BrickDomain, or FemSolidDomain with solids="warp.fem"
+        tet4 solid    FemSolidDomain
+
+    penta6, tri3, three-field and discrete domains are further branches that
+    return other Terms.
     """
     dom = model.domain_of(block.name)
     bound, _ = bind_material(model.material(dom.material), model)
     conn = block.connectivity
     nodes = model.mesh.nodes
     if dom.kind == "SolidDomain":
+        if block.febio_type != "hex8" or solids == "warp.fem":
+            return FemSolidDomain(
+                block.name, block.febio_type, bound, nodes, conn,
+                fields.entries_of("displacement"), fields.count, device,
+            )
         X = nodes[conn]  # (E, 8, 3)
         emap = fields.entries_of("displacement", conn)
         febio_type = "elastic-solid"
@@ -90,19 +111,24 @@ def select_load(record, model, fields, directors, device):
     return pressure.PressureLoad(record, model, fields, directors, device)
 
 
-def build_system(model, device=None) -> System:
+def build_system(model, device=None, solids: str = "dedicated") -> System:
     """Check coverage, then build the field table and the term list.
 
     Raises CoverageError, carrying the report, if the model needs a feature
-    that is not supported. The coverage rules are those of pull request 5.
+    that is not supported. The coverage rules are those of pull request 5,
+    extended by what this run path adds (loads, tet4).
+    solids: "dedicated" (hex8 by the hand-written brick kernel) or
+    "warp.fem" (hex8 through warp.fem). tet4 always goes through warp.fem.
     """
-    report = inspect(model, load_support=load_support)
+    report = inspect(model, load_support=load_support, domain_support=domain_support)
     if not report.runnable:
         raise CoverageError(report)
     device = wp.get_device(device)
     fields = build_field_table(model)
     directors = shell_directors(model)
-    terms = [select_domain(model, b, fields, directors, device) for b in model.mesh.blocks]
+    terms = [
+        select_domain(model, b, fields, directors, device, solids) for b in model.mesh.blocks
+    ]
     for record in model.loads:
         terms.append(select_load(record, model, fields, directors, device))
     # Discrete elements and contact interfaces are appended here as further

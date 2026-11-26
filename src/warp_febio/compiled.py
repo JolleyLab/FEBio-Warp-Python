@@ -52,12 +52,14 @@ DOF_NAMES = ("x", "y", "z", "sx", "sy", "sz")
 PLOT_VARIABLES = {"displacement", "stress"}
 
 
-def inspect(model: Model, load_support=None) -> CoverageReport:
+def inspect(model: Model, load_support=None, domain_support=None) -> CoverageReport:
     """Coverage report for a Model. Allocates nothing on the device.
 
     load_support: optional function (record, model) -> (status, note) or None,
     through which a run path says which loads it can build. Without it every
     load is reported as not supported, as this fixture has none.
+    domain_support: optional function (kind, element type, domain type) ->
+    bool, for element types a run path has beyond this fixture's two.
     """
     rep = CoverageReport()
     for issue in model.issues:
@@ -101,6 +103,8 @@ def inspect(model: Model, load_support=None) -> CoverageReport:
             and dtype in (None, "elastic-shell")
         ):
             rep.add("domain", "elastic-shell, quad4", IMPLEMENTED, where)
+        elif domain_support is not None and domain_support(dom.kind, block.febio_type, dtype):
+            rep.add("domain", f"{dtype or 'elastic-solid'}, {block.febio_type}", IMPLEMENTED, where)
         else:
             rep.add(
                 "domain",

@@ -13,8 +13,11 @@ start from a small end-to-end example.
 A third input, `hex8_pressure.feb`, is the gradient check case of the run path
 template: one unit hex8, `neo-Hookean`, symmetry conditions on three faces and a
 follower pressure on the top face. Its solution is homogeneous and has a closed
-form (see `tests/test_run_path_pressure.py`). No FEBio result is stored for it
-yet; run it in FEBio and add the outputs to `febio/` as for the other two.
+form (see `tests/test_run_path_pressure.py`). Its FEBio results in `febio/` are
+from FEBio 4.13.0 built from source at commit `e4df3f8` by
+`tools/build_febio.sh` (same options as below). That build reproduces the
+stored results of `hex8_neo_hookean.feb` exactly. FEBio's log reports 7, 9, 11
+and 13 reformations for the four load steps.
 
 Both use `max_ups` 0 (full Newton) and tolerances tighter than FEBio's defaults,
 so each code converges well below the comparison tolerance.

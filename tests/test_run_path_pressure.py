@@ -6,8 +6,8 @@ faces and a follower pressure on the top face
 uniaxial stress, so there is a closed-form solution to compare with, and it
 depends on E, v and the pressure, so all three gradients are nonzero.
 
-No FEBio result is stored for this input yet; the comparison here is with the
-closed form. FEBio's neo-Hookean: sigma = mu/J (b - I) + lambda ln(J)/J I.
+It is compared with the closed form and with FEBio's result for the same
+input. FEBio's neo-Hookean: sigma = mu/J (b - I) + lambda ln(J)/J I.
 """
 
 import os
@@ -79,8 +79,10 @@ def exact_tangent_error(system, u0):
         return state, system.residual(state).numpy().reshape(-1)
 
     state, _ = residual(u0)
-    K = dense(system.matrix(system.tangent(state, exact=True)))
-    Ks = dense(system.matrix(system.tangent(state)))
+    system.tangent(state, exact=True)
+    K = dense(system.matrix())
+    system.tangent(state)
+    Ks = dense(system.matrix())
     h, fd = 1e-6, np.zeros_like(K)
     for j in range(K.shape[0]):
         e = np.zeros(K.shape[0])
@@ -121,13 +123,36 @@ class Pressure(unittest.TestCase):
             for other in (sx, sy, sxy, syz, sxz):
                 self.assertAlmostEqual(other, 0.0, delta=1e-9)
 
+    def test_agrees_with_febio(self):
+        """FEBio 4.13.0 (source build at e4df3f8) on the same input: log data
+        at 12 digits, and the same number of Newton iterations per step.
+        FEBio's log reports 7, 9, 11 and 13 reformations for the four steps,
+        with its default symmetrized pressure stiffness and max_ups = 0."""
+        from warp_febio.analysis.steps import run
+
+        results = run(build())
+        n = len(results.states)
+
+        def febio_log(kind, columns):
+            path = os.path.join(SINGLE, "febio", f"hex8_pressure_{kind}.txt")
+            with open(path) as f:
+                rows = [line.split() for line in f if not line.startswith("*")]
+            return np.array(rows, dtype=float)[:, 1:].reshape(n, -1, columns)
+
+        u_ref, s_ref = febio_log("nodes", 3), febio_log("elements", 6)
+        u = np.stack([s.displacement for s in results.states])
+        s = np.stack([s.stress["Part1"] for s in results.states])
+        self.assertLess(abs(u - u_ref).max() / abs(u_ref).max(), 1e-10)
+        self.assertLess(abs(s - s_ref).max() / abs(s_ref).max(), 1e-10)
+        self.assertEqual([st.iterations for st in results.states], [0, 7, 9, 11, 13])
+
     def test_linear_flag_loads_the_reference_area(self):
         from warp_febio.analysis.steps import run
 
         model = read_feb(CASE)
         set_load(model, "linear", 1)
         system = build(model)
-        self.assertIsNone(system.terms[1].linearize(system.state(), None))
+        self.assertIsNone(system.terms[1].linearize(system.state(), None))  # no stiffness
         s = run(system).states[-1]
         a, c = closed_form(E0, V0, P0, linear=True)
         np.testing.assert_allclose(s.displacement[6], [a - 1, a - 1, c - 1], rtol=0, atol=1e-9)
@@ -257,6 +282,58 @@ class Pressure(unittest.TestCase):
         for r in rows:
             self.assertGreater(abs(r.finite_difference), 1e-2)
             self.assertLess(r.relative_error, 1e-6)
+
+    def test_solve_on_a_tape_composes_with_warp_kernels(self):
+        """The solve as one step on a wp.Tape: a kernel upstream sets the
+        pressure from a design variable, a kernel downstream computes the
+        output, and tape.backward gives the whole chain."""
+        from warp_febio.sensitivity.adjoint import solve_on_tape
+
+        @wp.kernel
+        def design_to_pressure(theta: wp.array(dtype=wp.float64), p: wp.array(dtype=wp.float64)):
+            p[0] = theta[0] * theta[0]
+
+        @wp.kernel
+        def top_displacement(
+            u: wp.array(dtype=wp.vec3d), top: wp.array(dtype=wp.int32),
+            out: wp.array(dtype=wp.float64),
+        ):
+            i = wp.tid()
+            wp.atomic_add(out, 0, wp.float64(0.25) * u[top[i]][2])
+
+        system = build()
+        domain, load = system.terms
+        top = wp.array(system.fields.entries_of("displacement", [4, 5, 6, 7]), dtype=wp.int32)
+        theta = wp.array([np.sqrt(P0)], dtype=wp.float64, requires_grad=True)
+        loss = wp.zeros(1, dtype=wp.float64, requires_grad=True)
+
+        tape = wp.Tape()
+        with tape:
+            wp.launch(design_to_pressure, dim=1, inputs=[theta], outputs=[load.pressure])
+        state = solve_on_tape(system, tape)
+        with tape:
+            wp.launch(top_displacement, dim=4, inputs=[state.u, top], outputs=[loss])
+        tape.backward(loss)
+
+        h = 1e-5
+        closed = np.zeros(3)
+        base = np.array([E0, V0, P0])
+        for k in range(3):
+            d = np.zeros(3)
+            d[k] = h * base[k]
+            closed[k] = (closed_form(*(base + d))[1] - closed_form(*(base - d))[1]) / (2 * d[k])
+        self.assertAlmostEqual(loss.numpy()[0], closed_form(*base)[1] - 1, delta=1e-9)
+        np.testing.assert_allclose(domain.params.grad.numpy()[0], closed[:2], rtol=1e-6)
+        # The pressure array was written by the upstream kernel, so its
+        # gradient has been passed on to theta (and cleared, as Warp does for
+        # an overwritten array): dJ/dtheta = 2 theta dJ/dp.
+        np.testing.assert_allclose(
+            theta.grad.numpy()[0], 2 * np.sqrt(P0) * closed[2], rtol=1e-6
+        )
+        with tape:
+            with self.assertRaises(RuntimeError):
+                solve_on_tape(system, tape)
+        tape.zero()
 
 
 PATCH = os.path.join(
