@@ -25,7 +25,7 @@ each pair's force to both elements; when one surface is both primary and
 secondary (leaflet self-contact in the CardioFEM and Aslan decks) the pair
 (A, B) is also activated from B's side, so every self-contact pair enters
 twice. ``PotentialParams(scale=2)`` on that pair class reproduces FEBio;
-the default is 1. This is flagged for review in docs/CONTACT.md.
+the default is 1. This is flagged for review in docs/design/contact.md.
 
 Weights. By default the integration weights are the reference ones carried by
 ``ContactPoints`` and the force is exactly minus the energy gradient. With

@@ -1,7 +1,7 @@
 """Contact search and enforcement for leaflets and devices.
 
 Point-based contact: point sets, pair search, the Kamensky volume potential,
-and the PhysicsTerm adapter. See docs/CONTACT.md.
+and the PhysicsTerm adapter. See docs/design/contact.md.
 
 FEBio counterpart: FEBioMech contact interfaces.
 Status (November 2026): draft, in pull request 1. See the development areas table in the README.
