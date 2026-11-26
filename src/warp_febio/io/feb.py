@@ -55,6 +55,19 @@ _TYPED_SECTIONS = {
     "LoadData",
     "Output",
 }
+# Typed sections whose own element is not kept as a Record. FEBio's format
+# gives them no attributes; one that appears is reported.
+_SECTIONS_WITHOUT_ATTRIBUTES = {
+    "Material",
+    "Mesh",
+    "MeshDomains",
+    "MeshData",
+    "Boundary",
+    "Loads",
+    "Contact",
+    "Step",
+    "LoadData",
+}
 # Top-level sections that are valid FEBio but carried as Records for now.
 _CARRIED_SECTIONS = {
     "Initial",
@@ -168,7 +181,36 @@ def _rows(elems, dtype):
 
 
 def _ids(elems, key="id"):
-    return np.array([e.get(key) for e in elems], dtype=np.int64).astype(np.int32)
+    values = [e.get(key) for e in elems]
+    if any(v is None for v in values):
+        tag = next(e.tag for e, v in zip(elems, values) if v is None)
+        raise FebFormatError(f"<{tag}> without an {key!r} attribute")
+    return np.array(values, dtype=np.int64).astype(np.int32)
+
+
+def _note_attributes(elem, expected, where, model):
+    """Record an issue for attributes this reader does not carry.
+
+    The typed parts of the model keep the attributes FEBio's format defines
+    for them. Any other attribute is reported, so it is never lost unseen.
+    """
+    extra = sorted(set(elem.attrib) - set(expected))
+    if extra:
+        model.issues.append(
+            Issue(where, f"attribute(s) {', '.join(extra)} not read; not written back")
+        )
+
+
+def _note_row_attributes(elems, where, model):
+    """The same check for bulk rows (node, elem, facets), which carry only id."""
+    if any(len(e.attrib) != 1 for e in elems):
+        extra = sorted({k for e in elems for k in e.attrib} - {"id"})
+        if extra:
+            model.issues.append(
+                Issue(
+                    where, f"attribute(s) {', '.join(extra)} not read; not written back"
+                )
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -182,6 +224,7 @@ def read_feb(path) -> Model:
 
 
 def read_feb_string(text: str) -> Model:
+    """Read a FEBio spec 4.0 input from a string. Same result as `read_feb`."""
     return _read_root(ET.fromstring(text))
 
 
@@ -206,6 +249,8 @@ def _read_root(root) -> Model:
                 Issue(tag, "refers to another file; included files are not read")
             )
             continue
+        if tag in _SECTIONS_WITHOUT_ATTRIBUTES:
+            _note_attributes(sec, (), tag, model)
         if tag == "Module":
             model.module = sec.get("type", "solid")
             model.module_record = _record(sec)
@@ -282,6 +327,8 @@ def _read_mesh(sec, model):
         tag = item.tag
         if tag == "Nodes":
             nodes = list(item)
+            _note_attributes(item, ("name",), "Mesh/Nodes", model)
+            _note_row_attributes(nodes, "Mesh/Nodes/node", model)
             mesh.node_blocks.append(
                 (item.get("name"), sum(len(c) for c in coords), len(nodes))
             )
@@ -295,6 +342,7 @@ def _read_mesh(sec, model):
         elif tag == "Surface":
             raw_surfaces.append(item)
         elif tag == "ElementSet":
+            _note_set(item, mesh.element_sets, model)
             mesh.element_sets[item.get("name")] = _id_list(item, "e")
         else:
             # Edge, SurfacePair, DiscreteSet, PartList, ...: carried as written.
@@ -310,6 +358,8 @@ def _read_mesh(sec, model):
     for item in raw_blocks:
         etype = item.get("type")
         elems = list(item)
+        where = f"Mesh/Elements {item.get('name')!r}"
+        _note_row_attributes(elems, where + "/elem", model)
         conn = _rows(elems, np.int64)
         if (
             etype in ELEMENT_NODES
@@ -324,14 +374,22 @@ def _read_mesh(sec, model):
             ElementBlock(
                 name=item.get("name"),
                 febio_type=etype,
-                connectivity=mesh.node_index(conn.ravel()).reshape(conn.shape),
+                connectivity=_node_index(mesh, conn.ravel(), where).reshape(conn.shape),
                 ids=_ids(elems),
+                attrs={
+                    k: v for k, v in item.attrib.items() if k not in ("type", "name")
+                },
             )
         )
     for item in raw_sets:
-        mesh.node_sets[item.get("name")] = mesh.node_index(_id_list(item, "n"))
+        _note_set(item, mesh.node_sets, model)
+        mesh.node_sets[item.get("name")] = _node_index(
+            mesh, _id_list(item, "n"), f"Mesh/NodeSet {item.get('name')!r}"
+        )
     for item in raw_surfaces:
+        _note_set(item, mesh.surfaces, model)
         facets = list(item)
+        _note_row_attributes(facets, f"Mesh/Surface {item.get('name')!r}/facet", model)
         for f in facets:
             if f.tag not in FACET_NODES:
                 model.issues.append(
@@ -341,13 +399,39 @@ def _read_mesh(sec, model):
         lists = [np.array(f.text.split(","), dtype=np.int64) for f in facets]
         sizes = [len(x) for x in lists]
         flat = (
-            mesh.node_index(np.concatenate(lists)) if lists else np.zeros(0, np.int32)
+            _node_index(
+                mesh, np.concatenate(lists), f"Mesh/Surface {item.get('name')!r}"
+            )
+            if lists
+            else np.zeros(0, np.int32)
         )
         mesh.surfaces[item.get("name")] = Surface(
             name=item.get("name"),
             facet_types=[f.tag for f in facets],
             facets=np.split(flat, np.cumsum(sizes)[:-1]) if lists else [],
             ids=_ids(facets) if facets else np.zeros(0, np.int32),
+        )
+
+
+def _node_index(mesh, node_ids, where):
+    """Node indices for node IDs, naming the item when an ID is not in the mesh."""
+    try:
+        return mesh.node_index(node_ids)
+    except KeyError:
+        raise FebFormatError(
+            f"{where}: refers to a node ID that is not in the mesh"
+        ) from None
+
+
+def _note_set(item, existing, model):
+    """Checks shared by NodeSet, Surface and ElementSet: only a name attribute,
+    and a name not already used. A repeated name is reported; the later
+    definition is the one kept, since the sets are stored by name."""
+    where = f"Mesh/{item.tag} {item.get('name')!r}"
+    _note_attributes(item, ("name",), where, model)
+    if item.get("name") in existing:
+        model.issues.append(
+            Issue(where, "name used more than once; only the last definition is kept")
         )
 
 
@@ -390,6 +474,7 @@ def _read_step(s, model) -> Step:
         id=int(s.get("id", len(model.steps) + 1)),
         name=s.get("name", ""),
         control=Record("Control"),
+        attrs={k: v for k, v in s.attrib.items() if k not in ("id", "name")},
     )
     for sec in s:
         if sec.tag == "Control":
@@ -455,31 +540,37 @@ def write_feb(model: Model, path) -> None:
         sec = ET.SubElement(root, "MeshData")
         for r in model.mesh_data:
             sec.append(_mesh_data_element(r))
-    carried = {r.tag: r for r in model.other_sections}
-    if "Initial" in carried:
-        root.append(_element(carried.pop("Initial")))
+    # Carried sections are placed where FEBio Studio writes them. A section
+    # may appear more than once in a file; each one is written.
+    carried = list(model.other_sections)
+
+    def write_carried(tag):
+        nonlocal carried
+        for r in carried:
+            if r.tag == tag:
+                root.append(_element(r))
+        carried = [r for r in carried if r.tag != tag]
+
+    write_carried("Initial")
     for tag, items in (("Boundary", model.boundary),):
         if items:
             sec = ET.SubElement(root, tag)
             for r in items:
                 sec.append(_element(r))
-    for tag in ("Rigid",):
-        if tag in carried:
-            root.append(_element(carried.pop(tag)))
+    write_carried("Rigid")
     for tag, items in (("Loads", model.loads), ("Contact", model.contact)):
         if items:
             sec = ET.SubElement(root, tag)
             for r in items:
                 sec.append(_element(r))
-    for tag in ("Constraints", "Discrete"):
-        if tag in carried:
-            root.append(_element(carried.pop(tag)))
-    for r in carried.values():
+    write_carried("Constraints")
+    write_carried("Discrete")
+    for r in carried:
         root.append(_element(r))
     if not model.single_step_layout:
         sec = ET.SubElement(root, "Step")
         for s in model.steps:
-            e = ET.SubElement(sec, "step", {"id": str(s.id), "name": s.name})
+            e = ET.SubElement(sec, "step", {"id": str(s.id), "name": s.name, **s.attrs})
             e.append(_element(s.control, "Control"))
             for tag, items in (
                 ("Boundary", s.boundary),
@@ -544,7 +635,9 @@ def _mesh_element(mesh: Mesh):
                 _format_value(mesh.nodes[i])
             )
     for b in mesh.blocks:
-        e = ET.SubElement(sec, "Elements", {"type": b.febio_type, "name": b.name})
+        e = ET.SubElement(
+            sec, "Elements", {"type": b.febio_type, "name": b.name, **b.attrs}
+        )
         ids = mesh.node_ids[b.connectivity]
         for eid, row in zip(b.ids, ids):
             ET.SubElement(e, "elem", {"id": str(int(eid))}).text = ",".join(

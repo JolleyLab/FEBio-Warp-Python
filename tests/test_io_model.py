@@ -132,6 +132,112 @@ class FebReadWrite(unittest.TestCase):
         self.assertFalse(inspect(model).runnable)
 
 
+# A small input with what a well-formed FEBio file rarely has: a section that
+# appears twice, carried sections out of FEBio Studio's order, attributes the
+# reader has no field for, and a set name used twice.
+UNUSUAL = """<febio_spec version="4.0">
+<Module type="solid"/>
+<Material><material id="1" name="m" type="neo-Hookean"><E>1</E><v>0.3</v></material></Material>
+<Mesh>
+<Nodes name="Obj">
+<node id="1">0,0,0</node><node id="2">1,0,0</node><node id="3">1,1,0</node><node id="4">0,1,0</node>
+<node id="5">0,0,1</node><node id="6">1,0,1</node><node id="7">1,1,1</node><node id="8">0,1,1</node>
+</Nodes>
+<Elements type="hex8" name="Part1" extra="kept"><elem id="1">1,2,3,4,5,6,7,8</elem></Elements>
+{sets}
+</Mesh>
+<MeshDomains><SolidDomain name="Part1" mat="m"/></MeshDomains>
+<MeshAdaptor><mesh_adaptor type="a"/></MeshAdaptor>
+<Constraints><constraint type="x"/></Constraints>
+<Rigid><rigid_bc type="r"/></Rigid>
+<Constraints><constraint type="y"/></Constraints>
+<Step><step id="1" name="s1" extra="kept"><Control><time_steps>1</time_steps></Control></step></Step>
+</febio_spec>"""
+
+
+class NothingDroppedUnseen(unittest.TestCase):
+    """What the reader has no field for is either written back or reported."""
+
+    def round_trip(self, model):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = os.path.join(tmp, "out.feb")
+            write_feb(model, out)
+            with open(out, encoding="ISO-8859-1") as f:
+                return read_feb(out), f.read()
+
+    def test_repeated_sections_and_extra_attributes_are_written_back(self):
+        model = read_feb_string(UNUSUAL.format(sets=""))
+        self.assertEqual(model.issues, [])
+        again, text = self.round_trip(model)
+        self.assertTrue(model.equals(again))
+        # Both Constraints sections, in their order, and the extra attributes.
+        self.assertLess(text.index('type="x"'), text.index('type="y"'))
+        self.assertEqual(text.count("<Constraints>"), 2)
+        self.assertIn('<Elements type="hex8" name="Part1" extra="kept">', text)
+        self.assertIn('<step id="1" name="s1" extra="kept">', text)
+        self.assertEqual(again.mesh.blocks[0].attrs, {"extra": "kept"})
+        self.assertEqual(again.steps[0].attrs, {"extra": "kept"})
+
+    def test_section_order_follows_febio_studio_and_content_is_equal(self):
+        """The writer places carried sections where FEBio Studio writes them
+        (Rigid before Constraints, others after), so their order can change;
+        equality compares them tag by tag."""
+        model = read_feb_string(UNUSUAL.format(sets=""))
+        again, _ = self.round_trip(model)
+        self.assertEqual(
+            [r.tag for r in model.other_sections],
+            ["MeshAdaptor", "Constraints", "Rigid", "Constraints"],
+        )
+        self.assertEqual(
+            [r.tag for r in again.other_sections],
+            ["Rigid", "Constraints", "Constraints", "MeshAdaptor"],
+        )
+        self.assertTrue(model.equals(again))
+        # A change inside one of the repeated sections is still a difference.
+        again.other_sections[1].children[0].attrs["type"] = "changed"
+        self.assertFalse(model.equals(again))
+
+    def test_attributes_and_names_the_reader_cannot_keep_are_reported(self):
+        sets = (
+            '<NodeSet name="a" flag="1">1,2</NodeSet>'
+            '<NodeSet name="b">1,2</NodeSet><NodeSet name="b">3,4</NodeSet>'
+        )
+        model = read_feb_string(UNUSUAL.format(sets=sets))
+        found = {(i.where, i.message.split(";")[0]) for i in model.issues}
+        self.assertIn(("Mesh/NodeSet 'a'", "attribute(s) flag not read"), found)
+        self.assertIn(("Mesh/NodeSet 'b'", "name used more than once"), found)
+
+    def test_malformed_input_is_named(self):
+        from warp_febio.io import FebFormatError
+
+        head = '<febio_spec version="4.0"><Mesh><Nodes>'
+        for text, expected in (
+            (
+                head + "<node>0,0,0</node></Nodes></Mesh></febio_spec>",
+                "without an 'id'",
+            ),
+            (
+                head + '<node id="1">0,0,0</node></Nodes><Elements type="tri3" '
+                'name="p"><elem id="1">1,2,3</elem></Elements></Mesh></febio_spec>',
+                "Mesh/Elements 'p': refers to a node ID that is not in the mesh",
+            ),
+        ):
+            with self.assertRaises(FebFormatError) as caught:
+                read_feb_string(text)
+            self.assertIn(expected, str(caught.exception))
+
+    def test_truncated_plot_file_is_named(self):
+        with open(os.path.join(SINGLE, "febio", CASES[0] + ".xplt"), "rb") as f:
+            data = f.read()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "cut.xplt")
+            with open(path, "wb") as f:
+                f.write(data[: len(data) // 2])
+            with self.assertRaises(ValueError) as caught:
+                read_xplt(path)
+            self.assertIn("truncated or corrupt", str(caught.exception))
+
+
 class PlotFiles(unittest.TestCase):
     def test_febio_files_rewrite_byte_for_byte(self):
         """FEBio 4.9 plot files, read and written again, are unchanged."""

@@ -197,6 +197,8 @@ CPU only. FEBio is 4.13.0 built from source at `552138d` with GCC and without MK
 | Reference inputs in this repository | 11 | 11 | 11 |
 
 - The suite covers solid, biphasic, multiphasic, fluid, fluid-FSI and solute modules; all are read and carried.
+- "Equal" compares everything the reader stores. The writer places top-level sections where FEBio Studio writes them, so their order can differ from the input; six suite inputs are written in a different section order (`ar08`, `ar09`, `cr04`, `mp06`, `mp07`, `mp08`) with the same content.
+- A section that appears more than once is written each time, and extra attributes on `Elements` and `step` are kept. An attribute the model has no place for, or a set name used twice, is reported as an issue. None of the 538 suite inputs raises one.
 - A 65,011-node TPVR input reads in 1.4 s and writes in 1.7 s.
 - FEBio ran inputs written by `write_feb`, including ones built from VTK meshes, and produced log output identical to its runs of the originals.
 
@@ -217,7 +219,7 @@ CPU only. FEBio is 4.13.0 built from source at `552138d` with GCC and without MK
 - The same results were obtained with materials taken from the material layer of draft PR #2 and with Warp's own linear solvers (`warp.optim.linear`).
 - The coverage report refuses the other 532 suite inputs and all open application inputs and lists why. For the open mitral input: `isotropic Lee-Sacks`, `contact potential`, nonlinear springs, `pressure`, `mass damping`, dynamic analysis.
 
-**Automated tests.** 21 tests cover the above and pass. They do not need FEBio, since its outputs are stored under `references/`.
+**Automated tests.** 26 tests cover the above; 25 pass and one is skipped unless the material layer of draft pull request 2 is present. They do not need FEBio, since its outputs are stored under `references/`.
 
 **Not checked**
 
