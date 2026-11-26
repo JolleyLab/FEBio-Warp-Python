@@ -106,6 +106,9 @@ class Term:
     """
 
     name: str = ""
+    #: True for domains: the term's residual is (minus) an internal force.
+    #: FEBio reports nodal reaction forces from the internal forces alone.
+    internal: bool = False
     #: Number of 3x3 blocks the term contributes to the tangent. Fixed for
     #: the life of the system, with fixed (row, column) pairs.
     block_count: int = 0

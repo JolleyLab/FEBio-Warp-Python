@@ -35,6 +35,7 @@ Limits
     covered: warp.fem has no thick shell element.
 """
 
+import re
 from typing import Any
 
 import numpy as np
@@ -66,7 +67,6 @@ def _make_forms(bound):
     def deformation_gradient(grad_u: mat33d):
         return grad_u + wp.identity(n=3, dtype=wp.float64)
 
-    @fem.integrand
     def internal_force(
         s: fem.Sample, u: fem.Field, v: fem.Field,
         params: wp.array(dtype=pvec), geom: wp.array(dtype=gvec),
@@ -77,7 +77,6 @@ def _make_forms(bound):
         P = wp.determinant(F) * sigma * wp.transpose(wp.inverse(F))
         return wp.ddot(P, fem.grad(v, s))
 
-    @fem.integrand
     def stiffness(
         s: fem.Sample, u: fem.Field, du: fem.Field, v: fem.Field,
         params: wp.array(dtype=pvec), geom: wp.array(dtype=gvec),
@@ -97,11 +96,9 @@ def _make_forms(bound):
                       gu[0, 1] + gu[1, 0], gu[1, 2] + gu[2, 1], gu[0, 2] + gu[2, 0])
         return (wp.dot(a, c * b) + wp.ddot(sigma, wp.transpose(gu) * gv)) * wp.determinant(F)
 
-    @fem.integrand
     def point_jacobian(s: fem.Sample, u: fem.Field):
         return wp.determinant(deformation_gradient(fem.grad(u, s)))
 
-    @fem.integrand
     def point_stress(
         s: fem.Sample, u: fem.Field, params: wp.array(dtype=pvec), geom: wp.array(dtype=gvec),
     ):
@@ -109,7 +106,17 @@ def _make_forms(bound):
         sigma, c = stress_and_tangent(F, geom[s.element_index], params[0])
         return sigma
 
-    _FORMS[key] = (internal_force, stiffness, point_jacobian, point_stress)
+    # warp.fem caches the kernel it generates for an integrand under the
+    # integrand's name. Two materials would otherwise both define
+    # "internal_force", and the later definition would silently replace the
+    # earlier one, so a domain would integrate another domain's material.
+    # Each material tree therefore gets integrands with its own names.
+    tag = re.sub(r"\W", "_", key)
+    forms = []
+    for function in (internal_force, stiffness, point_jacobian, point_stress):
+        function.__name__ = function.__qualname__ = f"{function.__name__}__{tag}"
+        forms.append(fem.integrand(function))
+    _FORMS[key] = tuple(forms)
     return _FORMS[key]
 
 
@@ -133,6 +140,8 @@ class FemSolidDomain(Term):
     """FEBio "elastic-solid" on hex8 or tet4, integrated by warp.fem."""
 
     febio_type = "elastic-solid"
+
+    internal = True
 
     def __init__(self, name, element_type, bound, nodes, connectivity, entry, n_entries, device):
         geometry, order, points = ELEMENTS[element_type]

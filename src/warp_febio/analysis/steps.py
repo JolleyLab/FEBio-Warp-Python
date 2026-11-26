@@ -37,7 +37,7 @@ import warp as wp
 from ..assembly.system import SolveError, State, System
 from ..compiled import inspect, shell_directors
 from ..coverage import CoverageError
-from ..discretization.fields import build_field_table
+from ..discretization.fields import FIXED, build_field_table
 from ..elements.brick_domain import BrickDomain
 from ..elements.fem_domain import ELEMENTS as FEM_ELEMENTS
 from ..elements.fem_domain import FemSolidDomain
@@ -147,6 +147,17 @@ def collect(system: System, state: State, iterations: int = 0) -> StateResult:
         displacement=u[fields.entries_of("displacement")],
         iterations=iterations,
     )
+    # FEBio's nodal data "R" (log data Rx, Ry, Rz; plot variable "reaction
+    # forces"): minus the internal force, at every component that is free or
+    # prescribed, and zero at fixed components, which have no equation in
+    # FEBio (FESolidSolver2::Residual and UpdateKinematics). The domains'
+    # data is current, since a converged step ends with an update.
+    internal = wp.zeros(system.n, dtype=wp.vec3d, device=system.device)
+    for term in system.terms:
+        if term.internal:
+            term.residual(state, None, internal)  # adds minus the internal force
+    reaction = internal.numpy() * (fields.bc != FIXED)
+    out.reaction_force = reaction[fields.entries_of("displacement")]
     shell = fields.entries_of("shell displacement")
     if (shell >= 0).any():
         out.shell_displacement = np.zeros((len(shell), 3))
@@ -212,7 +223,7 @@ def run(system: System, log=None, linear_solver: str = "direct", keep_states: bo
         if controller is not None:
             controller.retries = 0
             if time + eps < tend:
-                # FEBio passes its iteration counter, one less than the
-                # number of solves in the converged step.
-                dt = controller.auto(iterations - 1, time, dt)
+                # FEBio passes m_niter, the number of Newton iterations of
+                # the converged step (FEAnalysis.cpp, AutoTimeStep call).
+                dt = controller.auto(iterations, time, dt)
     return (results, states) if keep_states else results

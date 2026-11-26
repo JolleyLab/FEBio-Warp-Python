@@ -113,7 +113,7 @@ def solve_step(system: System, state0: State, time: float, settings: NewtonSetti
     system.update(state)
     R = system.residual(state)
     normRi = normEi = 0.0
-    for it in range(settings.max_refs + 1):
+    for it in range(settings.max_refs):
         system.tangent(state)
         rhs = R
         if it == 0 and any_prescribed:

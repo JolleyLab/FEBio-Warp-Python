@@ -157,6 +157,8 @@ class BrickDomain(Term):
     """One element block with one material: FEBio "elastic-solid" on hex8, or
     "elastic-shell" on quad4 (front and back face as the brick's two faces)."""
 
+    internal = True
+
     def __init__(self, name, febio_type, bound, X, emap, n_entries, model, device):
         self.name = name
         self.febio_type = febio_type

@@ -1,0 +1,11 @@
+# time iterations (FEBio 4, commit e4df3f8, converged steps)
+0.1 4
+0.24 5
+0.35 6
+0.505271 7
+0.649024 7
+0.782114 8
+0.8 8
+0.899817 8
+0.986261 9
+1 9

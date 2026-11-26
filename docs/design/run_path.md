@@ -15,7 +15,7 @@ Draft v0.3 for discussion, November 26, 2026. For Steve Maas, Jeff Weiss, Ryan B
 - **Warp's own pieces are used where they fit.** Block sparse matrices with a reusable pattern map, the iterative solvers, the tape, and `warp.fem`, which now provides the tet4 element and a second, independent hex8.
 - **Gradients are part of the structure.** A gradient with respect to any number of parameters costs one transpose solve and one reverse pass of the residual, with the same kernels as the forward solve. The solve can sit on a `wp.Tape` as one step, so it composes with other Warp kernels.
 - **Newton and the adjoint do not always want the same tangent.** FEBio's default pressure stiffness is a symmetrized form. Newton uses it; the adjoint asks each term for its exact tangent.
-- **Checked against FEBio** on seven inputs, to 4e-12 where FEBio's log data is available (section 8), with the same Newton iteration counts.
+- **Checked against FEBio** on nine inputs, to 4e-12 where FEBio's log data is available (section 8), with the same Newton iteration counts.
 - **Newton, the physics library, is kept in view.** The step is a function from one state to the next, as Newton's solvers are. Section 6 lists what Newton expects and where this stands.
 
 ## 2. The path
@@ -234,9 +234,25 @@ CPU only, Warp 1.19.0, double precision. FEBio log data has 12 digits.
 | `shell_patch.feb` | 9 quad4 shells | Curved shell patch | 4e-12 |
 | `hex8_pressure.feb` (new) | 1 hex8 | Follower pressure; also run through `warp.fem` | 3e-12, same iteration counts as FEBio |
 | `tet4_block.feb` (new) | 6 tet4 | tet4 from `warp.fem` | 2e-12 |
+| `two_material_pressure.feb` (new) | 8 hex8 in 2 domains, neo-Hookean and isotropic elastic | Several domains, pressure, reaction forces; both solid paths | 4e-12 displacement, 2e-12 stress, 7e-13 reactions; same iteration counts |
+| `hex8_pressure_autostep.feb` (new) | 1 hex8 | Automatic time stepper, must points | Same ten step times and iteration counts |
 | Shell patch under pressure, FEBio 4.9, from the pilot phase | 1,863 quad4 shells | Pressure on a real shell mesh, 17 output times | 8e-8 (single-precision plot file) |
 
 The first four are also run with Warp's CG, BiCGSTAB and GMRES (4e-11), and give the same output times and iteration counts as the fixture.
+
+### Checks made as a reviewer would
+
+These were run to find what the first cases did not exercise. Four of them found errors, which are fixed on this branch.
+
+| Check | Finding |
+| --- | --- |
+| Two materials in two domains | The dedicated domain matched FEBio. The `warp.fem` domain did not: `warp.fem` caches the kernels it generates by integrand name, so the second material reused the first material's kernels. Each material now gets integrands with their own names. |
+| Reaction forces | FEBio's nodal `R` is minus the internal force at free and prescribed components and zero at fixed ones. It is not the residual at constrained components. `collect` now follows FEBio, and `StateResult` has `reaction_force`. |
+| Automatic time stepper | FEBio passes the number of Newton iterations of the converged step to `AutoTimeStep`. The run path passed one fewer, as the fixture does, and took larger steps than FEBio. |
+| Reformation limit | With full Newton FEBio allows `max_refs` iterations. The run path allowed one more, as the fixture does. With `max_refs` 8 on the stepper case FEBio fails 13 attempts and stops at t = 0.955516; the run path now converges the same ten steps, fails the same 13 attempts and stops at the same point. |
+| FEBio's default BFGS (`max_ups` 10) against full Newton | Same solution to 2e-9 on the two-material case. Iteration counts differ, so step sequences under the automatic stepper can differ from a FEBio run that uses BFGS. |
+
+The time stepper and reformation limit findings apply to `analysis/static.py` in the model and I/O draft as well. On a displacement-driven single element with `opt_iter` 3, FEBio keeps the step at 0.1 for ten steps and the fixture grows it and finishes in six. This is noted for that draft and not changed here.
 
 ### The gradient check case
 
@@ -264,9 +280,9 @@ On the 1,863-element shell patch, Warp's CG with a block-diagonal preconditioner
 
 ### Tests and the FEBio build
 
-The whole test suite on this branch: 140 tests, 136 pass and 4 skip (two need a GPU, two need VTK and h5py).
+The whole test suite on this branch: 144 tests, 140 pass and 4 skip (two need a GPU, two need VTK and h5py).
 
-FEBio for the two new references is 4.13.0 built from source at `e4df3f8` without MKL, by `tools/build_febio.sh`. That build reproduces the stored results for `hex8_neo_hookean.feb`, made at `552138d`, exactly.
+FEBio for the new references is 4.13.0 built from source at `e4df3f8` without MKL, by `tools/build_febio.sh`. That build reproduces the stored results for `hex8_neo_hookean.feb`, made at `552138d`, exactly.
 
 ## 9. Points for review
 
@@ -303,5 +319,8 @@ Each was checked against the FEBio source (`e4df3f8`), Warp 1.19.0, Newton (`12b
 - One small change outside the new files: `inspect` in `compiled.py` takes two optional functions through which a run path says which loads and element types it can build. The fixture's behavior is unchanged.
 - No history, so `commit` and `rollback` are called and do nothing.
 - CPU only. No timing was taken.
-- The first-iteration handling of prescribed displacements and the convergence tests were carried over from the fixture, which was compared with FEBio; they were not re-derived from the FEBio source for this note.
+- The first-iteration handling of prescribed displacements and the convergence tests were carried over from the fixture, which was compared with FEBio. The reformation limit and the iteration count given to the step controller were checked against the FEBio source and corrected (section 8); the rest was not re-derived.
+- Solver settings that are read but have no effect: `lstol`, `lsmin`, `lsiter` (no line search), `qn_method` (always full Newton), and the solver's `symmetric_stiffness` (FEBio uses it to choose matrix storage; here the matrix is always general). The coverage report lists each of them.
+- The command line (`python -m warp_febio run`) still runs the fixture, which refuses pressure. The run path is reached from Python.
+- There are two hex8 implementations (the dedicated brick domain and `warp.fem`). They agree to round-off on every case here. Keeping one is a decision for after the review.
 - The FEBio references are from a source build without MKL, not an official release.
