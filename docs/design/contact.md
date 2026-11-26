@@ -38,7 +38,8 @@ element and material checks as those components arrive.
   tests apply to the reference mode. `kc` is unscaled, as in FEBio, so it
   carries the units that make `weight_i * weight_j * kc / r^p` a force.
 * Inside the kernels distances are `s = r / R_out`, so one set of coefficients
-  serves models in millimetres and in metres (the package convention is SI).
+  serves models in millimetres and in metres. The package computes in the
+  units of the input file, as FEBio does.
 * Pair selection and pair evaluation are separate steps. `build_pairs` (or
   `update_pairs` on the term) is called once per Newton iteration in a forward
   solve and once at the converged state for a frozen-pairing adjoint.
