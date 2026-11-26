@@ -1,6 +1,6 @@
 # Central model and FEBio input and output
 
-Draft v0.3 for discussion, November 25, 2026. For Steve Maas, Jeff Weiss, the Warp and Newton team, Andras Lasso, and Ryan Black.  Happy Thanksgiving! The code is a local draft on branch `io-model-draft`; nothing is merged.
+Draft v0.3 for discussion, November 25, 2026. For Steve Maas, Jeff Weiss, the Warp and Newton team, Andras Lasso, and Ryan Black.  Happy Thanksgiving! The code is draft pull request 5 on branch `mattjolley/io-model-draft`; nothing is merged.
 
 Scope: the model object and the files that go in and out of it. Elements, assembly, solvers, time stepping, contact and materials are separate designs that are still to be made. A minimal version of some of them exists in the draft only so the model could be exercised end to end, as Steve suggested; section 7 says what that was.
 
@@ -153,7 +153,7 @@ Questions were kept to those we could not settle ourselves. Each was checked aga
 1. **Records or typed features.** FEBio builds a typed object per feature with declared parameters. The draft stores features as generic records under FEBio's names and interprets them at compile. With records, all 538 suite inputs and the open application inputs read and write back equal, including modules we do not implement. Would you keep records as the stored form and add typed access where a feature is implemented, or declare typed features in the model from the start, as FEBio does?
 2. **Parameter defaults.** An input need not list every parameter; FEBio fills the rest from its constructors. Our plan is to generate a table of defaults from FEBio itself, with a small program that walks `FECoreKernel`'s factory list and each class's parameter list, rather than transcribe constructors by hand. Is there already an export of that registry we should use instead? We found none among the command-line options in `FEBioApp.cpp`.
 
-One request: we could not open results in FEBio Studio from this environment. If the two attached files (`hex8_neo_hookean_warp.xplt`, `quad4_shell_neo_hookean_warp.xplt`) open and display as FEBio's own do, that closes the last check on the writer.
+One request: we could not open results in FEBio Studio from this environment. If the two files in `references/single_element/febio_warp/` (`hex8_neo_hookean_warp.xplt`, `quad4_shell_neo_hookean_warp.xplt`) open and display as FEBio's own in `references/single_element/febio/` do, that closes the last check on the writer.
 
 **For the Warp and Newton team (Eric, Kay)**
 
