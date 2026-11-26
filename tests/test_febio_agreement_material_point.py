@@ -7,6 +7,12 @@ reads the material and the deformation from the same FEBio input file the
 reference was generated from, evaluates the FEBio-Warp material model of
 that FEBio type, and compares with the stored FEBio values.
 
+Uncoupled materials (``formulation == "uncoupled"``) supply only their
+deviatoric part. FEBio logs the total, so for those cases the test adds the
+volumetric terms exactly as FEUncoupledMaterial::Stress and ::Tangent do, with
+the model's pressure model. That sum is made here for the comparison only; in
+FEBio-Warp the two parts are meant to be combined by a multi-field element.
+
 This is the one comparison of FEBio-Warp with FEBio that needs no input
 reader or solver. It is skipped where the material interface
 (``warp_febio.materials.model``) is not present, and for FEBio material
@@ -33,16 +39,50 @@ C_INDEX = [(n % 6, n // 6) for n in range(21)]
 
 try:
     from warp_febio.materials import model as api
+    from warp_febio.materials.geometry import axes_from_vectors
     import warp_febio.materials.models  # noqa: F401  (registers the models)
 except ImportError:
     api = None
+
+# U'(J) and U''(J) of FEBio's pressure models (FEBioMech/FEUncoupledMaterial.cpp).
+PRESSURE = {
+    "default": (
+        lambda J, k: k * np.log(J) / J,
+        lambda J, k: k * (1 - np.log(J)) / J**2,
+    ),
+    "NIKE3D": (
+        lambda J, k: 0.5 * k * (J - 1 / J),
+        lambda J, k: 0.5 * k * (1 + 1 / J**2),
+    ),
+    "Abaqus": (lambda J, k: k * (J - 1), lambda J, k: k + 0 * J),
+    "Abaqus (GOH)": (
+        lambda J, k: 0.5 * k * (J - 1 / J),
+        lambda J, k: 0.5 * k * (1 + 1 / J**2),
+    ),
+}
+# dyad1s(I) and dyad4s(I) as 6x6, in the order xx, yy, zz, xy, yz, xz.
+IxI = np.zeros((6, 6))
+IxI[:3, :3] = 1.0
+I4 = np.diag([1.0, 1.0, 1.0, 0.5, 0.5, 0.5])
 
 
 def read_input(path):
     """Material type, parameters and target deformation gradient of an mp case."""
     root = ET.parse(path).getroot()
     mat = root.find("Material/material")
-    params = {p.tag: float(p.text) for p in mat if len(p) == 0 and p.text}
+    params = {}
+    for p in mat:
+        if len(p) == 0 and p.text:
+            try:
+                params[p.tag] = float(p.text)
+            except ValueError:
+                params[p.tag] = p.text.strip()  # an option, for example pressure_model
+    axis = mat.find("mat_axis")
+    if axis is not None:
+        params["mat_axis"] = axes_from_vectors(
+            [float(x) for x in axis.findtext("a").split(",")],
+            [float(x) for x in axis.findtext("d").split(",")],
+        )
     bc = root.find("Boundary/bc[@type='prescribed deformation']")
     F = np.array([float(x) for x in bc.find("F").text.split(",")]).reshape(3, 3)
     points = [
@@ -62,9 +102,9 @@ def febio_warp(febio_type, params, F):
         return None
     values = {k: params[k] for k in model.param_names}
     geometry = None
-    if "HGO" in febio_type:
-        # The inputs set mat_axis a = (1,0,0), d = (0,1,0): the global frame.
-        geometry = {"mat_axis": np.tile(np.eye(3).ravel(), (len(F), 1))}
+    if any(f.name == "mat_axis" for f in model.geometry):
+        # Material axes as FEBio builds them from the input's a and d vectors.
+        geometry = {"mat_axis": np.tile(params["mat_axis"].ravel(), (len(F), 1))}
     sigma = api.evaluate(model, F, values, geometry=geometry)["cauchy"]
     c = np.zeros((len(F), 6, 6))
     for b, (k, l) in enumerate(VOIGT):
@@ -77,6 +117,19 @@ def febio_warp(febio_type, params, F):
         ]
         for a, (i, j) in enumerate(VOIGT):
             c[:, a, b] = cd[:, i, j]
+    if model.formulation == "uncoupled":
+        # FEUncoupledMaterial: sigma = dev + p I,
+        # c = c_dev + p (dyad1s(I) - 2 dyad4s(I)) + J U''(J) dyad1s(I), p = U'(J).
+        name = params.get("pressure_model", dict(model.options)["pressure_model"])
+        dU, d2U = PRESSURE[name]
+        J = np.linalg.det(F)
+        p = dU(J, values["k"])
+        sigma = sigma + p[:, None, None] * np.eye(3)
+        c = (
+            c
+            + p[:, None, None] * (IxI - 2 * I4)
+            + (J * d2U(J, values["k"]))[:, None, None] * IxI
+        )
     return (
         np.array([[s[i, j] for i, j in VOIGT] for s in sigma]),
         np.array([[m[a, b] for a, b in C_INDEX] for m in c]),

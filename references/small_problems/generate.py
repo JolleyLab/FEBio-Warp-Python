@@ -80,6 +80,40 @@ MATERIALS = {
         },
         '<mat_axis type="vector"><a>1,0,0</a><d>0,1,0</d></mat_axis>',
     ),
+    # The two HGO forms again with material axes away from the global frame, so
+    # that the construction of the axes from a and d is part of the comparison.
+    "hgo_uncoupled_rotated": (
+        "Holzapfel-Gasser-Ogden",
+        {
+            "density": 1,
+            "k": 100,
+            "c": 0.00764,
+            "k1": 0.9966,
+            "k2": 524.6,
+            "kappa": 0.226,
+            "gamma": 49.98,
+        },
+        '<mat_axis type="vector"><a>1,2,0.5</a><d>-1,0.3,2</d></mat_axis>',
+    ),
+    "hgo_unconstrained_rotated": (
+        "HGO unconstrained",
+        {
+            "density": 1,
+            "c": 0.00764,
+            "k1": 0.9966,
+            "k2": 524.6,
+            "kappa": 0.226,
+            "gamma": 49.98,
+            "k": 100,
+        },
+        '<mat_axis type="vector"><a>1,2,0.5</a><d>-1,0.3,2</d></mat_axis>',
+    ),
+    # Device frame of the published TPVR model (Zelonis et al., Table 1; kPa, mm).
+    "isotropic_elastic": (
+        "isotropic elastic",
+        {"density": 6.45e-6, "E": 4.0e7, "v": 0.33},
+        "",
+    ),
 }
 
 
@@ -130,11 +164,19 @@ MATERIAL_POINT_CASES = [
     ("hgo_unconstrained", "biaxial"),  # no in-scope suite problem
     ("hgo_unconstrained", "general"),
     ("neo_hookean", "general"),  # control
+    ("hgo_uncoupled_rotated", "general"),  # axes away from the global frame
+    ("hgo_unconstrained_rotated", "general"),
+    ("isotropic_elastic", "general"),  # device frame, no earlier case
 ]
 
 # The fiber term of the ma34 parameters (k2 = 524.6) stiffens very quickly, so
 # the HGO cases use a quarter of each path: about 5 percent strain.
-AMPLITUDE = {"hgo_uncoupled": 0.25, "hgo_unconstrained": 0.25}
+AMPLITUDE = {
+    "hgo_uncoupled": 0.25,
+    "hgo_unconstrained": 0.25,
+    "hgo_uncoupled_rotated": 0.25,
+    "hgo_unconstrained_rotated": 0.25,
+}
 
 
 def target(mat_key, path_key):

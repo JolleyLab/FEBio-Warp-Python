@@ -32,7 +32,7 @@ Comparisons become possible in this order, each needing more of FEBio-Warp than 
 
 `tests/test_febio_agreement_material_point.py` takes the material and the deformation from a FEBio input file, evaluates the FEBio-Warp material model of that FEBio type, and compares Cauchy stress and spatial tangent with the stored FEBio reference for that same file. The inputs are single elements under FEBio's `prescribed deformation` boundary condition, so the deformation is uniform and FEBio's logged element values are point values.
 
-With the models in the materials draft (#2), seven cases agree to 1e-10: Lee-Sacks under four deformations, HGO unconstrained under two, and neo-Hookean under one. The measured differences are about 1e-12, the limit of FEBio's log output. Two uncoupled HGO cases have references but no FEBio-Warp model yet. The test is skipped on `main`, which has no material models yet.
+With the models in the materials draft (#2), nine cases agree to 1e-10: Lee-Sacks under four deformations, HGO unconstrained under three (one with material axes away from the global frame), isotropic elastic under one, and neo-Hookean under one. The measured differences are about 1e-12, the limit of FEBio's log output. Three uncoupled HGO cases have references but no FEBio-Warp model in #2 yet. The test reads the material axes from the input's `mat_axis` vectors, and for an uncoupled material it adds the volumetric terms as `FEUncoupledMaterial` does before comparing. The test is skipped on `main`, which has no material models yet.
 
 ## Step 1: inputs assembled so far
 
@@ -63,12 +63,13 @@ How far the suite covers what the valve and device models use (problems in scope
 
 The general machinery is well covered. The features most specific to these models are thin.
 
-**Small inputs where the suite is thin,** in `references/small_problems/inputs/`. Seventeen FEBio 4.0 input files, each mirroring or extending a suite problem, all generated geometry.
+**Small inputs where the suite is thin,** in `references/small_problems/inputs/`. Twenty FEBio 4.0 input files, each mirroring or extending a suite problem, all generated geometry.
 
 | Inputs | Feature | Mirrors or extends |
 |---|---|---|
 | `mp_lee_sacks_*` (4) | Isotropic Lee-Sacks | Leaflet parameters of the open mitral model |
-| `mp_hgo_*` (4) | HGO, uncoupled and unconstrained | Parameters of `ma34` |
+| `mp_hgo_*` (6) | HGO, uncoupled and unconstrained; two with material axes away from the global frame | Parameters of `ma34` |
+| `mp_isotropic_elastic_general` | Isotropic elastic | Device frame constants of the open TPVR inputs |
 | `mp_neo_hookean_general` | Neo-Hookean, as a control | Parameters of `co62` |
 | `ch_chord_slack_tension` | Nonlinear spring through slack and tension | `di04`; chord of the open mitral model |
 | `bk_contact_potential_patch` | Contact potential, non-matching meshes | `co62` |
@@ -92,7 +93,7 @@ Read from the files: the valve models are Lee-Sacks quad4 shells with contact po
 
 `references/small_problems/make_references.py` runs FEBio on an input and stores the logged data with the FEBio version, a description of the build, and the hash of the input file. A reference is valid only for the input whose hash it carries. The script records what FEBio produced and checks nothing.
 
-References for the 17 small inputs are in `references/small_problems/febio/`. They come from a provisional FEBio 4.13.0 build from source (commit `552138d`, no MKL) and are labelled as such.
+References for the 20 small inputs are in `references/small_problems/febio/`. They come from provisional FEBio 4.13.0 builds from source (commit `552138d`, no MKL) and are labelled as such. The three added on November 25 come from a second build of the same commit and options, which reproduced the 17 earlier references exactly.
 
 What a pinned build needs:
 

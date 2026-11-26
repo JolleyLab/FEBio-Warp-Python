@@ -63,6 +63,27 @@
   ]
  },
  {
+  "case": "mp_hgo_uncoupled_rotated_general",
+  "tier": 0,
+  "tags": [
+   "Holzapfel-Gasser-Ogden"
+  ]
+ },
+ {
+  "case": "mp_hgo_unconstrained_rotated_general",
+  "tier": 0,
+  "tags": [
+   "HGO unconstrained"
+  ]
+ },
+ {
+  "case": "mp_isotropic_elastic_general",
+  "tier": 0,
+  "tags": [
+   "isotropic elastic"
+  ]
+ },
+ {
   "case": "ch_chord_slack_tension",
   "tier": 1,
   "tags": [

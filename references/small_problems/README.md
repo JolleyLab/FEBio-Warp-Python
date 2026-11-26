@@ -1,6 +1,6 @@
 # Small FEBio inputs and their FEBio references
 
-Seventeen small FEBio 4.0 input files for features the FEBio test suite
+Twenty small FEBio 4.0 input files for features the FEBio test suite
 covers thinly for the valve and device applications, with the FEBio results
 for each. Each input mirrors or extends a suite problem. All geometry is
 generated; nothing here is patient data. See
