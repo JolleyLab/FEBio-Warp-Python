@@ -1,6 +1,6 @@
 # FEBio-Warp design overview
 
-Initial draft, November 26, 2026. This page is the entry point to the design. It shows how the pieces fit, says what state each is in, and links to the note that holds the detail. It is a summary of drafts under review, not a specification. Sections 1 to 4 describe pieces that have a design note and code on a branch. Section 5 holds first templates for the areas after that; nothing in it is settled.
+Initial draft, November 26, 2026. This page is the entry point to the design. It shows how the pieces fit, says what state each is in, and links to the note that holds the detail. It is a summary of drafts under review, not a specification. Sections 1 to 4 describe pieces that have a design note and code in a draft pull request. Each note opens with its own diagrams. Section 5 holds first templates for the areas after that; nothing in it is settled.
 
 **The rule the design follows.** Follow FEBio where it matters to a user or a reviewer: the same input files, the same names, the same formulations, the same outputs, and FEBio results as the reference. Build the internals for Warp: flat arrays on the device, one kernel per batch, a matrix pattern that is analysed once, state kept apart from the model, and gradients as a design requirement.
 
@@ -43,7 +43,7 @@ flowchart TB
 | Contact | Point-based contact potential after Kamensky et al. and FEBio's `FEContactPotential`: contact points, pair search on the device, force and tangent, gradients. | Draft, in review | [contact.md](contact.md) | [PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1) |
 | Verification | FEBio-Warp run on FEBio inputs and compared with pinned FEBio results, at four levels: material point, element, small problem, application. | Draft, tabled until model and I/O | [verification.md](verification.md) | [PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4) |
 | Integration | The four drafts merged and made consistent where they meet. | Branch | [integration.md](integration.md) | [`mattjolley/integration-base`](https://github.com/JolleyLab/FEBio-Warp-Python/tree/mattjolley/integration-base) |
-| Run path | From a model to a result: unknowns, terms, the Newton step, the step driver, pressure, solids on `warp.fem`, adjoint gradients. | Template | [run_path.md](run_path.md) | Local draft on the integration branch |
+| Run path | From a model to a result: unknowns, terms, the Newton step, the step driver, pressure, solids on `warp.fem`, adjoint gradients. | Template, draft | [run_path.md](run_path.md) | [PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6), stacked on the integration branch |
 
 ## 3. One run
 

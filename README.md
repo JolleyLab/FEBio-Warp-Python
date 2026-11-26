@@ -46,7 +46,7 @@ flowchart LR
 | Model and I/O | One model object for what a FEBio input defines; reads and writes FEBio files; says whether an input can run | Draft ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)) |
 | Materials | FEBio's material structure, compiled into one Warp kernel per material tree | Draft ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)) |
 | Contact | Point-based contact potential with pair search on the device | Draft ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)) |
-| Run path | From a model to a result on small cases, with adjoint gradients | Template |
+| Run path | From a model to a result on small cases, with adjoint gradients | Template, draft ([PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6)) |
 | Verification | The same inputs run in FEBio and compared | Draft ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)) |
 
 The [design overview](docs/design/overview.md) shows how these fit together, where the design

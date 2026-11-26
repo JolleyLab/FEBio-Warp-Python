@@ -1,6 +1,6 @@
 # Run path: from a compiled model to a result
 
-Draft v0.3 for discussion, November 26, 2026. For Steve Maas, Jeff Weiss, Ryan Black and the Warp team. The code is a local template on branch `mattjolley/run-path-template`, stacked on `mattjolley/integration-base`. Nothing is merged or pushed.
+Draft v0.3 for discussion, November 26, 2026. For Steve Maas, Jeff Weiss, Ryan Black and the Warp team. The code is a template in draft pull request 6, on branch `mattjolley/run-path-template`, stacked on `mattjolley/integration-base`. Nothing is merged. The [design overview](overview.md) shows where this sits among the other drafts.
 
 **Scope.** The structure that takes a model and drives it through steps to a result: unknowns, terms, the Newton step, the step driver, and gradients. It is shown on the basic example Steve suggested (one element, one material, prescribed nodal displacements, with free unknowns and a Newton solve), and on one element under a pressure load, which is the standing case for checking gradients.
 
