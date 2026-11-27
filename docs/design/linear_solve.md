@@ -13,8 +13,8 @@ First template for discussion, November 26, 2026 (v0.2). Design only: nothing in
 - **The adjoint may need a non-symmetric solve even when Newton's matrix is symmetric.** On a surface with free edges, such as a leaflet, the exact pressure tangent differs from FEBio's symmetrized form, so it is not expected to be symmetric there, and the adjoint must use it. To confirm by measurement.
 - **Slack truss chordae can make the tangent indefinite**, which a preconditioner for positive definite matrices may not accept.
 - **Proposal: one solver interface with a setup, a refit and a solve, and a ladder of methods behind it**, chosen by measurement.
-- **A direct solver on the device is available outside Warp: cuDSS.** It was suggested in review. Its transpose solve reuses the factors, which is what the adjoint needs. Read from its documentation, not tried (section 4).
-- **The roadmap is in three steps.** Keep the host direct solve for comparisons with FEBio. Measure Warp's `FSAI` and block Jacobi on suite problem `sh11`. Try cuDSS on the same case on a GPU, with the transpose solve. Then choose (section 8).
+- **A direct solver on the device is available outside Warp: cuDSS.** It was suggested in review. As we read its documentation, its transpose solve reuses the factors, which appears to be what the adjoint needs. Not tried (section 4).
+- **A possible order of work, open to correction.** Keep the host direct solve for comparisons with FEBio. Measure Warp's `FSAI` and block Jacobi on suite problem `sh11`. Try cuDSS on the same case on a GPU, with the transpose solve. Then choose, with the Warp team's advice (section 8).
 
 ## 2. Choosing a method
 
@@ -37,7 +37,7 @@ flowchart TB
     b1 --> enough
     pre2 --> enough
     enough -- yes --> done["Use it"]
-    enough -- no --> direct["Factorization on the device<br/>cuDSS first; Newton's Kamino routines<br/><i>section 4; point 6 of the run path note</i>"]:::todo
+    enough -- no --> direct["Factorization on the device<br/>cuDSS, as suggested in review; Newton's Kamino routines<br/><i>section 4; point 6 of the run path note</i>"]:::todo
 
     classDef todo stroke-dasharray: 5 5
 ```
@@ -77,16 +77,16 @@ Its documented preconditions are a symmetric positive definite matrix with both 
 
 ### A direct solver on the device: cuDSS
 
-Raised in review, and not tried here. cuDSS is NVIDIA's sparse direct solver for the GPU. It is a separate library from Warp, and Warp 1.19.0 does not call it; Python bindings are in `nvmath-python`. What follows is from its documentation, not from a run.
+Raised in review, and not tried here. cuDSS is NVIDIA's sparse direct solver for the GPU. It is a separate library from Warp, and Warp 1.19.0 does not call it; Python bindings are in `nvmath-python`. What follows is our reading of its documentation, not a result, and the people who suggested it know it far better than we do. Corrections are welcome.
 
 | Point | What the documentation says | What it means here |
 | --- | --- | --- |
 | Phases | Analysis once per sparsity pattern, then factorization or refactorization, then solve | Fits `setup(pattern)`, `refit(values)`, `solve(b)` in section 5. The pattern is fixed in the run path, so analysis is done once |
-| Transpose solve | `CUDSS_CONFIG_SOLVE_MODE` set to `CUDSS_SOLVE_MODE_TRANSPOSE` solves A^T x = b from the existing factors (added in cuDSS 1.0.0) | The adjoint solve of decision L5 becomes two substitutions, with no second factorization |
-| Where transpose is not supported | With a Schur complement, with the COLAMD reorderings, with non-uniform batches, and for Hermitian matrix types | None of these is in the proposed path. To confirm for the reordering actually used |
+| Transpose solve | `CUDSS_CONFIG_SOLVE_MODE` set to `CUDSS_SOLVE_MODE_TRANSPOSE` solves A^T x = b from the existing factors (added in cuDSS 1.0.0) | As we understand it, the adjoint solve of decision L5 would become two substitutions, with no second factorization |
+| Where transpose is not supported | With a Schur complement, with the COLAMD reorderings, with non-uniform batches, and for Hermitian matrix types | None of these appears to be in the proposed path. To confirm for the reordering actually used |
 | Solve sub-phases | Forward and backward substitution can be run separately | Not needed for the adjoint. Which combinations with the transpose mode are supported was not checked here, and the reviewer was not certain all are |
 
-One point is specific to this design. The adjoint needs the transpose of the exact tangent, and Newton may factor FEBio's tangent, which differs from it in the known cases (symmetrized pressure, `tangent_scale`, `mass damping`; [sensitivity.md](sensitivity.md), section 4). Where they are the same, Newton's last factorization serves the adjoint directly. Where they differ, either the exact tangent is factorized once at the converged state, or Newton's factors are used as the preconditioner of a Krylov solve with the exact transpose.
+One point on which guidance would help. The adjoint needs the transpose of the exact tangent, and Newton may factor FEBio's tangent, which differs from it in the known cases (symmetrized pressure, `tangent_scale`, `mass damping`; [sensitivity.md](sensitivity.md), section 4). Where they are the same, Newton's last factorization serves the adjoint directly. Where they differ, we see two options: factorize the exact tangent once at the converged state, or use Newton's factors as the preconditioner of a Krylov solve with the exact transpose. There may be a better one.
 
 ## 5. Proposed
 
@@ -124,7 +124,7 @@ Until then, results agree with FEBio's but step sequences under the automatic ti
 | ID | Decision | Options | Proposed | For |
 | --- | --- | --- | --- | --- |
 | L1 | Order of work | (a) Measure `FSAI` and block Jacobi first. (b) Ask the Warp team about a direct solver first | (a), with cuDSS tried alongside (measurement 7) since it was suggested in review. Point 6 of the run path note is then asked with data | MJ, then Warp team |
-| L2 | Iterative or direct at application size | (a) Preconditioned Krylov. (b) A factorization on the device: cuDSS (section 4), or Newton's Kamino routines. (c) A host direct solver as a stopgap | Decide from the measurements below. cuDSS is the first candidate for (b) | Warp team, Ryan |
+| L2 | Iterative or direct at application size | (a) Preconditioned Krylov. (b) A factorization on the device: cuDSS (section 4), or Newton's Kamino routines. (c) A host direct solver as a stopgap | Decide from the measurements below and the Warp team's advice. For (b) we would start with cuDSS, as suggested | Warp team, Ryan |
 | L3 | Symmetry | (a) Follow the solver's `symmetric_stiffness` setting. (b) Always general | (a) for Newton. The adjoint solve is general in either case (L5) | Steve |
 | L4 | Indefinite tangents | (a) Rely on mass and damping. (b) Use methods that do not need a positive definite matrix. (c) A tension-only chord (decision C1) | Measure on a leaflet patch with slack trusses | Steve, Warp team |
 | L5 | The adjoint solve | It uses the transpose of the exact tangent. With a follower pressure on a surface with free edges that matrix is not expected to be symmetric, even where Newton's is | With an iterative solver: GMRES or BiCGSTAB, with the preconditioner built from Newton's matrix. With cuDSS: its transpose solve on the factors of the exact tangent, or Newton's factors as the preconditioner where the two tangents differ (section 4). To measure | Warp team |
@@ -142,7 +142,7 @@ Recommended as the first code after these notes. Each is small. Cases from the F
 | 4 | What does contact do to it ? | `sh_self_contact_fold` once contact is a term | Iterations with and without contact blocks in the preconditioner |
 | 5 | What do slack trusses do to it ? | A quad4 patch with a branched truss network ([chordae.md](chordae.md)) | Whether CG with `FSAI` still converges; the smallest eigenvalue on a small case |
 | 6 | What does the adjoint solve cost ? | The pressure gradient case of the run path at patch size | Iterations of the transpose solve against the forward solve |
-| 7 | Does a factorization on the device remove the problem ? | `sh11` and the pressure gradient case with cuDSS on a GPU | Time for analysis, factorization and solve against the best iterative result; the transpose solve reusing the factors |
+| 7 | How does a factorization on the device compare ? | `sh11` and the pressure gradient case with cuDSS on a GPU | Time for analysis, factorization and solve against the best iterative result; the transpose solve reusing the factors |
 
 A rough expectation for question 2, not a result: at dt 1e-4 with `rhoi` 0 the mass term is scaled by alpha_m/(beta dt^2) = 2e8, against a leaflet density of 1.04e-6 in the input's units. Whether that dominates the bending stiffness of a 0.4 thick shell at this mesh size is what the measurement would show.
 

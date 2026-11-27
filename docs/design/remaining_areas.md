@@ -261,7 +261,7 @@ Each is stated in the note named, with its source.
 | Both application inputs use `rhoi` 0. No simple suite problem does; the suite's small dynamic problems use the defaults or `rhoi` 1. | [dynamics.md](dynamics.md) |
 | FEBio's `mass damping` stiffness is C/dt, not the derivative of its force. | [dynamics.md](dynamics.md), [sensitivity.md](sensitivity.md) |
 | On a surface with free edges the exact pressure tangent differs from FEBio's symmetrized form, so the adjoint solve is expected to be non-symmetric even for the mitral case. Not yet measured. | [linear_solve.md](linear_solve.md) |
-| cuDSS, suggested in review, solves with the transpose from existing factors. With a direct solver the adjoint then costs two substitutions where Newton's tangent is the exact one. Read from the documentation, not tried. | [linear_solve.md](linear_solve.md) |
+| cuDSS, suggested in review, solves with the transpose from existing factors. As we understand it, the adjoint would then cost two substitutions where Newton's tangent is the exact one. Read from the documentation, not tried. | [linear_solve.md](linear_solve.md) |
 | Both applications set `w_tol` above zero, where the contact draft and FEBio apply the gate differently. | [contact_in_run.md](contact_in_run.md) |
 | FEBio's penta6 solid and tri3 shell use the same six integration points and weights. | [elements.md](elements.md) |
 | FEBio runs uncoupled materials on hex8 and penta6 as `three-field-solid` by default, and not on tet4. | [elements.md](elements.md) |
