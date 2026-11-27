@@ -95,7 +95,7 @@ def _make_forms(bound):
         sigma, c = stress_and_tangent(F, geom[s.element_index], params[0])
         gv = fem.grad(v, s) * Fi
         gu = fem.grad(du, s) * Fi
-        two = wp.float64(2.0)
+        two = wp.float64(2.0)  # noqa: F841 (unused; left as written in the draft)
         # symmetric parts in FEBio's tens4ds order xx, yy, zz, xy, yz, xz
         a = wp.vector(
             gv[0, 0],

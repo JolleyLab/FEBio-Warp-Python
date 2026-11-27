@@ -38,7 +38,7 @@ What a term must keep to for differentiation
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import warp as wp
@@ -129,7 +129,7 @@ class Term:
     def residual(self, state: State, history: Any, out: wp.array) -> None:
         raise NotImplementedError
 
-    def linearize(self, state: State, history: Any, exact: bool = False) -> Optional[BlockTangent]:
+    def linearize(self, state: State, history: Any, exact: bool = False) -> BlockTangent | None:
         """The term's part of K. FEBio lets some terms give Newton a tangent
         that is not the derivative of their residual (the symmetrized
         pressure stiffness; `tangent_scale` on a material). With exact=True a

@@ -32,7 +32,6 @@ Reserved, not implemented
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 import numpy as np
 
@@ -70,7 +69,7 @@ class Prescribed:
     entries: np.ndarray  # (n,) entry index
     component: int  # 0, 1 or 2
     scale: float
-    load_controller: Optional[int]  # FEBio load controller id, or None
+    load_controller: int | None  # FEBio load controller id, or None
 
 
 @dataclass

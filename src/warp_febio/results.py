@@ -31,7 +31,7 @@ class StateResult:
     stress_points: dict = field(default_factory=dict)
     iterations: int = 0
     #: FEBio's nodal reaction forces (N, 3); set by the run path template.
-    reaction_force: Optional[np.ndarray] = None
+    reaction_force: np.ndarray | None = None
 
 
 @dataclass

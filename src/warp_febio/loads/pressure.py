@@ -33,7 +33,7 @@ Not implemented
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import warp as wp
@@ -231,7 +231,7 @@ class PressureLoad(Term):
             device=self.device,
         )
 
-    def linearize(self, state: State, history: Any, exact: bool = False) -> Optional[BlockTangent]:
+    def linearize(self, state: State, history: Any, exact: bool = False) -> BlockTangent | None:
         if self.linear:
             return None  # the load does not depend on the solution
         symmetric = 0 if exact else self.symmetric
