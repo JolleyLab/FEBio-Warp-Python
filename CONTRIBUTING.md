@@ -51,7 +51,7 @@ uv sync --extra dev
 
 The project uses [uv](https://docs.astral.sh/uv/) to manage the environment. `uv sync` creates `.venv` from `uv.lock`, and `uv run` runs a command inside it. If uv is not available, a virtual environment with `pip install -e ".[warp]"` works as a fallback.
 
-Python 3.10 or newer is supported, and 3.11 is the tested version (set in `.python-version`). Warp is pinned to an exact version in `pyproject.toml`. Do not change the pin as part of an unrelated pull request. If a change does alter dependencies, commit the updated `uv.lock` with it.
+Python 3.11 or newer is supported, and 3.12 is the tested version, as in Warp (set in `.python-version`). Warp is pinned to an exact version in `pyproject.toml`. Do not change the pin as part of an unrelated pull request. If a change does alter dependencies, commit the updated `uv.lock` with it.
 
 Run the test suite before you start to confirm your environment works:
 

@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "warp_febio"
 version = "0.1.0"
 description = "GPU-accelerated, differentiable finite element mechanics on Warp, following FEBio formulations"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 # The model and the file readers and writers need only NumPy, so they install
 # in 3D Slicer and other environments without Warp. Compiling and running a
 # model needs the "warp" extra.
