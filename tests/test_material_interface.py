@@ -6,6 +6,7 @@ FEBio source; they do not establish agreement of a full FEBio solve.
 """
 
 import json
+import os
 import pathlib
 import unittest
 
@@ -16,6 +17,21 @@ import warp as wp
 from warp_febio.materials import model as model_api
 from warp_febio.materials import models  # noqa: F401  (registers the models)
 from warp_febio.materials.conformance import check_model, sample_states
+
+# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
+# GPU). It becomes Warp's current device while this module's tests run, so
+# calls that do not name a device follow it.
+DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
+_device_scope = wp.ScopedDevice(DEVICE)
+
+
+def setUpModule():
+    _device_scope.__enter__()
+
+
+def tearDownModule():
+    _device_scope.__exit__(None, None, None)
+
 
 # The pilot implementations are an independent comparison. The input and output
 # draft (pull request 5) moves them from warp_febio.materials to the
@@ -119,7 +135,7 @@ def legacy_lame_response(
 def legacy(name, F, H, params):
     """The pre-interface implementation of `name`, evaluated on the same states."""
     if name == "lee_sacks_isotropic":
-        out = legacy_lee_sacks(F, params, H)
+        out = legacy_lee_sacks(F, params, H, device=DEVICE)
         return out["energy"], out["pk1"], out["tangent_action"]
     lame, shear = legacy_nh.lame_from_young_poisson(params["E"], params["v"])
     n = len(F)

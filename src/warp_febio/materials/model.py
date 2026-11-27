@@ -401,7 +401,7 @@ def make_point_kernel(model: MaterialModel, dtype=wp.float64):
     return kernel
 
 
-def evaluate(model, F, params, H=None, geometry=None, dtype=wp.float64, device="cpu"):
+def evaluate(model, F, params, H=None, geometry=None, dtype=wp.float64, device=None):
     """Host convenience for tests and small studies. Not a production path.
 
     F, H: arrays of shape (n, 3, 3). params: dict of named values. geometry:
