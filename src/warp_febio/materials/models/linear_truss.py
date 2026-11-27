@@ -37,9 +37,7 @@ import warp as wp
 
 from ..uniaxial import UniaxialModel
 
-SOURCE = (
-    "FEBioMech/FETrussMaterial.cpp, FEBioMech/FELinearTrussDomain.cpp (FEBio develop)"
-)
+SOURCE = "FEBioMech/FETrussMaterial.cpp, FEBioMech/FELinearTrussDomain.cpp (FEBio develop)"
 
 
 @wp.func

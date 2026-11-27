@@ -88,11 +88,7 @@ def dev_energy(F: Any, g: Any, p: Any):
     I1 = wp.ddot(Ft, Ft)
     E1 = fiber_strain(Ft, fiber_direction(g, gamma, one), kappa)
     E2 = fiber_strain(Ft, fiber_direction(g, gamma, -one), kappa)
-    return (
-        F.dtype(0.5) * c * (I1 - F.dtype(3.0))
-        + fiber_energy(E1, k1, k2)
-        + fiber_energy(E2, k1, k2)
-    )
+    return F.dtype(0.5) * c * (I1 - F.dtype(3.0)) + fiber_energy(E1, k1, k2) + fiber_energy(E2, k1, k2)
 
 
 @wp.func

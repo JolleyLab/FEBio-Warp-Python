@@ -59,9 +59,7 @@ def pk2_from_strain(strain: Any, p: Any):
 def energy(F: Any, g: Any, p: Any):
     strain = green_lagrange(F)
     tr = wp.trace(strain)
-    return F.dtype(0.5) * lame_lambda(p) * tr * tr + lame_mu(p) * wp.ddot(
-        strain, strain
-    )
+    return F.dtype(0.5) * lame_lambda(p) * tr * tr + lame_mu(p) * wp.ddot(strain, strain)
 
 
 @wp.func

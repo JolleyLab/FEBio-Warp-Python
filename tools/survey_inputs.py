@@ -60,9 +60,7 @@ def survey(paths):
             row["error"] = f"{type(err).__name__}: {err}"[:300]
         try:
             report = inspect(model)
-            row["missing"] = sorted(
-                {f"{e.category}: {e.febio_name}" for e in report.missing()}
-            )
+            row["missing"] = sorted({f"{e.category}: {e.febio_name}" for e in report.missing()})
             row["status"] = "runnable" if report.runnable else "not yet runnable"
         except Exception as err:
             row["status"] = "inspect failed"
@@ -92,9 +90,7 @@ def summarize(rows, top=25):
     print("modules:", dict(collections.Counter(r["module"] for r in v4).most_common()))
     print(
         "element types:",
-        dict(
-            collections.Counter(t for r in v4 for t in r["element_types"]).most_common()
-        ),
+        dict(collections.Counter(t for r in v4 for t in r["element_types"]).most_common()),
     )
     missing = collections.Counter(m for r in v4 for m in r.get("missing", []))
     print(f"\nmost common missing features (of {len(v4)} inputs):")
@@ -124,11 +120,7 @@ def main():
     a = p.parse_args()
     files = []
     for x in a.paths:
-        files += (
-            sorted(glob.glob(os.path.join(x, "**", "*.feb"), recursive=True))
-            if os.path.isdir(x)
-            else [x]
-        )
+        files += sorted(glob.glob(os.path.join(x, "**", "*.feb"), recursive=True)) if os.path.isdir(x) else [x]
     rows = survey(files)
     summarize(rows)
     if a.json:

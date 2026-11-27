@@ -60,9 +60,7 @@ def main():
         if model.name in PILOT:
             new = model_api.evaluate(model, F, params, H)
             W, P, dP = legacy(model.name, F, H, params)
-            rel = lambda a, b: float(
-                np.abs(a - b).max() / np.abs(b).max()
-            )  # noqa: E731
+            rel = lambda a, b: float(np.abs(a - b).max() / np.abs(b).max())  # noqa: E731
             metrics["previous_stress"] = rel(new["pk1"], P)
             metrics["previous_tangent"] = rel(new["tangent_action"], dP)
         results[model.name] = {
@@ -86,21 +84,10 @@ def main():
     (out / "results.json").write_text(json.dumps(record, indent=2) + "\n")
 
     names = list(results)
-    print(
-        "| Check | "
-        + " | ".join(f"{n} ({results[n]['authored']})" for n in names)
-        + " |"
-    )
+    print("| Check | " + " | ".join(f"{n} ({results[n]['authored']})" for n in names) + " |")
     print("|---|" + "---|" * len(names))
     for key, label in ROWS:
-        cells = [
-            (
-                f"{results[n]['metrics'][key]:.1e}"
-                if key in results[n]["metrics"]
-                else "n/a"
-            )
-            for n in names
-        ]
+        cells = [(f"{results[n]['metrics'][key]:.1e}" if key in results[n]["metrics"] else "n/a") for n in names]
         print(f"| {label} | " + " | ".join(cells) + " |")
 
 

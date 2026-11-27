@@ -144,9 +144,7 @@ class MaterialBinding(unittest.TestCase):
         bound, issues = bind_material(model.materials[0], model)
         self.assertIsNotNone(bound, issues)
         self.assertTrue(bound.time_dependent)
-        records = json.loads(
-            (CASES / "febio" / "bk_modulus_load_curve.json").read_text()
-        )["records"]
+        records = json.loads((CASES / "febio" / "bk_modulus_load_curve.json").read_text())["records"]
         times = np.array(records[1]["times"])
         Fs = np.array(records[1]["values"])[:, 0, :].reshape(-1, 3, 3)
         stress = np.array(records[2]["values"])[:, 0, :]
@@ -175,9 +173,7 @@ class MaterialBinding(unittest.TestCase):
             if bound is None or bound.model.formulation != "coupled":
                 continue
             with self.subTest(case=ref["case"]):
-                bc = next(
-                    r for r in model.boundary if r.type == "prescribed deformation"
-                )
+                bc = next(r for r in model.boundary if r.type == "prescribed deformation")
                 target = np.asarray(bc.get("F"), dtype=float).reshape(3, 3)
                 curve = model.load_controller(int(bc.child("scale").attrs["lc"]))
                 f_rec, s_rec, c_rec = ref["records"]
@@ -203,9 +199,7 @@ class MaterialBinding(unittest.TestCase):
         ):
             bound, issues = bind_material(record)
             self.assertIsNone(bound)
-            self.assertIn(
-                expected, {i.febio_name for i in issues if i.status == NOT_SUPPORTED}
-            )
+            self.assertIn(expected, {i.febio_name for i in issues if i.status == NOT_SUPPORTED})
 
     def test_range_checks_apply_as_in_febio(self):
         """FEBio rejects v outside [-1, 0.5) for neo-Hookean at initialization."""

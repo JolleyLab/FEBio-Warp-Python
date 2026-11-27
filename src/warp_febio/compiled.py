@@ -84,17 +84,9 @@ def inspect(model: Model) -> CoverageReport:
             continue
         dtype = dom.params.attrs.get("type")
         where = f"part {block.name}"
-        if (
-            dom.kind == "SolidDomain"
-            and block.febio_type == "hex8"
-            and dtype in (None, "elastic-solid")
-        ):
+        if dom.kind == "SolidDomain" and block.febio_type == "hex8" and dtype in (None, "elastic-solid"):
             rep.add("domain", "elastic-solid, hex8", IMPLEMENTED, where)
-        elif (
-            dom.kind == "ShellDomain"
-            and block.febio_type == "quad4"
-            and dtype in (None, "elastic-shell")
-        ):
+        elif dom.kind == "ShellDomain" and block.febio_type == "quad4" and dtype in (None, "elastic-shell"):
             rep.add("domain", "elastic-shell, quad4", IMPLEMENTED, where)
         else:
             rep.add(
@@ -106,20 +98,14 @@ def inspect(model: Model) -> CoverageReport:
         for c in dom.params.children:
             if dom.kind == "ShellDomain" and c.tag == "shell_thickness":
                 rep.add("domain setting", c.tag, IMPLEMENTED, where)
-            elif (
-                dom.kind == "ShellDomain"
-                and c.tag == "shell_normal_nodal"
-                and c.value == 1
-            ):
+            elif dom.kind == "ShellDomain" and c.tag == "shell_normal_nodal" and c.value == 1:
                 rep.add("domain setting", c.tag, IMPLEMENTED, where)
             else:
                 rep.add("domain setting", c.tag, NOT_SUPPORTED, where)
         try:
             mat = model.material(dom.material)
         except KeyError:
-            rep.add(
-                "material", dom.material, NOT_SUPPORTED, where, "material not found"
-            )
+            rep.add("material", dom.material, NOT_SUPPORTED, where, "material not found")
             continue
         # One interpretation of a FEBio material, shared with the tests and
         # with compile: materials/febio.py. A solid mixture is reported with
@@ -164,11 +150,7 @@ def inspect(model: Model) -> CoverageReport:
         )
 
     for r in model.mesh_data:
-        if (
-            r.tag == "ElementData"
-            and r.attrs.get("type") == "shell thickness"
-            and isinstance(r.value, np.ndarray)
-        ):
+        if r.tag == "ElementData" and r.attrs.get("type") == "shell thickness" and isinstance(r.value, np.ndarray):
             rep.add(
                 "mesh data",
                 "shell thickness",
@@ -179,9 +161,7 @@ def inspect(model: Model) -> CoverageReport:
             rep.add("mesh data", f"{r.tag} {r.attrs.get('type')}", NOT_SUPPORTED)
     for r in model.mesh.other:
         if r.tag == "Edge":
-            rep.add(
-                "mesh", "Edge", IMPLEMENTED, r.attrs.get("name", ""), "as a node set"
-            )
+            rep.add("mesh", "Edge", IMPLEMENTED, r.attrs.get("name", ""), "as a node set")
         else:
             rep.add(
                 "mesh",
@@ -346,9 +326,7 @@ def _inspect_bc(r, model, rep):
             f"node set {r.attrs.get('node_set')!r} not resolved",
         )
         return
-    known = set(_BC_FLAGS.get(r.type, ())) | (
-        {"dof", "value", "relative"} if r.type in _BC_PRESCRIBED else set()
-    )
+    known = set(_BC_FLAGS.get(r.type, ())) | ({"dof", "value", "relative"} if r.type in _BC_PRESCRIBED else set())
     status, note = IMPLEMENTED, ""
     for c in r.children:
         if c.tag not in known:
@@ -416,19 +394,13 @@ class CompiledModel:
     dN: wp.array  # (Q, 8, 3)
     gw: wp.array  # (Q,)
     directors: Optional[np.ndarray] = None  # (N, 3) shell directors d0, host
-    constrained_device: Any = (
-        None  # (ndof,) int32 on the device: 1 = fixed or prescribed
-    )
+    constrained_device: Any = None  # (ndof,) int32 on the device: 1 = fixed or prescribed
 
     def prescribed_values(self, time: float):
         """(dofs, values) of all prescribed degrees of freedom at `time`."""
         dofs, vals = [], []
         for p in self.prescribed:
-            f = (
-                1.0
-                if p.load_controller is None
-                else self.model.load_controller(p.load_controller).value(time)
-            )
+            f = 1.0 if p.load_controller is None else self.model.load_controller(p.load_controller).value(time)
             dofs.append(p.dofs)
             vals.append(np.full(len(p.dofs), p.scale * f))
         if not dofs:
@@ -440,9 +412,7 @@ class CompiledModel:
 
         The call mirrors Newton's `Model.state(requires_grad=...)`.
         """
-        u = wp.zeros(
-            self.ndof, dtype=wp.float64, device=self.device, requires_grad=requires_grad
-        )
+        u = wp.zeros(self.ndof, dtype=wp.float64, device=self.device, requires_grad=requires_grad)
         return State(time=0.0, u=u)
 
 
@@ -551,9 +521,7 @@ def compile(model: Model, device=None) -> CompiledModel:
             front = mesh.nodes[conn]
             back = front - directors[conn]
             X = np.concatenate([back, front], axis=1)
-            dofmap = np.concatenate(
-                [dof_index[conn][:, :, 3:], dof_index[conn][:, :, :3]], axis=1
-            ).reshape(E, 24)
+            dofmap = np.concatenate([dof_index[conn][:, :, 3:], dof_index[conn][:, :, :3]], axis=1).reshape(E, 24)
         nq = len(GAUSS_WEIGHTS)
         # One geometry row per element: material axes from the input's
         # mat_axis (identity where a model declares axes and the input has
@@ -568,9 +536,7 @@ def compile(model: Model, device=None) -> CompiledModel:
                 count=E,
                 X=wp.array(X, dtype=wp.vec3d, device=device),
                 dofmap=wp.array(dofmap.astype(np.int32), dtype=wp.int32, device=device),
-                params=wp.array(
-                    [pvec(*bound.param_values(0.0))], dtype=pvec, device=device
-                ),
+                params=wp.array([pvec(*bound.param_values(0.0))], dtype=pvec, device=device),
                 geom=wp.array(geometry, dtype=gvec, device=device),
                 fe=wp.zeros((E, 24), dtype=wp.float64, device=device),
                 ke=wp.zeros((E, 24, 24), dtype=wp.float64, device=device),
@@ -616,9 +582,7 @@ def compile(model: Model, device=None) -> CompiledModel:
         fixed=fixed,
         prescribed=prescribed,
         free=free,
-        constrained_device=wp.array(
-            constrained.astype(np.int32), dtype=wp.int32, device=device
-        ),
+        constrained_device=wp.array(constrained.astype(np.int32), dtype=wp.int32, device=device),
         dN=dN,
         gw=gw,
         directors=directors,

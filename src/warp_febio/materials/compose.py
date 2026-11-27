@@ -82,9 +82,7 @@ def _pair(label_a, a: MaterialModel, label_b, b: MaterialModel, name):
 
     @wp.func
     def spatial_tangent_action(F: Any, d: Any, g: Any, p: Any):
-        return ta(F, d, geometry_a(g), params_a(p)) + tb(
-            F, d, geometry_b(g), params_b(p)
-        )
+        return ta(F, d, geometry_a(g), params_a(p)) + tb(F, d, geometry_b(g), params_b(p))
 
     # The one-pass stress and tangent of a mixture is the sum of its children's,
     # available when every child provides one.
@@ -110,23 +108,11 @@ def _pair(label_a, a: MaterialModel, label_b, b: MaterialModel, name):
         energy,
         cauchy,
         spatial_tangent_action,
-        geometry=tuple(
-            GeometryField(f"{label_a}.{f.name}" if label_a else f.name, f.size)
-            for f in a.geometry
-        )
-        + tuple(
-            GeometryField(f"{label_b}.{f.name}" if label_b else f.name, f.size)
-            for f in b.geometry
-        ),
+        geometry=tuple(GeometryField(f"{label_a}.{f.name}" if label_a else f.name, f.size) for f in a.geometry)
+        + tuple(GeometryField(f"{label_b}.{f.name}" if label_b else f.name, f.size) for f in b.geometry),
         # Each child's parameter ranges carry over under its prefixed name.
-        param_ranges=tuple(
-            replace(r, name=f"{label_a}.{r.name}" if label_a else r.name)
-            for r in a.param_ranges
-        )
-        + tuple(
-            replace(r, name=f"{label_b}.{r.name}" if label_b else r.name)
-            for r in b.param_ranges
-        ),
+        param_ranges=tuple(replace(r, name=f"{label_a}.{r.name}" if label_a else r.name) for r in a.param_ranges)
+        + tuple(replace(r, name=f"{label_b}.{r.name}" if label_b else r.name) for r in b.param_ranges),
         stress_and_tangent=combined,
         authored="composed",
     )
@@ -150,8 +136,6 @@ def solid_mixture(name, components):
     # prefixed, so the accumulated side takes an empty label.
     for i, (next_label, next_model) in enumerate(components[1:]):
         last = i == len(components) - 2
-        model = _pair(
-            label, model, next_label, next_model, name if last else f"{name}__{i}"
-        )
+        model = _pair(label, model, next_label, next_model, name if last else f"{name}__{i}")
         label = ""
     return model

@@ -92,9 +92,7 @@ class BoundMaterial:
 
     def geometry_array(self, count: int) -> np.ndarray:
         """(count, geometry_size) geometry rows, one per element or point."""
-        return self.model.pack_geometry(
-            count, **{k: np.asarray(v).ravel() for k, v in self.geometry.items()}
-        )
+        return self.model.pack_geometry(count, **{k: np.asarray(v).ravel() for k, v in self.geometry.items()})
 
     def stress_and_tangent(self) -> Callable:
         """Cauchy stress and 6x6 spatial tangent in one call, for an element."""
@@ -166,11 +164,7 @@ def _resolve(record, issues, path=""):
             elif c.tag != "solid":
                 # A mixture's own mat_axis composes with its children's in
                 # FEBio (FEElasticMixture); that is not done here yet.
-                issues.append(
-                    MaterialIssue(
-                        "material parameter", f"{where}.{c.tag}", NOT_SUPPORTED
-                    )
-                )
+                issues.append(MaterialIssue("material parameter", f"{where}.{c.tag}", NOT_SUPPORTED))
         if len(parts) < 2:
             issues.append(
                 MaterialIssue(
@@ -182,9 +176,7 @@ def _resolve(record, issues, path=""):
             )
             return None, values, curves, geometry, density
         try:
-            model = solid_mixture(
-                "mixture(" + ", ".join(m.name for _, m in parts) + ")", parts
-            )
+            model = solid_mixture("mixture(" + ", ".join(m.name for _, m in parts) + ")", parts)
         except ValueError as err:
             issues.append(MaterialIssue("material", where, NOT_SUPPORTED, str(err)))
             return None, values, curves, geometry, density
@@ -241,9 +233,7 @@ def _resolve(record, issues, path=""):
                     )
                 )
         else:
-            issues.append(
-                MaterialIssue("material parameter", f"{where}.{tag}", NOT_SUPPORTED)
-            )
+            issues.append(MaterialIssue("material parameter", f"{where}.{tag}", NOT_SUPPORTED))
     for name in model.param_names:
         if name not in values:
             issues.append(
@@ -305,9 +295,7 @@ def bind_material(material, model=None):
     try:
         resolved.validate(values)
     except ValueError as err:
-        issues.append(
-            MaterialIssue("material parameter", febio_type, NOT_SUPPORTED, str(err))
-        )
+        issues.append(MaterialIssue("material parameter", febio_type, NOT_SUPPORTED, str(err)))
         return None, issues
     if resolved.formulation != "coupled":
         issues.append(
@@ -321,9 +309,7 @@ def bind_material(material, model=None):
     bound = BoundMaterial(
         name=name,
         febio_type=febio_type,
-        material=material_model.Material(
-            model=resolved, params=values, density=density, schedules=schedules
-        ),
+        material=material_model.Material(model=resolved, params=values, density=density, schedules=schedules),
         geometry=geometry,
     )
     return bound, issues

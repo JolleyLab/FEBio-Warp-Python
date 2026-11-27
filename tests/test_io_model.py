@@ -32,9 +32,7 @@ try:
     HAVE_WARP = True
 except ImportError:
     HAVE_WARP = False
-needs_warp = unittest.skipUnless(
-    HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')"
-)
+needs_warp = unittest.skipUnless(HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')")
 
 
 class WithoutWarp(unittest.TestCase):
@@ -51,17 +49,13 @@ class WithoutWarp(unittest.TestCase):
             f"m = read_feb({os.path.join(SINGLE, 'hex8_neo_hookean.feb')!r})\n"
             "assert len(m.mesh.nodes) == 8\n"
         )
-        done = subprocess.run(
-            [sys.executable, "-c", code], capture_output=True, text=True
-        )
+        done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
         self.assertEqual(done.returncode, 0, done.stderr)
 
 
 class FebReadWrite(unittest.TestCase):
     def test_round_trip_of_every_reference_input(self):
-        files = glob.glob(
-            os.path.join(ROOT, "references", "**", "*.feb"), recursive=True
-        )
+        files = glob.glob(os.path.join(ROOT, "references", "**", "*.feb"), recursive=True)
         self.assertGreaterEqual(len(files), 11)
         for path in files:
             with (
@@ -75,27 +69,17 @@ class FebReadWrite(unittest.TestCase):
                 self.assertTrue(model.equals(read_feb(out)))
 
     def test_ids_are_kept(self):
-        model = read_feb(
-            os.path.join(
-                ORIGINALS, "cardiofem", "valve_pressurization", "mitral_p2prolapse.feb"
-            )
-        )
+        model = read_feb(os.path.join(ORIGINALS, "cardiofem", "valve_pressurization", "mitral_p2prolapse.feb"))
         mesh = model.mesh
         self.assertEqual((len(mesh.nodes), mesh.blocks[0].count), (7442, 7200))
         # Connectivity is zero-based; the file's IDs come back through node_ids.
         self.assertEqual(mesh.blocks[0].connectivity.min(), 0)
-        self.assertTrue(
-            np.array_equal(mesh.node_ids[mesh.node_index(mesh.node_ids)], mesh.node_ids)
-        )
+        self.assertTrue(np.array_equal(mesh.node_ids[mesh.node_index(mesh.node_ids)], mesh.node_ids))
 
     def test_original_text_is_written_back(self):
         """Values are written as they stood in the file unless they were changed."""
         with open(os.path.join(SINGLE, "hex8_neo_hookean.feb")) as f:
-            text = (
-                f.read()
-                .replace("<E>1</E>", "<E>1.00</E>")
-                .replace("<v>0.3</v>", "<v>3.0E-1</v>")
-            )
+            text = f.read().replace("<E>1</E>", "<E>1.00</E>").replace("<v>0.3</v>", "<v>3.0E-1</v>")
         model = read_feb_string(text)
         self.assertEqual(model.materials[0].value("E"), 1.0)
         model.materials[0].params.set("v", 0.25)
@@ -115,9 +99,7 @@ class FebReadWrite(unittest.TestCase):
 
     def test_only_spec_4_is_read(self):
         with self.assertRaises(ValueError):
-            read_feb_string(
-                '<febio_spec version="3.0"><Module type="solid"/></febio_spec>'
-            )
+            read_feb_string('<febio_spec version="3.0"><Module type="solid"/></febio_spec>')
 
     @needs_warp
     def test_unknown_section_is_reported_and_blocks_the_run(self):
@@ -125,9 +107,7 @@ class FebReadWrite(unittest.TestCase):
 
         with open(os.path.join(SINGLE, "hex8_neo_hookean.feb")) as f:
             text = f.read()
-        model = read_feb_string(
-            text.replace("</febio_spec>", "<Mystery><a>1</a></Mystery></febio_spec>")
-        )
+        model = read_feb_string(text.replace("</febio_spec>", "<Mystery><a>1</a></Mystery></febio_spec>"))
         self.assertEqual([i.where for i in model.issues], ["Mystery"])
         self.assertFalse(inspect(model).runnable)
 
@@ -198,10 +178,7 @@ class NothingDroppedUnseen(unittest.TestCase):
         self.assertFalse(model.equals(again))
 
     def test_attributes_and_names_the_reader_cannot_keep_are_reported(self):
-        sets = (
-            '<NodeSet name="a" flag="1">1,2</NodeSet>'
-            '<NodeSet name="b">1,2</NodeSet><NodeSet name="b">3,4</NodeSet>'
-        )
+        sets = '<NodeSet name="a" flag="1">1,2</NodeSet><NodeSet name="b">1,2</NodeSet><NodeSet name="b">3,4</NodeSet>'
         model = read_feb_string(UNUSUAL.format(sets=sets))
         found = {(i.where, i.message.split(";")[0]) for i in model.issues}
         self.assertIn(("Mesh/NodeSet 'a'", "attribute(s) flag not read"), found)
@@ -295,9 +272,7 @@ class LoadCurves(unittest.TestCase):
         smooth = curve("SMOOTH")
         for t, v in pts:
             self.assertAlmostEqual(smooth.value(t), v)
-        self.assertAlmostEqual(
-            smooth.value(0.5), 0.75
-        )  # parabola through (0,0), (1,1), (2,0)
+        self.assertAlmostEqual(smooth.value(0.5), 0.75)  # parabola through (0,0), (1,1), (2,0)
 
 
 @needs_warp
@@ -329,11 +304,7 @@ class Coverage(unittest.TestCase):
         from warp_febio.compiled import compile, inspect
         from warp_febio.coverage import CoverageError
 
-        model = read_feb(
-            os.path.join(
-                ORIGINALS, "cardiofem", "valve_pressurization", "mitral_p2prolapse.feb"
-            )
-        )
+        model = read_feb(os.path.join(ORIGINALS, "cardiofem", "valve_pressurization", "mitral_p2prolapse.feb"))
         report = inspect(model)
         missing = {e.febio_name for e in report.missing()}
         # The material layer has isotropic Lee-Sacks; what it lacks for this
@@ -448,15 +419,12 @@ class SingleElement(unittest.TestCase):
                     abs(a.variable("displacement") - b.variable("displacement")).max(),
                     1e-7,
                 )
-                self.assertLess(
-                    abs(a.variable("stress")[0] - b.variable("stress")[0]).max(), 1e-7
-                )
+                self.assertLess(abs(a.variable("stress")[0] - b.variable("stress")[0]).max(), 1e-7)
                 # Same size once the software name is accounted for.
                 size = lambda p: os.path.getsize(p)
                 self.assertEqual(
                     size(out) - len(b.software),
-                    size(os.path.join(SINGLE, "febio", name + ".xplt"))
-                    - len(a.software),
+                    size(os.path.join(SINGLE, "febio", name + ".xplt")) - len(a.software),
                 )
 
     def test_tangent_is_the_derivative_of_the_residual(self):
@@ -468,13 +436,9 @@ class SingleElement(unittest.TestCase):
         rng = np.random.default_rng(0)
         for name in CASES:
             with self.subTest(name):
-                cm = compile(
-                    read_feb(os.path.join(SINGLE, name + ".feb")), device="cpu"
-                )
+                cm = compile(read_feb(os.path.join(SINGLE, name + ".feb")), device="cpu")
                 u = 0.05 * rng.standard_normal(cm.ndof)
-                at = lambda v: evaluate(
-                    cm, State(0.0, wp.array(v, dtype=wp.float64, device="cpu"))
-                )
+                at = lambda v: evaluate(cm, State(0.0, wp.array(v, dtype=wp.float64, device="cpu")))
                 K = dense(tangent_matrix(cm, at(u)[1]))
                 h = 1e-6
                 fd = np.zeros_like(K)
