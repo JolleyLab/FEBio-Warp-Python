@@ -76,7 +76,9 @@ No application input runs end to end yet.
 
 Design notes live in [`docs/design/`](docs/design/README.md). What is left before the application
 inputs run, in order, is in [remaining areas](docs/design/remaining_areas.md). Each design note ends with
-the decision points for the team, and that page lists them by reviewer. Testing uses the
+the decision points for the team, and that page lists them by reviewer. The
+[work plan](docs/design/work_plan.md) says what has to be agreed first and which work packages
+can then be built in parallel. Testing uses the
 [FEBio test suite](https://github.com/febiosoftware/TestSuite) first, then the open models in the
 [FEBio model repository](https://repo.febio.org/modelRepo/UserProjects) user projects, with small
 generated inputs only where neither has a case that fits. The pilot examples are not test targets.

@@ -19,7 +19,7 @@ Start with the [design overview](overview.md): one page on how the pieces fit, w
 
 ## Remaining areas: design only
 
-First templates for discussion. Each is a short note with a flow diagram, the FEBio source it follows, a proposed approach, what has been explored, the decision points for the team, and the FEBio test suite problems that would verify it. None has code yet. Start with [remaining_areas.md](remaining_areas.md), which orders them along the path to the first application runs and lists the decisions by reviewer.
+First templates for discussion. Each is a short note with a flow diagram, the FEBio source it follows, a proposed approach, what has been explored, the decision points for the team, and the FEBio test suite problems that would verify it. None has code yet. Start with [remaining_areas.md](remaining_areas.md), which orders them along the path to the first application runs and lists the decisions by reviewer. [work_plan.md](work_plan.md) says what must be agreed first and which work packages can then proceed in parallel.
 
 | Area | Note | Decision points | Needed by |
 |---|---|---|---|

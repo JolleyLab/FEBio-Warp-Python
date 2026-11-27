@@ -4,7 +4,7 @@ First template for discussion, November 26, 2026 (v0.2). For Steve Maas, Jeff We
 
 **What this is.** A map of what still stands between the run path template (pull request 6) and the first applications, with one short note per area. Each note has a flow diagram, the FEBio source it follows, what Warp already provides, a proposed approach, what has been explored so far, the decision points for the team, and the FEBio test suite problems that would verify it.
 
-**What is asked of a reader.** Not a code review. The notes are meant to help plan the architecture: where a proposal is wrong, which option to take at each decision point, and what is missing. Section 5 lists the decisions by who is best placed to make them.
+**What is asked of a reader.** Not a code review. The notes are meant to help plan the architecture: where a proposal is wrong, which option to take at each decision point, and what is missing. Section 5 lists the decisions by who is best placed to make them. [work_plan.md](work_plan.md) turns the notes into work packages that can proceed in parallel.
 
 **Assumptions.** The model and reader of pull request 5 are accepted in the main. The run path of pull request 6 (field table, terms, Newton step, step driver, adjoint) is the structure everything attaches to. If review changes either, the notes change with it; section 8 says which.
 
@@ -207,7 +207,7 @@ How a gradient is checked when FEBio has none is decision S6: finite differences
 
 ## 7. A possible order for the first code
 
-For planning only. None of it is started.
+For planning only. None of it is started. This is the order for one person working alone; [work_plan.md](work_plan.md) splits the same work into packages for several people.
 
 | Step | Piece | Verified by (suite first) | Unlocks |
 | --- | --- | --- | --- |
