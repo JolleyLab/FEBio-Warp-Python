@@ -29,9 +29,7 @@ def axes_from_vectors(a, d):
             d = np.array([0.0, 1.0, 0.0])
     c = np.cross(a, d)
     b = np.cross(c, a)
-    return np.column_stack(
-        [a / np.linalg.norm(a), b / np.linalg.norm(b), c / np.linalg.norm(c)]
-    )
+    return np.column_stack([a / np.linalg.norm(a), b / np.linalg.norm(b), c / np.linalg.norm(c)])
 
 
 def check_axes(Q, tolerance=1.0e-8):

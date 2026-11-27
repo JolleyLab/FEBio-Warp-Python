@@ -86,9 +86,7 @@ def unit(v):
 
 class GeometryAndCompositionTests(unittest.TestCase):
     def test_fiber_model_passes_conformance(self):
-        metrics = check_model(
-            FIBER_TEST_MODEL, {"ksi": 800.0}, geometry={"fiber": unit([1.0, 2.0, 0.5])}
-        )
+        metrics = check_model(FIBER_TEST_MODEL, {"ksi": 800.0}, geometry={"fiber": unit([1.0, 2.0, 0.5])})
         for name, limit in LIMITS.items():
             self.assertLess(metrics[name], limit, name)
 
@@ -102,9 +100,7 @@ class GeometryAndCompositionTests(unittest.TestCase):
                 ("fiber2", FIBER_TEST_MODEL),
             ],
         )
-        self.assertEqual(
-            mix.param_names, ("ground.E", "ground.v", "fiber1.ksi", "fiber2.ksi")
-        )
+        self.assertEqual(mix.param_names, ("ground.E", "ground.v", "fiber1.ksi", "fiber2.ksi"))
         self.assertEqual(
             [(f.name, f.size) for f in mix.geometry],
             [("fiber1.fiber", 3), ("fiber2.fiber", 3)],
@@ -122,18 +118,12 @@ class GeometryAndCompositionTests(unittest.TestCase):
         whole = model_api.evaluate(mix, F, params, H, geometry=geometry)
         parts = [
             model_api.evaluate(neo, F, {"E": 1000.0, "v": 0.3}, H),
-            model_api.evaluate(
-                FIBER_TEST_MODEL, F, {"ksi": 800.0}, H, geometry={"fiber": a1}
-            ),
-            model_api.evaluate(
-                FIBER_TEST_MODEL, F, {"ksi": 300.0}, H, geometry={"fiber": a2}
-            ),
+            model_api.evaluate(FIBER_TEST_MODEL, F, {"ksi": 800.0}, H, geometry={"fiber": a1}),
+            model_api.evaluate(FIBER_TEST_MODEL, F, {"ksi": 300.0}, H, geometry={"fiber": a2}),
         ]
         for key in ("energy", "cauchy", "spatial_tangent_action"):
             total = sum(part[key] for part in parts)
-            self.assertLess(
-                np.abs(whole[key] - total).max() / np.abs(total).max(), 1e-13
-            )
+            self.assertLess(np.abs(whole[key] - total).max() / np.abs(total).max(), 1e-13)
         # The composed model is a model: it passes the same conformance checks,
         # including gradients with respect to every child's parameters.
         metrics = check_model(mix, params, geometry=geometry)
@@ -142,13 +132,9 @@ class GeometryAndCompositionTests(unittest.TestCase):
 
     def test_mixtures_nest_and_compile_in_single_precision(self):
         neo = model_api.get("neo_hookean")
-        inner = solid_mixture(
-            "test_inner", [("a", neo), ("b", model_api.get("isotropic_elastic"))]
-        )
+        inner = solid_mixture("test_inner", [("a", neo), ("b", model_api.get("isotropic_elastic"))])
         outer = solid_mixture("test_outer", [("in", inner), ("f", FIBER_TEST_MODEL)])
-        self.assertEqual(
-            outer.param_names, ("in.a.E", "in.a.v", "in.b.E", "in.b.v", "f.ksi")
-        )
+        self.assertEqual(outer.param_names, ("in.a.E", "in.a.v", "in.b.E", "in.b.v", "f.ksi"))
         params = {
             "in.a.E": 1000.0,
             "in.a.v": 0.3,
@@ -162,8 +148,7 @@ class GeometryAndCompositionTests(unittest.TestCase):
         single = model_api.evaluate(outer, F, params, geometry=g, dtype=wp.float32)
         self.assertEqual(single["cauchy"].dtype, np.float32)
         self.assertLess(
-            np.abs(single["cauchy"] - double["cauchy"]).max()
-            / np.abs(double["cauchy"]).max(),
+            np.abs(single["cauchy"] - double["cauchy"]).max() / np.abs(double["cauchy"]).max(),
             1e-4,
         )
 
@@ -219,11 +204,7 @@ class DifferentiabilityTests(unittest.TestCase):
         h = 1e-6
         numeric = np.array(
             [
-                (
-                    total_energy(direction + h * e, False)
-                    - total_energy(direction - h * e, False)
-                )
-                / (2 * h)
+                (total_energy(direction + h * e, False) - total_energy(direction - h * e, False)) / (2 * h)
                 for e in np.eye(3)
             ]
         )
@@ -234,14 +215,10 @@ class DifferentiabilityTests(unittest.TestCase):
         kernel = make_update_kernel(model)
         # Load into the forward plateau, then unload partway down the reverse one,
         # so the final stress depends on the history.
-        path = np.concatenate(
-            [np.linspace(0, 0.05, 30), np.linspace(0.05, 0.02, 20)[1:]]
-        )
+        path = np.concatenate([np.linspace(0, 0.05, 30), np.linspace(0.05, 0.02, 20)[1:]])
 
         def final_stress(values, tape):
-            p = wp.array(
-                [model.pack(**values)], dtype=model.param_vector(), requires_grad=tape
-            )
+            p = wp.array([model.pack(**values)], dtype=model.param_vector(), requires_grad=tape)
             state = wp.zeros(1, dtype=model.state_vector(), requires_grad=tape)
             region = wp.zeros(1, dtype=int)
             stress = None
@@ -267,22 +244,16 @@ class DifferentiabilityTests(unittest.TestCase):
         for index, name in enumerate(model.param_names):
             h = 1e-6 * NITINOL[name]
             up = final_stress({**NITINOL, name: NITINOL[name] + h}, False)[0].numpy()[0]
-            down = final_stress({**NITINOL, name: NITINOL[name] - h}, False)[0].numpy()[
-                0
-            ]
+            down = final_stress({**NITINOL, name: NITINOL[name] - h}, False)[0].numpy()[0]
             numeric = (up - down) / (2 * h)
-            self.assertAlmostEqual(
-                from_tape[index], numeric, delta=1e-5 * abs(numeric) + 1e-12, msg=name
-            )
+            self.assertAlmostEqual(from_tape[index], numeric, delta=1e-5 * abs(numeric) + 1e-12, msg=name)
 
 
 class CoreRobustnessTests(unittest.TestCase):
     def test_models_sharing_a_name_do_not_share_a_kernel(self):
         neo = model_api.get("neo_hookean")
         first = solid_mixture("test_same_name", [("a", neo), ("b", FIBER_TEST_MODEL)])
-        second = solid_mixture(
-            "test_same_name", [("a", neo), ("b", model_api.get("isotropic_elastic"))]
-        )
+        second = solid_mixture("test_same_name", [("a", neo), ("b", model_api.get("isotropic_elastic"))])
         F = sample_states()[:8]
         one = model_api.evaluate(
             first,
@@ -290,9 +261,7 @@ class CoreRobustnessTests(unittest.TestCase):
             {"a.E": 1000.0, "a.v": 0.3, "b.ksi": 500.0},
             geometry={"b.fiber": [1.0, 0.0, 0.0]},
         )
-        two = model_api.evaluate(
-            second, F, {"a.E": 1000.0, "a.v": 0.3, "b.E": 500.0, "b.v": 0.2}
-        )
+        two = model_api.evaluate(second, F, {"a.E": 1000.0, "a.v": 0.3, "b.E": 500.0, "b.v": 0.2})
         self.assertGreater(np.abs(one["cauchy"] - two["cauchy"]).max(), 1.0)
 
     def test_one_pass_tangent_survives_composition(self):
@@ -311,14 +280,11 @@ class CoreRobustnessTests(unittest.TestCase):
         fast = evaluate_exchange(mix, F, params)
         slow = evaluate_exchange(mix, F, params, combined=False)
         self.assertLess(
-            np.abs(fast["tangent"] - slow["tangent"]).max()
-            / np.abs(slow["tangent"]).max(),
+            np.abs(fast["tangent"] - slow["tangent"]).max() / np.abs(slow["tangent"]).max(),
             1e-13,
         )
         # A child without a one-pass function leaves the mixture without one.
-        partial = solid_mixture(
-            "test_partial_mix", [("n", neo), ("f", FIBER_TEST_MODEL)]
-        )
+        partial = solid_mixture("test_partial_mix", [("n", neo), ("f", FIBER_TEST_MODEL)])
         self.assertIsNone(partial.stress_and_tangent)
 
     def test_axes_from_vectors_follows_febio(self):
@@ -353,9 +319,7 @@ class ParameterRangeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 neo.pack(**bad)
         hgo = model_api.get("hgo_unconstrained")
-        good = dict(
-            c=200.0, k1=13480.0, k2=1.06, kappa=1.0 / 3.0, gamma=18.85, k=1500.0
-        )
+        good = dict(c=200.0, k1=13480.0, k2=1.06, kappa=1.0 / 3.0, gamma=18.85, k=1500.0)
         hgo.pack(**good)  # FE_RANGE_CLOSED(0, 1/3): 1/3 is allowed
         with self.assertRaises(ValueError) as caught:
             hgo.pack(**{**good, "kappa": 0.4})
@@ -410,9 +374,7 @@ class FailureStatusTests(unittest.TestCase):
         # The good points match a launch that contains only good points.
         clean = model_api.evaluate(self.model, self.F[[0, 4]], self.params)
         np.testing.assert_array_equal(out["cauchy"][[0, 4]], clean["cauchy"])
-        self.assertEqual(
-            material_status.worst(out["status"]), material_status.NEGATIVE_JACOBIAN
-        )
+        self.assertEqual(material_status.worst(out["status"]), material_status.NEGATIVE_JACOBIAN)
         with self.assertRaises(material_status.MaterialFailure) as caught:
             material_status.raise_on_failure(out["status"])
         self.assertIn("negative Jacobian at 2", str(caught.exception))
@@ -421,9 +383,7 @@ class FailureStatusTests(unittest.TestCase):
     def test_exchange_kernel_follows_the_same_rule(self):
         with np.errstate(all="ignore"):
             out = evaluate_exchange(self.model, self.F, self.params)
-        self.assertEqual(
-            list(out["status"] != material_status.OK), [False, True, True, True, False]
-        )
+        self.assertEqual(list(out["status"] != material_status.OK), [False, True, True, True, False])
         self.assertTrue(np.all(np.isfinite(out["tangent"])))
         self.assertEqual(np.abs(out["tangent"][1:4]).max(), 0.0)
         self.assertGreater(np.abs(out["tangent"][0]).max(), 0.0)
@@ -439,9 +399,7 @@ class HolzapfelGasserOgdenTests(unittest.TestCase):
 
     def evaluate(self, F, params, axes=None):
         Q = self.axes if axes is None else axes
-        return model_api.evaluate(
-            self.model, F, params, geometry={"mat_axis": Q.reshape(9)}
-        )
+        return model_api.evaluate(self.model, F, params, geometry={"mat_axis": Q.reshape(9)})
 
     def test_parameter_sets_from_the_literature_and_the_febio_suite(self):
         small = np.eye(3) + 0.02 * np.random.default_rng(5).normal(size=(40, 3, 3))
@@ -472,9 +430,7 @@ class HolzapfelGasserOgdenTests(unittest.TestCase):
                 metrics = check_model(
                     self.model,
                     params,
-                    lambda F, **p: febio_closed_forms.hgo_unconstrained(
-                        F, self.axes, **p
-                    ),
+                    lambda F, **p: febio_closed_forms.hgo_unconstrained(F, self.axes, **p),
                     geometry={"mat_axis": self.axes.reshape(9)},
                     states=states,
                 )
@@ -502,12 +458,8 @@ class HolzapfelGasserOgdenTests(unittest.TestCase):
     def test_direction_dependence_and_its_limits(self):
         axes = np.eye(3)
         params = {**self.base, "kappa": 0.0, "gamma": 0.0}
-        along = self.evaluate(np.array([np.diag([1.1, 1.0, 1.0])]), params, axes)[
-            "cauchy"
-        ][0, 0, 0]
-        across = self.evaluate(np.array([np.diag([1.0, 1.0, 1.1])]), params, axes)[
-            "cauchy"
-        ][0, 2, 2]
+        along = self.evaluate(np.array([np.diag([1.1, 1.0, 1.0])]), params, axes)["cauchy"][0, 0, 0]
+        across = self.evaluate(np.array([np.diag([1.0, 1.0, 1.1])]), params, axes)["cauchy"][0, 2, 2]
         self.assertGreater(along, 5.0 * across)  # stiffer along the fibers
         F = sample_states()[:12]
         # The two families are symmetric about the first axis: gamma and -gamma agree.
@@ -555,11 +507,7 @@ class HolzapfelGasserOgdenTests(unittest.TestCase):
             requires_grad=True,
         )
         W = wp.zeros(n, dtype=wp.float64, requires_grad=True)
-        outputs = (
-            [W]
-            + [wp.zeros(n, dtype=wp.mat33d) for _ in range(4)]
-            + [wp.zeros(n, dtype=int)]
-        )
+        outputs = [W] + [wp.zeros(n, dtype=wp.mat33d) for _ in range(4)] + [wp.zeros(n, dtype=int)]
         recording = wp.Tape()
         with recording:
             wp.launch(
@@ -580,12 +528,8 @@ class HolzapfelGasserOgdenTests(unittest.TestCase):
         W.grad.fill_(1.0)
         recording.backward()
         h = 1.0e-6
-        one_sided = (
-            self.evaluate(F, {**self.base, "k2": h})["energy"].sum() - e0.sum()
-        ) / h
-        self.assertAlmostEqual(
-            p.grad.numpy()[0][2], one_sided, delta=1e-4 * abs(one_sided)
-        )
+        one_sided = (self.evaluate(F, {**self.base, "k2": h})["energy"].sum() - e0.sum()) / h
+        self.assertAlmostEqual(p.grad.numpy()[0][2], one_sided, delta=1e-4 * abs(one_sided))
 
 
 class VolumetricTests(unittest.TestCase):
@@ -617,12 +561,8 @@ class VolumetricTests(unittest.TestCase):
 
             mid, up, down, rest = run(J), run(J + h), run(J - h), run(np.array([1.0]))
             with self.subTest(pressure_model=name):
-                np.testing.assert_allclose(
-                    mid[:, 1], (up[:, 0] - down[:, 0]) / (2 * h), rtol=1e-6, atol=1e-6
-                )
-                np.testing.assert_allclose(
-                    mid[:, 2], (up[:, 1] - down[:, 1]) / (2 * h), rtol=1e-6, atol=1e-6
-                )
+                np.testing.assert_allclose(mid[:, 1], (up[:, 0] - down[:, 0]) / (2 * h), rtol=1e-6, atol=1e-6)
+                np.testing.assert_allclose(mid[:, 2], (up[:, 1] - down[:, 1]) / (2 * h), rtol=1e-6, atol=1e-6)
                 # No energy and no pressure at J = 1; stiffness there is the bulk modulus.
                 np.testing.assert_allclose(rest[0], [0.0, 0.0, k], atol=1e-9)
 
@@ -636,9 +576,7 @@ class UncoupledModelTests(unittest.TestCase):
         self.assertEqual(uncoupled.formulation, "uncoupled")
         self.assertEqual(dict(uncoupled.options)["pressure_model"], "Abaqus (GOH)")
         with self.assertRaises(ValueError):
-            solid_mixture(
-                "bad", [("a", model_api.get("neo_hookean")), ("b", uncoupled)]
-            )
+            solid_mixture("bad", [("a", model_api.get("neo_hookean")), ("b", uncoupled)])
 
 
 class ScheduleTests(unittest.TestCase):
@@ -648,9 +586,7 @@ class ScheduleTests(unittest.TestCase):
         self.assertAlmostEqual(ramp(5.0), 3.0)
         step = LoadCurve((0.0, 1.0), (1.0, 0.25), interpolate="step")
         # FEBio's STEP rule: between two points the later point's value applies.
-        self.assertEqual(
-            [step(t) for t in (0.0, 0.99, 1.0, 2.0)], [1.0, 0.25, 0.25, 0.25]
-        )
+        self.assertEqual([step(t) for t in (0.0, 0.99, 1.0, 2.0)], [1.0, 0.25, 0.25, 0.25])
         # Values from FEBio 4.13 runs of STEP curves through these points, at
         # output times that fall on the points and between them.
         two = LoadCurve((0.35, 0.65), (1.0, 0.75), interpolate="step")
@@ -686,9 +622,7 @@ class ScheduleTests(unittest.TestCase):
             before = model_api.evaluate(frame.model, F, frame.params_at(0.5))
             after = model_api.evaluate(frame.model, F, frame.params_at(1.5))
             # Both laws are linear in E at fixed Poisson ratio.
-            np.testing.assert_allclose(
-                after["cauchy"], 0.5 * before["cauchy"], rtol=1e-12, atol=1e-6
-            )
+            np.testing.assert_allclose(after["cauchy"], 0.5 * before["cauchy"], rtol=1e-12, atol=1e-6)
 
     def test_published_tpvr_frame(self):
         """The frame material and load curve of the six open TPVR inputs."""
@@ -706,9 +640,7 @@ class SuperelasticUniaxialTests(unittest.TestCase):
     or with test data."""
 
     def cycle(self, steps, top=0.09):
-        return np.concatenate(
-            [np.linspace(0.0, top, steps), np.linspace(top, 0.0, steps)[1:]]
-        )
+        return np.concatenate([np.linspace(0.0, top, steps), np.linspace(top, 0.0, steps)[1:]])
 
     def test_full_cycle_closes_with_expected_plateaus(self):
         steps = 4001
@@ -720,33 +652,22 @@ class SuperelasticUniaxialTests(unittest.TestCase):
         start = path[loading][np.argmax(xi[loading] > 1e-12)]
         finish = path[loading][np.argmax(xi[loading] >= 1.0 - 1e-12)]
         self.assertAlmostEqual(start, NITINOL["s_AM_s"] / E, delta=2 * 0.09 / steps)
-        self.assertAlmostEqual(
-            finish, NITINOL["s_AM_f"] / E + eps_L, delta=2 * 0.09 / steps
-        )
+        self.assertAlmostEqual(finish, NITINOL["s_AM_f"] / E + eps_L, delta=2 * 0.09 / steps)
         self.assertEqual(xi.max(), 1.0)
         self.assertAlmostEqual(stress[-1], 0.0, places=9)  # full strain recovery
         self.assertAlmostEqual(xi[-1], 0.0, places=12)
         # Dissipated energy per cycle is the area between the plateaus:
         # eps_L times the difference of their mean stresses.
         expected = eps_L * (
-            0.5 * (NITINOL["s_AM_s"] + NITINOL["s_AM_f"])
-            - 0.5 * (NITINOL["s_MA_s"] + NITINOL["s_MA_f"])
+            0.5 * (NITINOL["s_AM_s"] + NITINOL["s_AM_f"]) - 0.5 * (NITINOL["s_MA_s"] + NITINOL["s_MA_f"])
         )
-        self.assertAlmostEqual(
-            np.trapezoid(stress, path), expected, delta=1e-3 * expected
-        )
+        self.assertAlmostEqual(np.trapezoid(stress, path), expected, delta=1e-3 * expected)
 
     def test_update_does_not_depend_on_step_size(self):
         target = 0.05  # mid-plateau
-        coarse, _, state_coarse = integrate(
-            NITINOL_SUPERELASTIC_UNIAXIAL, np.array([0.0, target]), NITINOL
-        )
-        fine, _, state_fine = integrate(
-            NITINOL_SUPERELASTIC_UNIAXIAL, np.linspace(0.0, target, 1000), NITINOL
-        )
-        self.assertAlmostEqual(
-            coarse[-1, 0], fine[-1, 0], delta=1e-9 * NITINOL["s_AM_f"]
-        )
+        coarse, _, state_coarse = integrate(NITINOL_SUPERELASTIC_UNIAXIAL, np.array([0.0, target]), NITINOL)
+        fine, _, state_fine = integrate(NITINOL_SUPERELASTIC_UNIAXIAL, np.linspace(0.0, target, 1000), NITINOL)
+        self.assertAlmostEqual(coarse[-1, 0], fine[-1, 0], delta=1e-9 * NITINOL["s_AM_f"])
         self.assertAlmostEqual(state_coarse[-1, 0, 0], state_fine[-1, 0, 0], places=12)
 
     def test_tangent_is_consistent(self):
@@ -784,16 +705,12 @@ class SuperelasticUniaxialTests(unittest.TestCase):
         # A beam cross-section in bending: fibers at different heights see
         # different strains, tension on one side and compression on the other.
         heights = np.linspace(-1.0, 1.0, 9)
-        curvature = np.concatenate(
-            [np.linspace(0, 0.08, 200), np.linspace(0.08, 0, 200)]
-        )
+        curvature = np.concatenate([np.linspace(0, 0.08, 200), np.linspace(0.08, 0, 200)])
         path = curvature[:, None] * heights[None, :]
         stress, _, state = integrate(NITINOL_SUPERELASTIC_UNIAXIAL, path, NITINOL)
         np.testing.assert_allclose(stress[:, ::-1], -stress, atol=1e-9)  # antisymmetric
         self.assertEqual(state[199, 4, 0], 0.0)  # neutral axis never transforms
-        self.assertGreater(
-            state[199, -1, 0], state[199, -3, 0]
-        )  # outer fiber transforms most
+        self.assertGreater(state[199, -1, 0], state[199, -3, 0])  # outer fiber transforms most
         np.testing.assert_allclose(stress[-1], 0.0, atol=1e-9)
 
 

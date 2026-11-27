@@ -56,9 +56,7 @@ class UniaxialModel:
         missing = set(self.param_names) - set(values)
         extra = set(values) - set(self.param_names)
         if missing or extra:
-            raise ValueError(
-                f"{self.name}: missing {sorted(missing)}, unknown {sorted(extra)}"
-            )
+            raise ValueError(f"{self.name}: missing {sorted(missing)}, unknown {sorted(extra)}")
         return self.param_vector(dtype)(*[values[k] for k in self.param_names])
 
 
@@ -115,9 +113,7 @@ def integrate(model, strain_path, params, dtype=wp.float64, device="cpu"):
     stress = wp.zeros(n, dtype=dtype, device=device)
     tangent = wp.zeros(n, dtype=dtype, device=device)
     region = wp.zeros(n, dtype=int, device=device)
-    p = wp.array(
-        [model.pack(dtype, **params)], dtype=model.param_vector(dtype), device=device
-    )
+    p = wp.array([model.pack(dtype, **params)], dtype=model.param_vector(dtype), device=device)
     kernel = make_update_kernel(model, dtype)
     out_s, out_t, out_q = [], [], []
     for k in range(steps):

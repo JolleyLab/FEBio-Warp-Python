@@ -116,9 +116,7 @@ def make_point_function(n_points: int, extend: str = "extrapolate", offset: int 
 
 
 @lru_cache(maxsize=None)
-def nonlinear_spring(
-    n_points: int, measure: str = "elongation", extend: str = "extrapolate"
-) -> UniaxialModel:
+def nonlinear_spring(n_points: int, measure: str = "elongation", extend: str = "extrapolate") -> UniaxialModel:
     """The FEBio nonlinear spring with a linear point function of `n_points` points.
 
     As a uniaxial model its "strain" is FEBio's deformation measure s and its

@@ -46,9 +46,7 @@ def make_forms(model):
         return wp.ddot(pk1(F, g, p), fem.grad(v, s))
 
     @fem.integrand
-    def tangent_form(
-        s: fem.Sample, u: fem.Field, du: fem.Field, v: fem.Field, g: gvec, p: pvec
-    ):
+    def tangent_form(s: fem.Sample, u: fem.Field, du: fem.Field, v: fem.Field, g: gvec, p: pvec):
         F = wp.identity(n=3, dtype=wp.float64) + fem.grad(u, s)
         return wp.ddot(tangent_action(F, fem.grad(du, s), g, p), fem.grad(v, s))
 
@@ -113,9 +111,7 @@ class WarpFemTests(unittest.TestCase):
                     step = np.zeros(3 * nodes)
                     step[column] = h
                     step = step.reshape(nodes, 3)
-                    numeric[:, column] = (
-                        residual(displacement + step) - residual(displacement - step)
-                    ) / (2 * h)
+                    numeric[:, column] = (residual(displacement + step) - residual(displacement - step)) / (2 * h)
                 scale = np.abs(numeric).max()
                 self.assertLess(np.abs(K - numeric).max() / scale, 1e-8)
                 self.assertLess(np.abs(K - K.T).max() / scale, 1e-12)

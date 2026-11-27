@@ -137,11 +137,7 @@ def energy(F: Any, g: Any, p: Any):
     J = wp.determinant(F)
     lnJ = wp.log(J)
     I1 = wp.ddot(F, F)
-    ground = (
-        half * c * (I1 - F.dtype(3.0))
-        - c * lnJ
-        + half * k * (half * (J * J - one) - lnJ)
-    )
+    ground = half * c * (I1 - F.dtype(3.0)) - c * lnJ + half * k * (half * (J * J - one) - lnJ)
     E1 = fiber_strain(F, fiber_direction(g, gamma, one), kappa)
     E2 = fiber_strain(F, fiber_direction(g, gamma, -one), kappa)
     return ground + fiber_energy(E1, k1, k2) + fiber_energy(E2, k1, k2)
@@ -205,12 +201,8 @@ def spatial_tangent_action(F: Any, d: Any, g: Any, p: Any):
     E2 = fiber_strain(F, a2, kappa)
     h1 = structure_tensor(F, a1, kappa)
     h2 = structure_tensor(F, a2, kappa)
-    w1 = wp.where(
-        E1 >= zero, four * k1 * (one + two * k2 * E1 * E1) * wp.exp(k2 * E1 * E1), zero
-    )
-    w2 = wp.where(
-        E2 >= zero, four * k1 * (one + two * k2 * E2 * E2) * wp.exp(k2 * E2 * E2), zero
-    )
+    w1 = wp.where(E1 >= zero, four * k1 * (one + two * k2 * E1 * E1) * wp.exp(k2 * E1 * E1), zero)
+    w2 = wp.where(E2 >= zero, four * k1 * (one + two * k2 * E2 * E2) * wp.exp(k2 * E2 * E2), zero)
     out = out + (w1 * wp.ddot(h1, d)) * h1 + (w2 * wp.ddot(h2, d)) * h2
     return out / J
 
