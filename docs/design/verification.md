@@ -2,6 +2,8 @@
 
 **Draft for discussion, v2.2, November 24, 2026.** Revised after review by Steve Maas on pull request #4. **Tabled until FEBio-Warp can read and run a FEBio input file.** It is posted to agree the shape of the harness and to keep the inputs and references assembled so far in one place while input and output is worked on.
 
+**Layout.** This note follows the layout of the design set: a flow diagram, what has been explored, and decision points with options and a proposal ("Initial explorations" and "Decision points" below). The [design overview](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/overview.md) shows where it sits, [remaining areas](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/remaining_areas.md) lists every decision by reviewer, and the [work plan](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/work_plan.md) says what depends on it.
+
 ## Goal
 
 Make it easy to validate FEBio-Warp against FEBio.
@@ -143,6 +145,43 @@ One measured guide: the suite stores its values separately for Linux, macOS and 
 - The input reader, first (draft in pull request #5).
 - An official FEBio release with Pardiso that the harness can use to generate references.
 - For the two open application models to start with (`P2Prolapse_Mitral.feb` and `RVOT1_TPV25.feb`): the FEBio version they were run with, and one completed run of each to check a reference against.
+
+## Order of inputs
+
+Agreed since this note was first written. The inputs are taken in this order:
+
+1. The FEBio test suite, for each feature on its own.
+2. The open user project models in the FEBio model repository, for the applications.
+3. Small generated inputs, each mirroring a suite problem or a setting of an open model, only where neither of the first two has a case that fits.
+
+Pilot-phase examples are not used for testing. The [remaining areas note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/remaining_areas.md) lists, area by area, the suite problems that fit and what the suite lacks.
+
+## Initial explorations
+
+| Explored | Result |
+| --- | --- |
+| A survey of the FEBio test suite by material, element, contact and load | 549 inputs classified; coverage table above |
+| Twenty small inputs with FEBio references | Stored, from a provisional build |
+| Material-point comparison with FEBio | Twelve cases agree to 1e-10 |
+| How far FEBio agrees with itself across platforms | Of 563 suite values, 446 identical on all three platforms |
+| The open application models on current FEBio source | Both valve files stop at `laugon` in the contact potential block |
+| What the suite inputs offer for comparison | One of the 374 solid-module inputs requests log data; the suite's stored results are counts and one value |
+| A suite problem run in FEBio-Warp and compared | Six, through the fixture of pull request 5; none yet through a runner |
+
+## Decision points
+
+IDs follow the scheme of the design set (V for verification).
+
+| ID | Decision | Options | Proposed | For | Detail |
+| --- | --- | --- | --- | --- | --- |
+| V1 | The FEBio build references are pinned to | (a) An official release with Pardiso. (b) A source build, as now | (a). The source build is adequate for small inputs only | Steve | Question 1 |
+| V2 | Suite input files | (a) Referenced by commit, not copied. (b) Stored here | (a), since the suite repository has no license file | Steve | Question 2 |
+| V3 | Where larger references live | In git, or outside it once fields are compared | Open | Steve, MJ | Question 3 |
+| V4 | How a suite problem is compared | Plot file from the pinned build on the unmodified input (single precision), or a copy with log data added (12 digits) | See decision O1 in the [output note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/output.md#5-decision-points) | Steve | |
+| V5 | Tolerances | Set per case with a recorded reason, never tighter than FEBio achieves between its own platforms | As stated under "Step 4" | Steve | |
+| V6 | Checking gradients, which FEBio does not provide | Finite differences of FEBio-Warp, closed forms, differences of two FEBio runs, the suite's optimization problems | See decision S6 in the [sensitivity note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/sensitivity.md#6-decision-points) | Steve, Warp team | |
+
+In the [work plan](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/work_plan.md) the comparison runner is item C of the spine. It can start before the other drafts settle, and every work package uses it as its definition of done.
 
 ## Questions
 
