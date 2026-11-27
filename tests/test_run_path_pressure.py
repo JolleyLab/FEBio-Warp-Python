@@ -19,6 +19,7 @@ from warp_febio.io import read_feb
 from warp_febio.model.model import Record, Surface
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
+DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")  # "cuda:0" runs these on a GPU
 SINGLE = os.path.join(ROOT, "references", "single_element")
 CASE = os.path.join(SINGLE, "hex8_pressure.feb")
 E0, V0, P0 = 1.0, 0.3, 0.2  # the values in the input
@@ -67,7 +68,7 @@ def set_load(model, tag, value):
 def build(model=None):
     from warp_febio.analysis.steps import build_system
 
-    return build_system(model or read_feb(CASE), device="cpu")
+    return build_system(model or read_feb(CASE), device=DEVICE)
 
 
 def exact_tangent_error(system, u0):
@@ -77,7 +78,7 @@ def exact_tangent_error(system, u0):
     from warp_febio.solvers.linear.warp_linear import dense
 
     def residual(u, time=1.0):
-        state = State(time, wp.array(u, dtype=wp.vec3d, device="cpu"))
+        state = State(time, wp.array(u, dtype=wp.vec3d, device=DEVICE))
         system.update(state)
         return state, system.residual(state).numpy().reshape(-1)
 
@@ -109,7 +110,7 @@ class Pressure(unittest.TestCase):
         self.assertEqual([type(t).__name__ for t in system.terms], ["BrickDomain", "PressureLoad"])
         self.assertIsInstance(system.terms[1], PressureLoad)
         with self.assertRaises(CoverageError):
-            compile(read_feb(CASE), device="cpu")
+            compile(read_feb(CASE), device=DEVICE)
 
     def test_agrees_with_the_closed_form(self):
         from warp_febio.analysis.steps import run
@@ -312,16 +313,16 @@ class Pressure(unittest.TestCase):
 
         system = build()
         domain, load = system.terms
-        top = wp.array(system.fields.entries_of("displacement", [4, 5, 6, 7]), dtype=wp.int32)
-        theta = wp.array([np.sqrt(P0)], dtype=wp.float64, requires_grad=True)
-        loss = wp.zeros(1, dtype=wp.float64, requires_grad=True)
+        top = wp.array(system.fields.entries_of("displacement", [4, 5, 6, 7]), dtype=wp.int32, device=DEVICE)
+        theta = wp.array([np.sqrt(P0)], dtype=wp.float64, requires_grad=True, device=DEVICE)
+        loss = wp.zeros(1, dtype=wp.float64, requires_grad=True, device=DEVICE)
 
         tape = wp.Tape()
         with tape:
-            wp.launch(design_to_pressure, dim=1, inputs=[theta], outputs=[load.pressure])
+            wp.launch(design_to_pressure, dim=1, inputs=[theta], outputs=[load.pressure], device=DEVICE)
         state = solve_on_tape(system, tape)
         with tape:
-            wp.launch(top_displacement, dim=4, inputs=[state.u, top], outputs=[loss])
+            wp.launch(top_displacement, dim=4, inputs=[state.u, top], outputs=[loss], device=DEVICE)
         tape.backward(loss)
 
         h = 1e-5
@@ -393,7 +394,7 @@ class PressureAgainstFEBio(unittest.TestCase):
         model = read_feb(PATCH + ".feb")
         febio = read_xplt(PATCH + ".xplt")
         U = febio.variable("displacement")
-        system = build_system(model, device="cpu")
+        system = build_system(model, device=DEVICE)
         settings = newton.NewtonSettings.from_record(model.steps[0].control.child("solver"))
         settings.dtol, settings.etol = 1e-8, 1e-12
         original, newton.solve = newton.solve, sparse_direct

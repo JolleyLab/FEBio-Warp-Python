@@ -276,7 +276,7 @@ def check_model(model, params, closed_form=None, geometry=None, states=None, dev
         metrics["tangent_vs_febio"] = _rel(spatial["tangent"], np.array([r[1] for r in ref]))
 
     # 8. Gradient with respect to the parameters, tape against central differences.
-    if device == "cpu":
+    with wp.ScopedDevice(device):
         gradient = parameter_gradient(model, F, params, geometry)
         # A parameter sitting on a bound of its admissible range cannot be
         # perturbed to both sides, so it is left out of the comparison.

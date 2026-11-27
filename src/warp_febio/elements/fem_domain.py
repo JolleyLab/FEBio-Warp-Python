@@ -230,6 +230,7 @@ class FemSolidDomain(Term):
             output_dtype=wp.float64,
             output=output,
             bsr_options={"prune_numerical_zeros": False},
+            device=self.device,
         )
 
     # -- Term ----------------------------------------------------------------
@@ -256,7 +257,7 @@ class FemSolidDomain(Term):
             device=self.device,
         )
         # A kernel cannot throw; the worst Jacobian is read on the host.
-        fem.interpolate(self._jacobian, at=self.quadrature, fields={"u": self.u}, dest=self.detF)
+        fem.interpolate(self._jacobian, at=self.quadrature, fields={"u": self.u}, dest=self.detF, device=self.device)
         det = self.detF.numpy()
         if not np.isfinite(det).all():
             return NON_FINITE
@@ -269,6 +270,7 @@ class FemSolidDomain(Term):
             fields={"u": self.u, "v": self.test},
             values=self._values(),
             output=self.f,
+            device=self.device,
         )
         wp.launch(
             _scatter_subtract,
@@ -307,5 +309,6 @@ class FemSolidDomain(Term):
             fields={"u": self.u},
             values=self._values(),
             dest=sigma,
+            device=self.device,
         )
         return sigma.numpy().reshape(self.count, self.points, 3, 3)

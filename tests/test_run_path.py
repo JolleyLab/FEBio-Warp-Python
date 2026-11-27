@@ -13,6 +13,7 @@ import numpy as np
 from warp_febio.io import read_feb
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
+DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")  # "cuda:0" runs these on a GPU
 SINGLE = os.path.join(ROOT, "references", "single_element")
 SMALL = os.path.join(ROOT, "references", "small_meshes")
 CASES = (
@@ -40,7 +41,7 @@ def febio_log(path, states, columns):
 def build(folder, name):
     from warp_febio.analysis.steps import build_system
 
-    return build_system(read_feb(os.path.join(folder, name + ".feb")), device="cpu")
+    return build_system(read_feb(os.path.join(folder, name + ".feb")), device=DEVICE)
 
 
 @unittest.skipUnless(HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')")
@@ -94,7 +95,7 @@ class RunPath(unittest.TestCase):
         for folder, name in CASES:
             with self.subTest(name):
                 model = read_feb(os.path.join(folder, name + ".feb"))
-                old = fixture_run(compile(model, device="cpu"), linear_solver="direct")
+                old = fixture_run(compile(model, device=DEVICE), linear_solver="direct")
                 new = run(build(folder, name))
                 self.assertEqual(
                     [s.iterations for s in old.states],
@@ -116,7 +117,7 @@ class RunPath(unittest.TestCase):
                 u0 = 0.05 * rng.standard_normal((system.n, 3))
 
                 def residual(u):
-                    state = State(0.0, wp.array(u, dtype=wp.vec3d, device="cpu"))
+                    state = State(0.0, wp.array(u, dtype=wp.vec3d, device=DEVICE))
                     system.update(state)
                     return state, system.residual(state).numpy().reshape(-1)
 
@@ -183,7 +184,7 @@ class RunPath(unittest.TestCase):
             "mitral_p2prolapse.feb",
         )
         with self.assertRaises(CoverageError):
-            build_system(read_feb(path), device="cpu")
+            build_system(read_feb(path), device=DEVICE)
 
 
 if __name__ == "__main__":

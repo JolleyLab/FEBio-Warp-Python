@@ -9,6 +9,7 @@ import numpy as np
 from warp_febio.io import read_feb
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
+DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")  # "cuda:0" runs these on a GPU
 SINGLE = os.path.join(ROOT, "references", "single_element")
 SMALL = os.path.join(ROOT, "references", "small_meshes")
 
@@ -30,7 +31,7 @@ def febio_log(path, states, columns):
 def build(folder, name, solids="dedicated"):
     from warp_febio.analysis.steps import build_system
 
-    return build_system(read_feb(os.path.join(folder, name + ".feb")), device="cpu", solids=solids)
+    return build_system(read_feb(os.path.join(folder, name + ".feb")), device=DEVICE, solids=solids)
 
 
 def compare_with_febio(test, folder, name, system, tol=1e-10):
@@ -63,7 +64,7 @@ class FemSolidDomainTests(unittest.TestCase):
         u = 0.03 * np.random.default_rng(0).standard_normal((a.n, 3))
         out = []
         for system in (a, b):
-            state = State(0.0, wp.array(u, dtype=wp.vec3d, device="cpu"))
+            state = State(0.0, wp.array(u, dtype=wp.vec3d, device=DEVICE))
             system.update(state)
             R = system.residual(state).numpy()
             system.tangent(state)

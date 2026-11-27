@@ -11,6 +11,7 @@ import numpy as np
 from warp_febio.io import read_feb
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
+DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")  # "cuda:0" runs these on a GPU
 SINGLE = os.path.join(ROOT, "references", "single_element")
 SMALL = os.path.join(ROOT, "references", "small_meshes")
 
@@ -38,7 +39,7 @@ class TwoMaterialTests(unittest.TestCase):
         from warp_febio.analysis.steps import build_system, run
 
         model = read_feb(os.path.join(SMALL, "two_material_pressure.feb"))
-        results = run(build_system(model, device="cpu", solids=solids))
+        results = run(build_system(model, device=DEVICE, solids=solids))
         n = len(results.states)
         ref = os.path.join(SMALL, "febio", "two_material_pressure_")
         u_ref = febio_log(ref + "nodes.txt", n, 3)
@@ -71,7 +72,7 @@ class AutoStepTests(unittest.TestCase):
     def test_step_sequence_matches_febio(self):
         from warp_febio.analysis.steps import build_system, run
 
-        results = run(build_system(read_feb(self.CASE), device="cpu"))
+        results = run(build_system(read_feb(self.CASE), device=DEVICE))
         ref = np.loadtxt(os.path.join(SINGLE, "febio", "hex8_pressure_autostep_steps.txt"))
         states = results.states[1:]
         self.assertEqual(len(states), len(ref))
@@ -93,7 +94,7 @@ class AutoStepTests(unittest.TestCase):
         model.steps[0].control.child("solver").set("max_refs", 8)
         log = []
         with self.assertRaises(SolveError):
-            run(build_system(model, device="cpu"), log=log.append)
+            run(build_system(model, device=DEVICE), log=log.append)
         times = [float(line.split()[3]) for line in log if line.startswith("converged")]
         febio = [
             0.1,
