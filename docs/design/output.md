@@ -1,6 +1,6 @@
 # Output registry
 
-First template for discussion, November 26, 2026. Design only: there is no code for this note. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
+First template for discussion, November 26, 2026 (v0.2). Design only: there is no code for this note. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
 
 **Scope.** How the variables a FEBio input asks for, in its plot file and its log file, are produced from a State. The writers themselves (`.xplt`, VTKHDF) are in pull request 5 and are not changed.
 
@@ -57,16 +57,27 @@ For the contact potential, FEBio reports as the gap the smallest pair distance f
 
 **Alternative considered.** Compute every derived variable on the host from displacement and stress after the run. It keeps the device code smaller. It cannot give contact or spring variables, and it repeats kinematics the domains already have.
 
-## 5. Verification
+## 5. Decision points
 
-Each producer is compared with FEBio's log data on the small problem that exercises its owner. The stored references log nodal displacements, velocities and reactions and element stress components. References for `relative volume`, `Lagrange strain`, `contact gap` and `discrete element force` would need to be regenerated with those names added to the log.
+| ID | Decision | Options | Proposed | For |
+| --- | --- | --- | --- | --- |
+| O1 | How suite problems are compared. Of 374 suite inputs in the solid module, one requests log data; the suite's own stored results are step and iteration counts, the plot file size and one value | (a) Read FEBio's plot file from a pinned build run on the unmodified input (single precision). (b) Run FEBio on a copy with a log section added (12 digits) | (a) first: the input is unchanged and the plot file reader exists in pull request 5. (b) where 1e-7 is not enough | Steve |
+| O2 | Where derived variables are computed | (a) On the device by the term that owns them. (b) On the host after the run | (a) | Warp team |
+| O3 | Results in memory | (a) Stream each output step to the writer. (b) Keep all states, as the run path does | (a) for output. The adjoint keeps its own States ([sensitivity.md](sensitivity.md)) | Steve |
+| O4 | Outputs as objectives | An output used in a gradient (a contact area, a strain, a chord force) must be a kernel on the State, so the tape can differentiate it | Producers are written as kernels with `inputs` and `outputs` declared, which serves both uses | Warp team |
 
-## 6. Reserved
+## 6. Verification
+
+FEBio test suite first. Of the 374 suite inputs in the solid module, all request `displacement` in the plot file, 368 request `stress` and 200 request `relative volume`, so those three producers can be checked on any suite problem FEBio-Warp runs. `co62` requests `contact gap` and `contact pressure`. No suite problem requests `truss stretch`.
+
+The small inputs in `references/small_problems` log nodal displacements, velocities and reactions and element stress components at 12 digits. References for `Lagrange strain`, `contact gap` and `discrete element force` would need to be regenerated with those names added to the log.
+
+## 7. Reserved
 
 - `beam stress` and other beam variables.
 - Variables for sticky and sliding contact.
 - Output to OpenUSD, which the model note mentions.
 
-## 7. Depends on
+## 8. Depends on
 
 The results store and writers of pull request 5, and the `Term` contract of the run path.

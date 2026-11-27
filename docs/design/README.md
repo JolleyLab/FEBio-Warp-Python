@@ -19,17 +19,17 @@ Start with the [design overview](overview.md): one page on how the pieces fit, w
 
 ## Remaining areas: design only
 
-First templates for discussion. Each is a short note with a flow diagram, the FEBio source it follows, a proposed approach and the input that would verify it. None has code yet. Start with [remaining_areas.md](remaining_areas.md), which orders them along the path to the first application runs.
+First templates for discussion. Each is a short note with a flow diagram, the FEBio source it follows, a proposed approach, what has been explored, the decision points for the team, and the FEBio test suite problems that would verify it. None has code yet. Start with [remaining_areas.md](remaining_areas.md), which orders them along the path to the first application runs and lists the decisions by reviewer.
 
-| Area | Note | Needed by |
-|---|---|---|
-| Dynamics, mass damping, steps | [dynamics.md](dynamics.md) | Valve and device |
-| Chordae: discrete springs | [discrete.md](discrete.md) | Valve |
-| Contact in the run | [contact_in_run.md](contact_in_run.md) | Valve and device |
-| Linear solve, nonlinear strategy, first GPU runs | [linear_solve.md](linear_solve.md) | Valve and device |
-| Output registry | [output.md](output.md) | Valve and device |
-| Elements: tri3 shell, penta6, three-field solid | [elements.md](elements.md) | Device |
-| Constraints: normal displacement | [constraints.md](constraints.md) | Device |
-| Sensitivity over steps | [sensitivity.md](sensitivity.md) | Gradients for both |
+| Area | Note | Decision points | Needed by |
+|---|---|---|---|
+| Dynamics, mass damping, steps | [dynamics.md](dynamics.md) | [D1 to D5](dynamics.md#7-decision-points) | Valve and device |
+| Chordae: trusses first, then springs | [chordae.md](chordae.md) | [C1 to C5](chordae.md#7-decision-points) | Valve |
+| Contact in the run | [contact_in_run.md](contact_in_run.md) | [K1 to K5](contact_in_run.md#7-decision-points) | Valve and device |
+| Linear solve, nonlinear strategy, first GPU runs | [linear_solve.md](linear_solve.md) | [L1 to L6](linear_solve.md#7-decision-points) | Valve and device |
+| Output registry | [output.md](output.md) | [O1 to O4](output.md#5-decision-points) | Valve and device |
+| Elements: order of work; three-field solid, penta6, tri3 shell | [elements.md](elements.md) | [E1 to E5](elements.md#7-decision-points) | Valve (order), device |
+| Constraints: normal displacement | [constraints.md](constraints.md) | [B1 to B3](constraints.md#5-decision-points) | Device |
+| Sensitivity over steps: adjoints and automatic differentiation | [sensitivity.md](sensitivity.md) | [S1 to S10](sensitivity.md#6-decision-points) | Gradients for both |
 
 Notes describing the pilot phase are in [`pilots/docs/`](../../pilots/docs/).

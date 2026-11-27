@@ -82,11 +82,11 @@ flowchart TB
 
 ## 5. First templates: nothing here is settled
 
-These areas have a first shape in the run path template, or only a placeholder. Each now has a short design note with a flow diagram and a proposed approach, and no code beyond the template. [remaining_areas.md](remaining_areas.md) orders them along the path to the first application runs.
+These areas have a first shape in the run path template, or only a placeholder. Each now has a short design note with a flow diagram, a proposed approach, what has been explored and the decision points for the team, and no code beyond the template. [remaining_areas.md](remaining_areas.md) orders them along the path to the first application runs.
 
 | Area | First template | Not yet | Design note |
 | --- | --- | --- | --- |
-| Elements | hex8 and tet4 solids on `warp.fem`; hex8 and quad4 shell on a dedicated kernel | penta6, tri3 shell, the three-field element, springs for chordae | [elements.md](elements.md), [discrete.md](discrete.md) |
+| Elements | hex8 and tet4 solids on `warp.fem`; hex8 and quad4 shell on a dedicated kernel | Trusses and springs for chordae (valve path, first); the three-field element, penta6 and tri3 shell (device path) | [chordae.md](chordae.md), [elements.md](elements.md) |
 | Loads | Follower pressure on quad4 facets | `mass damping`, nodal forces, pressure on tri3 facets | [dynamics.md](dynamics.md) for `mass damping` |
 | Constraints | Fixed and prescribed displacements by masking | `normal displacement`, linear constraints, rigid bodies and joints | [constraints.md](constraints.md) |
 | Linear solve | Warp's CG, BiCGSTAB and GMRES with a Jacobi preconditioner | A stronger preconditioner or a direct solver on the device, which thin shells need; line search and quasi-Newton | [linear_solve.md](linear_solve.md) |

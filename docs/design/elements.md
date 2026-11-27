@@ -1,26 +1,43 @@
-# Elements: tri3 shell, penta6 and the three-field solid
+# Elements: what each path needs, and in what order
 
-First template for discussion, November 26, 2026. Design only: there is no code for this note. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
+First template for discussion, November 26, 2026 (v0.2). Design only: there is no code for this note. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
 
-**Scope.** The element types the open TPVR input needs beyond what the run path template has, and how they are selected. It addresses open items 3 and 4 of the [integration note](integration.md). Beams and rigid parts are kept as design shells.
+**Scope.** The element types the first targets need beyond the run path template, how they are selected, and the order to build them. It addresses open items 3 and 4 of the [integration note](integration.md). Beams and rigid parts are kept as design shells.
 
 ## 1. Summary
 
-- **The mitral input needs no new element.** It is quad4 shells, which the run path has.
-- **The TPVR input needs three**: tri3 shells (the two crimping tubes), penta6 (part of the vessel wall) and the three-field solid on hex8 and penta6 (uncoupled HGO).
+- **Valve path: quad4 shells and trusses.** All of the lab's valve models in FEBio use quad4 shells, and the valve work stays on them. The quad4 shell exists in the run path. Chordae are trusses in current practice and springs in the open mitral input. The truss is therefore the first new element, and it is described in [chordae.md](chordae.md).
+- **Device path: what the TPVR input uses.** tri3 shells (the two crimping tubes), penta6 (part of the vessel wall) and the three-field solid on hex8 and penta6 (uncoupled HGO). tet4 for the device exists through `warp.fem`. These come after the valve path.
 - **One wedge kernel could serve penta6 and the tri3 shell**, as one brick kernel already serves hex8 and the quad4 shell. FEBio gives the two the same six integration points and weights.
 - **The three-field solid adds no unknowns and no matrix pattern.** Its pressure and dilatation are per-element values.
 - **Selection follows FEBio's factory**, including its defaults.
 
-## 2. Selection
+## 2. Order of work
+
+| Order | Element | Path | State | Note |
+| --- | --- | --- | --- | --- |
+| 0 | quad4 shell (`elastic-shell`) | Valve | Template in the run path, matches FEBio on single elements and small patches | Section 4 |
+| 1 | Two-node truss (`linear-truss`) | Valve | Law and element block exist in the material layer; no domain | [chordae.md](chordae.md) |
+| 2 | Two-node spring (`discrete`) | Valve (open mitral input) | Law exists; no domain | [chordae.md](chordae.md) |
+| 3 | tet4, hex8 solids | Device | Template in the run path through `warp.fem` | Run path note |
+| 4 | Three-field solid on hex8 | Device (vessel) | Uncoupled HGO exists at a material point; no element | Section 5 |
+| 5 | penta6 solid and three-field penta6 | Device (vessel) | None | Section 5 |
+| 6 | tri3 shell | Device (crimping tubes) | None | Section 5 |
+| Later | Beam, rigid parts | Devices as beams; dilation model | Design shells | Section 8 |
+
+## 3. Selection
 
 ```mermaid
 flowchart TB
-    block["Element block and its domain record"] --> kind{"Shell or solid ?"}
+    block["Element block and its domain record"] --> kind{"Line, shell<br/>or solid ?"}
+
+    kind -- line --> lk{"Section"}
+    lk -- "Mesh, truss material" --> tr["Truss domain"]:::todo
+    lk -- "Discrete" --> sp["Spring domain"]:::todo
 
     kind -- shell --> sshape{"Shape"}
-    sshape -- quad4 --> q4["Brick kernel, 8 points<br/><i>exists</i>"]
-    sshape -- tri3 --> t3["Wedge kernel, 6 points"]:::todo
+    sshape -- quad4 --> q4["Brick kernel, 8 points<br/><i>exists; the valve shell</i>"]
+    sshape -- tri3 --> t3["Wedge kernel, 6 points<br/><i>devices only</i>"]:::todo
 
     kind -- solid --> unc{"Uncoupled material<br/>on hex8 or penta6 ?"}
     unc -- yes --> tf["Three-field solid<br/>brick or wedge kernel with<br/>element-averaged dilatation"]:::todo
@@ -29,12 +46,28 @@ flowchart TB
     shape -- tet4 --> t4["warp.fem<br/><i>exists</i>"]
     shape -- penta6 --> p6["Wedge kernel, 6 points"]:::todo
 
-    q4 & t3 & tf & h8 & t4 & p6 --> term["A domain: one element type,<br/>one material tree, one kernel set"]
+    tr & sp & q4 & t3 & tf & h8 & t4 & p6 --> term["A domain: one element type,<br/>one material tree, one kernel set"]
 
     classDef todo stroke-dasharray: 5 5
 ```
 
-## 3. What FEBio does
+## 4. The valve shell
+
+The open mitral input declares `ShellDomain ... type="elastic-shell"` on quad4 elements with `shell_normal_nodal` 1 and a thickness per element. That is what the run path's brick kernel implements: eight nodes built from the front face and the directors, FEBio's eight integration points, two variables per node (`displacement`, `shell displacement`).
+
+| Item | State |
+| --- | --- |
+| Single quad4 shell against FEBio | 2e-12 (run path note) |
+| Curved patch of 9 shells against FEBio | 4e-12 |
+| Pressure on the front and back face | Template, with an exact tangent on request |
+| Nodal normals, thickness from element data | Read by the template |
+| Mass and inertia | Not yet; in [dynamics.md](dynamics.md) |
+| Trusses and springs sharing leaflet nodes | Not yet; in [chordae.md](chordae.md) |
+| The linear solve at application size | Open; in [linear_solve.md](linear_solve.md) |
+
+FEBio also has two other quad shell domains, `elastic-shell-eas` and `elastic-shell-ans`, selected by the element types `q4eas` and `q4ans` or the control setting `shell_formulation`. The open mitral input does not use them. They are decision E1.
+
+## 5. What FEBio does for the device elements
 
 From `FEBioMech/FESolidDomainFactory.cpp`, `FEBioXML/FEModelBuilder.cpp`, `FECore/FEElementTraits.cpp` and `FEBioMech/FE3FieldElasticSolidDomain` at `e4df3f8`.
 
@@ -45,43 +78,47 @@ From `FEBioMech/FESolidDomainFactory.cpp`, `FEBioXML/FEModelBuilder.cpp`, `FECor
 | Three-field by default | On for hex8, penta6 and pyra5; off for tet4. A domain can override it with `three_field` |
 | When it applies | Only when the material is an uncoupled material. `Holzapfel-Gasser-Ogden` is one |
 | Three-field element data | Per element: the average dilatation and the average pressure, plus an augmented Lagrangian multiplier that is off by default |
-| Shell options in the inputs | `shell_normal_nodal` and per-element `shell thickness` (mitral); `shell_thickness` on the domain (TPVR) |
 
-In TPVR file 3599 the vessel is hex8 and penta6 with `Holzapfel-Gasser-Ogden`. Its `SolidDomain` records give no type, so FEBio's defaults apply and both run as `three-field-solid`. The device is tet4 with `isotropic elastic`, which is a plain `elastic-solid`.
+In TPVR file 3599 the vessel is hex8 and penta6 with `Holzapfel-Gasser-Ogden`. Its `SolidDomain` records give no type, so FEBio's defaults apply and both run as `three-field-solid`. The device is tet4 with `isotropic elastic`, a plain `elastic-solid`. The tubes are tri3 shells with `neo-Hookean`.
 
-## 4. Proposed
+## 6. Proposed for the device elements
 
 | Topic | Proposal | Why |
 | --- | --- | --- |
-| Wedge kernel | One six-node kernel with FEBio's six points, used for penta6 solids and, with the back face built from the directors, for tri3 shells | The run path does the same with eight nodes for hex8 and quad4 shells and matches FEBio to 4e-12. It halves the element code. To confirm on single elements |
+| Wedge kernel | One six-node kernel with FEBio's six points, used for penta6 solids and, with the back face built from the directors, for tri3 shells | The run path does the same with eight nodes for hex8 and quad4 shells. To confirm on single elements |
 | Why not `warp.fem` for penta6 | A dedicated kernel | `warp.fem` in Warp 1.19.0 has tetrahedral and hexahedral meshes and grids, and no wedge mesh |
-| Three-field solid | Two passes inside `update`: first the element's average dilatation, then stress at each point from the deviatoric response at the point and the pressure from the average | A kernel over elements can compute the average and a kernel over points can read it. No host step |
-| Three-field tangent | The extra volumetric term couples nodes of the same element only | The block pattern of the domain is unchanged, so the pattern map of the run path holds |
-| Material interface | The uncoupled model supplies its deviatoric stress and tangent and its volumetric function separately | The uncoupled HGO of the material layer is already written as this split and agrees with FEBio at a point. It needs to expose the two parts to the domain |
-| Per-element axes | The domain reads `mat_axis` element data into a per-element device array when it is built | Open item 3. The binding reads axes given on the material today |
+| Three-field solid | Two passes inside `update`: first the element's average dilatation, then stress at each point from the deviatoric response at the point and the pressure from the average | A kernel over elements computes the average and a kernel over points reads it. No host step |
+| Three-field tangent | The extra volumetric term couples nodes of the same element only | The block pattern of the domain is unchanged |
+| Material interface | The uncoupled model supplies its deviatoric stress and tangent and its volumetric function separately | The uncoupled HGO of the material layer is written as this split and agrees with FEBio at a point |
+| Per-element axes | The domain reads `mat_axis` element data into a per-element device array when it is built | Open item 3 |
 | Selection | `select_domain` mirrors `FESolidDomainFactory`, with FEBio's defaults for `three_field` | The same input then picks the same formulation as FEBio |
 
-**Alternative considered for the vessel.** Run HGO coupled (`HGO unconstrained`) on standard elements and skip the three-field element. This is simpler and Jeff's guidance was coupled models first. It would not reproduce the open TPVR input, which names the uncoupled model. Whether the faster tier should use the coupled model is question 8 to Jeff in the materials note and is not repeated here.
+## 7. Decision points
 
-## 5. What Warp provides
+| ID | Decision | Options | Proposed | For |
+| --- | --- | --- | --- | --- |
+| E1 | Quad shell formulation for valves | (a) `elastic-shell` only, as the open input uses. (b) Also plan for `elastic-shell-eas` or `-ans` | (a) now. The kernel structure does not close off (b) | Steve, Jeff, MJ |
+| E2 | Where shells live | (a) Dedicated kernels here. (b) A shell element in `warp.fem` | (a), without waiting. Question 13 of the materials note asks the Warp team about (b) | Warp team |
+| E3 | The vessel wall | (a) Uncoupled HGO on a three-field element, as the open TPVR input. (b) Coupled HGO on standard elements for the faster tier | (a) for the reference tier. (b) is question 8 to Jeff in the materials note | Jeff |
+| E4 | One wedge kernel for penta6 and tri3 shell | (a) Shared. (b) Separate | (a), if single elements match FEBio | Steve |
+| E5 | Three-field tangent for the adjoint | Whether FEBio's three-field stiffness is the exact derivative of its force has not been checked | Check on `bk_hgo_three_field` against finite differences before the element is used in a gradient | Whoever builds it |
 
-| Piece | Use |
-| --- | --- |
-| `warp.fem` tetrahedral and hexahedral meshes | tet4 and hex8 solids, in use |
-| Kernels over elements and points | The wedge and three-field kernels; the tape differentiates them as written |
-| `warp.fem` shells | None in 1.19.0. Question 13 of the materials note asks the Warp team; the proposal here does not wait on it |
+For gradients: every element here is a kernel over elements or points, so the tape differentiates `update` and `residual` as written. The check each new element owes is its tangent against finite differences of its own residual, which decides whether `linearize(exact=True)` can reuse the Newton tangent.
 
-## 6. Verification
+## 8. Verification
 
-| Input | What it exercises | Status |
+FEBio test suite first (commit `986005f`), then small inputs for what the suite lacks.
+
+| Element | Suite problems | Gap, covered by a small input |
 | --- | --- | --- |
-| `bk_hgo_three_field.feb` | 8 hex8, `three-field-solid`, uncoupled HGO | Input and FEBio reference stored |
-| One penta6 element | The wedge kernel as a solid | To add |
-| One tri3 shell element | The wedge kernel as a shell | To add |
-| A small penta6 block with uncoupled HGO | Three-field on wedges | To add |
-| Residual and tangent of the wedge kernel against finite differences | The tangent | With the kernel |
+| quad4 shell | `sh52` (one element, prescribed), `sh54` (one element, pressure), `sh02`, `sh06`, `sh05`, `sh56` (20 to 180 elements, nodal force or pressure), `dy13`, `dy14` (one element, dynamic) | Lee-Sacks on shells: the suite has no problem with that material. `sh_lee_sacks_pressure` |
+| Truss, spring | See [chordae.md](chordae.md) | |
+| Three-field solid | `ma34` (uncoupled HGO, but with a rigid body) | `bk_hgo_three_field` |
+| penta6 | `sh25` (mixed with hex8 and quad4, and a rigid wall) | One penta6 element; a small three-field penta6 block. To add |
+| tri3 shell | `sh65` (23,268 elements, bearing load) | One tri3 shell element. To add |
+| tet4 | Among problems with neo-Hookean or isotropic elastic alone and no rigid bodies, only `te02` and `te03`, which use `ut4-solid`, a different formulation | `tet4_block` |
 
-## 7. Design shells
+## 9. Design shells
 
 Kept in view so nothing above closes them off. No implementation is proposed.
 
@@ -89,8 +126,7 @@ Kept in view so nothing above closes them off. No implementation is proposed.
 | --- | --- | --- |
 | Beam | `linear-beam` domain with a beam material on section resultants | A `rotation` variable in the field table with an update through the exponential map, which the field table's per-variable update rule allows |
 | Rigid part | `rigid-solid`, `rigid-shell` | Rigid body unknowns and a rule tying nodes to them. See [constraints.md](constraints.md) |
-| Truss | `linear-truss`, `elastic-truss` | A two-node domain on the uniaxial family. See [discrete.md](discrete.md) |
 
-## 8. Depends on
+## 10. Depends on
 
 The choice between `warp.fem` and dedicated kernels (run path, section 5), and the material layer of pull request 2 for the uncoupled split and per-element axes.

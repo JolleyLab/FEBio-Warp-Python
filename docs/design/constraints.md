@@ -1,6 +1,6 @@
 # Constraints: normal displacement, and what masking reserves
 
-First template for discussion, November 26, 2026. Design only: there is no code for this note. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
+First template for discussion, November 26, 2026 (v0.2). Design only: there is no code for this note. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
 
 **Scope.** The one boundary condition the open TPVR input needs that the run path does not have, `normal displacement`, and a statement of how the masking approach would extend to the constraint types that are reserved.
 
@@ -51,13 +51,25 @@ In TPVR file 3599 there are two, one on each crimping tube, each with `scale` 22
 
 **Alternative considered.** Constrain only the normal component and leave the tangential components free. That is a different condition from FEBio's, which prescribes all three components along a fixed direction.
 
-## 5. Verification
+## 5. Decision points
 
-| Input | What it exercises | Status |
+| ID | Decision | Options | Proposed | For |
+| --- | --- | --- | --- | --- |
+| B1 | Linear constraints and rigid bodies with masking | Routes A and B of section 7 | None yet. Point 1 of the run path note asks Steve whether numbering by (node, variable) loses anything these need | Steve |
+| B2 | Prescribed values as parameters | (a) Constants from load curves. (b) Device arrays that carry gradients | (b). The adjoint solution already gives the sensitivity to a prescribed displacement, so the crimp depth and similar values become design variables at no extra solve | Warp team |
+| B3 | When boundary conditions change between steps | (a) Rebuild the masks, keep the matrix pattern. (b) Renumber | (a), which is why masking was chosen | Steve |
+
+## 6. Verification
+
+FEBio test suite first (commit `986005f`).
+
+| Input | Source | What it exercises |
 | --- | --- | --- |
-| A small tube of tri3 or quad4 shells with `normal displacement` on a load curve | The normals, the values and `relative` | To add, with its FEBio reference. The verification note lists suite problem `ma49` for this feature |
+| Fixed and prescribed displacements | Suite, throughout | Already exercised by the run path cases |
+| `ma49` | Suite | The only suite problem with `normal displacement`. It uses the `Shenoy` material, which is not planned, so it cannot be run as is |
+| A small tube of quad4 or tri3 shells with `normal displacement` on a load curve and `relative` 1 | To add | The normals, the values and `relative` |
 
-## 6. What masking reserves
+## 7. What masking reserves
 
 Masking keeps every unknown in the system and fixes the matrix pattern. Two constraint types need more than a mask.
 
@@ -68,6 +80,6 @@ Masking keeps every unknown in the system and fixes the matrix pattern. Two cons
 
 Route A keeps FEBio's formulation and costs a matrix product per iteration with a pattern that is fixed once the constraints are known. No choice is proposed here.
 
-## 7. Depends on
+## 8. Depends on
 
 Masking of constrained components (run path, section 4). Step activation is in [dynamics.md](dynamics.md).

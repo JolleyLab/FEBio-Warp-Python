@@ -25,7 +25,7 @@ The first targets set the scope. Capabilities are added because one of these nee
 
 | Application | Needs |
 |---|---|
-| Atrioventricular valve closure and repair | Shell leaflets, fiber-reinforced hyperelastic tissue, chordae, pressure loading, leaflet self-contact |
+| Atrioventricular valve closure and repair | Quadrilateral shell leaflets, fiber-reinforced hyperelastic tissue, chordae as trusses or springs, pressure loading, leaflet self-contact |
 | Self-expanding nitinol devices (transcatheter pulmonary valve replacement, septal occluders) | Beam frames, nitinol material, device-to-vessel contact, hyperelastic vessel wall |
 | Patch and material verification problems | Small problems with known or FEBio reference solutions, used to verify each component |
 
@@ -65,7 +65,7 @@ No application input runs end to end yet.
 | Materials | `materials/` | Common material interface; neo-Hookean, HGO, Ogden, Lee-Sacks, nitinol | Draft ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)), under redesign |
 | Contact | `contact/` | Potential-based contact for leaflets and devices; sliding contact later | Draft ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)). Design: [contact in a run](docs/design/contact_in_run.md) |
 | Assembly | `assembly/` | Full assembly of residual and tangent on the GPU | Decided ([note](docs/design/assembly.md)). Template: one block buffer and pattern map |
-| Elements | `elements/` | Shells, solids, beams, springs | Template: hex8, tet4, quad4 shell. Design: [tri3 shell, penta6, three-field solid](docs/design/elements.md), [springs](docs/design/discrete.md). Beams: design shell |
+| Elements | `elements/` | Shells, solids, trusses, springs, beams | Template: hex8, tet4, quad4 shell. Design: [trusses and springs for chordae](docs/design/chordae.md), then [three-field solid, penta6, tri3 shell](docs/design/elements.md). Beams: design shell |
 | Mesh and discretization | `mesh/`, `discretization/` | Mesh types, degree-of-freedom maps, quadrature | Template: unknowns by (node, variable). `mesh/` holds no code; the mesh is in the central model |
 | Loads and constraints | `loads/`, `constraints/` | Follower pressure, nodal loads, prescribed and multipoint constraints | Template: pressure, fixed and prescribed displacements. Design: [mass damping](docs/design/dynamics.md), [normal displacement](docs/design/constraints.md) |
 | Solvers | `solvers/` | Newton with line search; iterative linear solvers and preconditioners | Template: full Newton, Warp's iterative solvers. Design: [preconditioning for shells, line search, quasi-Newton](docs/design/linear_solve.md) |
@@ -75,7 +75,11 @@ No application input runs end to end yet.
 | Verification | `tests/`, `references/` | FEBio-Warp run on FEBio input files and compared with pinned FEBio references; cases from the FEBio test suite and the driving applications | Draft ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)), tabled until input and output |
 
 Design notes live in [`docs/design/`](docs/design/README.md). What is left before the application
-inputs run, in order, is in [remaining areas](docs/design/remaining_areas.md).
+inputs run, in order, is in [remaining areas](docs/design/remaining_areas.md). Each design note ends with
+the decision points for the team, and that page lists them by reviewer. Testing uses the
+[FEBio test suite](https://github.com/febiosoftware/TestSuite) first, then the open models in the
+[FEBio model repository](https://repo.febio.org/modelRepo/UserProjects) user projects, with small
+generated inputs only where neither has a case that fits. The pilot examples are not test targets.
 
 The four drafts are reviewed separately. They are also merged, and made consistent where they
 meet, on the branch

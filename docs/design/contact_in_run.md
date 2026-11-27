@@ -1,6 +1,6 @@
 # Contact in the run
 
-First template for discussion, November 26, 2026. Design only: there is no code for this note. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
+First template for discussion, November 26, 2026 (v0.2). Design only: there is no code for this note. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
 
 **Scope.** How the contact potential of pull request 1 ([contact.md](contact.md)) joins a run: where its points come from, how it sits among the terms, where its tangent goes, and when it is switched on. The law, the search and the gradients are in the contact note and are not restated. This closes open items 1 and 2 of the [integration note](integration.md).
 
@@ -89,28 +89,50 @@ What the application inputs ask of it:
 | `bsr_axpy` | The sum of the structural and contact matrices |
 | `warp.optim.linear.aslinearoperator` | The two matrices as one operator, for the second alternative |
 
-## 6. Verification
+## 6. Initial explorations
 
-| Input | What it exercises | Status |
+| Explored | Result | Where |
 | --- | --- | --- |
-| `bk_contact_potential_patch.feb` | Two hex8 blocks pressed together, `w_tol` 0 | Input and FEBio reference stored |
-| `bk_ring_in_tube.feb` | A ring against a tube, `w_tol` 0, with a prescribed deformation and a material parameter on a load curve | Stored |
-| `sh_self_contact_fold.feb` | 54 quad4 shells folded onto themselves, `w_tol` 0.6 | Stored. Needs element-pair activation to be compared at facet level |
-| A two-step input that adds an interface in step 2 | Activation | To add, with [dynamics.md](dynamics.md) |
+| The potential, pair search, tangent and gradients on small problems | Implemented and tested in the contact draft | Pull request 1, [contact.md](contact.md) |
+| A FEBio `contact potential` record from the reader to contact parameters | Works on `bk_contact_potential_patch` | `tests/test_contact_from_model.py` |
+| Contact parameters of the two application inputs | Section 3 | The input files |
+| Contact inside a Newton step with domains and loads | Not explored | |
 
-The first two can be compared with FEBio as soon as contact is a term. They are static and use only elements the run path has.
+## 7. Decision points
 
-## 7. Gradients
+| ID | Decision | Options | Proposed | For |
+| --- | --- | --- | --- | --- |
+| K1 | Residual sign of the contact term | (a) FEBio's, as every other term. (b) The sign the contact draft documents | (a). Already point 3 for review in the run path note | Steve |
+| K2 | Where contact blocks go | (a) Their own matrix, summed with the structural one. (b) One matrix, pattern rebuilt when pairs change. (c) Two matrices as one operator | (a) to start; measure (c) | Warp team, Ryan |
+| K3 | The `w_tol` and `R0_min` gates | (a) Per element pair, as FEBio. (b) Per point pair, as the contact draft | (a) for the reference tier, since both applications set `w_tol` above zero. (b) may remain the faster tier | Steve |
+| K4 | Contact and gradients | The pair list and the gates are not differentiable. Gradients hold the pairs fixed at each converged state | As the contact note states. It records that the energy is twice continuously differentiable in the positions at `w_tol` 0; above zero the gate adds switches | Warp team, Steve |
+| K5 | Line search | (a) Add it with contact. (b) Rely on the `R_out` step limit and step cuts | (a). FEBio uses `lstol` 0.9 in both applications | Steve |
+
+## 8. Verification
+
+FEBio test suite first (commit `986005f`), then small inputs for what the suite lacks.
+
+| Input | Source | What it exercises |
+| --- | --- | --- |
+| `co62` | Suite | Two hex8 elements, `contact potential`, `w_tol` 0, `max_ups` 0. The only suite problem with this contact type |
+| `bk_contact_potential_patch` | `references/small_problems` | Two hex8 blocks pressed together, `w_tol` 0 |
+| `bk_ring_in_tube` | `references/small_problems` | A ring against a tube, `w_tol` 0, with a prescribed deformation and a material parameter on a load curve |
+| `sh_self_contact_fold` | `references/small_problems` | 54 quad4 shells folded onto themselves, `w_tol` 0.6. Needs element-pair activation to be compared at facet level |
+| A two-step input that adds an interface in step 2 | To add | Activation |
+
+`co62` and the first two small inputs can be compared with FEBio as soon as contact is a term. They are static and use only elements the run path has. The suite has no contact potential problem with shells, self-contact or more than one interface, which is why the small inputs stay.
+
+## 9. Gradients
 
 Unchanged from the contact note: the pair list is frozen at the converged state and the potential is differentiated through it. The contact term supplies its parameter derivative (`kc`) to the adjoint as any term does. Gradients through a change of pairs are reserved.
 
-## 8. Reserved
+## 10. Reserved
 
 - `sticky` and tied contact, which the dilation model uses.
 - Sliding contact with friction for devices.
 - `check_intersections`.
 - The pair search captured in a CUDA graph. The contact note records that `hessian_bsr` has not been exercised under capture.
 
-## 9. Depends on
+## 11. Depends on
 
 The residual sign and the `Term` contract of the run path. The two questions the contact note poses to Steve (pair multiplicity in self-contact, and how `kc` is specified across pair classes) stay with that note and are not repeated here.
