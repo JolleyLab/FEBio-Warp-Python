@@ -281,7 +281,7 @@ class Coverage(unittest.TestCase):
         """Found by the FEBio suite (sh48, sh50): shells sharing nodes with solids
         need FEBio's shell-solid interface, which is not implemented."""
         from warp_febio.compiled import inspect
-        from warp_febio.model import ElementBlock, Record, Domain
+        from warp_febio.model import Domain, ElementBlock, Record
 
         model = read_feb(os.path.join(SINGLE, "hex8_neo_hookean.feb"))
         model.mesh.blocks.append(

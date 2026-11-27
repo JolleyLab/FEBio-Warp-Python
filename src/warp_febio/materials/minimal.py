@@ -14,8 +14,9 @@ FEBio material type : "neo-Hookean"
 FEBio source        : https://github.com/febiosoftware/FEBio/blob/develop/FEBioMech/FENeoHookean.cpp
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 import warp as wp
 

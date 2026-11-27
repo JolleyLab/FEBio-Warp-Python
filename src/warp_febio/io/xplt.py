@@ -24,11 +24,10 @@ from __future__ import annotations
 import struct
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
-from ..model import ELEMENT_NODES, Model
+from ..model import Model
 from ..results import Results
 
 SIGNATURE = 0x00464542
@@ -188,14 +187,14 @@ class DictionaryItem:
     type: int
     fmt: int
     array_size: int = 0
-    units: Optional[str] = None
+    units: str | None = None
 
 
 @dataclass
 class PlotDomain:
     elem_type: int
     part_id: int
-    name: Optional[str]
+    name: str | None
     elem_ids: np.ndarray  # (E,)
     connectivity: np.ndarray  # (E, k) zero-based node indices
 
@@ -212,7 +211,7 @@ class PlotSurface:
 class PlotState:
     time: float
     status: int = 0
-    element_state: Optional[np.ndarray] = None
+    element_state: np.ndarray | None = None
     # category -> list (one per dictionary item) of {item id: float32 array}
     data: dict = field(default_factory=dict)
 
@@ -221,8 +220,8 @@ class PlotState:
 class PlotFile:
     version: int = PLT_VERSION
     compression: int = 0
-    software: Optional[str] = None
-    units: Optional[str] = None
+    software: str | None = None
+    units: str | None = None
     dictionary: dict = field(default_factory=dict)  # category -> [DictionaryItem]
     node_ids: np.ndarray = field(default_factory=lambda: np.zeros(0, np.int32))
     nodes: np.ndarray = field(default_factory=lambda: np.zeros((0, 3), np.float32))

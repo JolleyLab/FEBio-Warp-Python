@@ -16,8 +16,8 @@ model (output history now; reverse-mode differentiation later).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Optional
+from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -409,7 +409,7 @@ class CompiledDomain:
 class Prescribed:
     dofs: np.ndarray  # global degrees of freedom
     scale: float
-    load_controller: Optional[int]  # id, or None for a constant
+    load_controller: int | None  # id, or None for a constant
 
 
 @dataclass
@@ -425,7 +425,7 @@ class CompiledModel:
     free: np.ndarray  # indices of the equations to solve
     dN: wp.array  # (Q, 8, 3)
     gw: wp.array  # (Q,)
-    directors: Optional[np.ndarray] = None  # (N, 3) shell directors d0, host
+    directors: np.ndarray | None = None  # (N, 3) shell directors d0, host
     constrained_device: Any = None  # (ndof,) int32 on the device: 1 = fixed or prescribed
 
     def prescribed_values(self, time: float):
@@ -439,7 +439,7 @@ class CompiledModel:
             return np.zeros(0, np.int64), np.zeros(0)
         return np.concatenate(dofs), np.concatenate(vals)
 
-    def state(self, requires_grad: bool = False) -> "State":
+    def state(self, requires_grad: bool = False) -> State:
         """A zero state (reference configuration) for this model.
 
         The call mirrors Newton's `Model.state(requires_grad=...)`.
@@ -456,7 +456,7 @@ class State:
     u: wp.array  # (ndof,) float64 global displacement vector
 
 
-def shell_directors(model: Model) -> Optional[np.ndarray]:
+def shell_directors(model: Model) -> np.ndarray | None:
     """Initial nodal directors d0, as FEModel::InitShells computes them:
     at each shell node, the average over the attached element corners of the
     corner normal times the thickness there.
