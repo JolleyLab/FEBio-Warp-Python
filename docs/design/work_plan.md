@@ -88,7 +88,7 @@ Each package owns its files, attaches through contract v0, and is done when the 
 | W3 | Dynamics, mass, mass damping | [dynamics.md](dynamics.md) | `analysis/`, mass in each domain | B, W1 | `dy01`, `dy07`, `sh32`, `sh34`, `sh58`; `bk_mass_damping` | D2, D4 |
 | W4 | Spring domain | [chordae.md](chordae.md) | `elements/` (discrete) | B | `di01` to `di04`, `ch_chord_slack_tension` | none |
 | W5 | Contact as a term | [contact_in_run.md](contact_in_run.md) | `contact/` | B | `co62`, `bk_contact_potential_patch`; then `sh_self_contact_fold` | K1, K3 |
-| W6 | Linear solve: interface and preconditioner measurements | [linear_solve.md](linear_solve.md) | `solvers/linear/` | B | Measurements 1 and 2 on `sh11` reported; a recommended method | L1 |
+| W6 | Linear solve: interface, preconditioner measurements, and cuDSS as the direct solver on the device | [linear_solve.md](linear_solve.md) | `solvers/linear/` | B | Measurements 1, 2 and 7 on `sh11` reported; a recommended method | L1, L2 |
 | W7 | Output registry | [output.md](output.md) | `results.py`, producers per term | B, C | `relative volume` and `Lagrange strain` on any suite problem that runs | O1 |
 | W8 | Sensitivity over steps | [sensitivity.md](sensitivity.md) | `sensitivity/` | W3 | Adjoint against finite differences over three dynamic steps, one hex8 and one truss | S1, S2, S3 |
 | W9 | Several steps and activation | [dynamics.md](dynamics.md) | `analysis/` | W3 | `ms01`, `ms02`, `ms03`, `ms05` | none |

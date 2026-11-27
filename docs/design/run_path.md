@@ -278,7 +278,7 @@ The time stepper and reformation limit findings apply to `analysis/static.py` in
 
 ### The linear solver on shells
 
-On the 1,863-element shell patch, Warp's CG with the `diag` preconditioner took 470 to 990 iterations per solve. On a block matrix that preconditioner is scalar Jacobi; Warp's block-Jacobi and approximate inverse (`FSAI`) preconditioners were not tried ([linear_solve.md](linear_solve.md)). The comparison above used a sparse direct solve from SciPy on the host. A better preconditioner or a direct solver on the device is needed before shell models of this size are practical. Newton's Kamino solver has direct factorizations written in Warp (`kamino/_src/linalg/factorize`), which have not been tried here.
+On the 1,863-element shell patch, Warp's CG with the `diag` preconditioner took 470 to 990 iterations per solve. On a block matrix that preconditioner is scalar Jacobi; Warp's block-Jacobi and approximate inverse (`FSAI`) preconditioners were not tried ([linear_solve.md](linear_solve.md)). The comparison above used a sparse direct solve from SciPy on the host. A better preconditioner or a direct solver on the device is needed before shell models of this size are practical. Newton's Kamino solver has direct factorizations written in Warp (`kamino/_src/linalg/factorize`), which have not been tried here. cuDSS, NVIDIA's sparse direct solver for the GPU, was suggested in review and has not been tried either; it can solve with the transpose from the same factors, which the adjoint of section 7 needs ([linear_solve.md](linear_solve.md), section 4).
 
 ### Tests and the FEBio build
 
@@ -300,7 +300,7 @@ Each was checked against the FEBio source (`e4df3f8`), Warp 1.19.0, Newton (`12b
 **For the Warp team**
 
 5. **Recording.** `solve_on_tape` must run its forward iterations without recording them. Warp 1.19 has no public way to pause a tape or to ask whether one is active, so it asks to be called outside the `with tape:` block. Is there a preferred way?
-6. **A direct solver.** Thin shells need more than a block-diagonal preconditioner (section 8). Warp's `warp.optim.linear` is iterative only. Newton's Kamino solver has block-sparse LDL and blocked LLT factorizations in Warp. Are those meant to be usable outside Kamino for a matrix of 10^4 to 10^6 unknowns, or is another route recommended?
+6. **A direct solver.** Thin shells need more than a block-diagonal preconditioner (section 8). Warp's `warp.optim.linear` is iterative only. Newton's Kamino solver has block-sparse LDL and blocked LLT factorizations in Warp. Are those meant to be usable outside Kamino for a matrix of 10^4 to 10^6 unknowns, or is another route recommended? Since this was written, cuDSS was suggested in review ([linear_solve.md](linear_solve.md), section 4).
 
 ## 10. Where the next features attach
 
@@ -338,7 +338,7 @@ Each row summarizes a point of section 9, where the full text is given. IDs foll
 | R3 | Residual sign | (a) FEBio's, external minus internal, everywhere. (b) The sign the contact draft documents | (a) | Steve | Point 3 |
 | R4 | Tangents Newton and the adjoint do not share | A term returns FEBio's tangent for Newton and the true derivative on request | Keep `linearize(exact=True)`. Known cases: symmetrized pressure, `tangent_scale`, and `mass damping` ([sensitivity.md](sensitivity.md), section 4) | Steve, Jeff | Point 4 |
 | R5 | Running the forward solve without recording it | Call the solve outside the tape block, or a supported way to pause a tape | Open | Warp team | Point 5 |
-| R6 | A direct solver or stronger preconditioner for shells | Warp's `FSAI` and block Jacobi, a factorization on the device, or another route | Measure the preconditioners first ([linear_solve.md](linear_solve.md), decision L1), then ask | Warp team | Point 6 |
+| R6 | A direct solver or stronger preconditioner for shells | Warp's `FSAI` and block Jacobi, a factorization on the device (cuDSS was suggested in review), or another route | Measure the preconditioners and try cuDSS ([linear_solve.md](linear_solve.md), decisions L1 and L2) | Warp team | Point 6 |
 | R7 | Two hex8 implementations | (a) `warp.fem` for solids, dedicated kernels where it has no element. (b) Dedicated kernels throughout | (a) to start; both agree to round-off | Steve, Warp team | Section 5 |
 | R8 | The fixture of pull request 5 | It differs from FEBio in two places found here. Correct it there, or leave it since this path replaces it | Leave it, recorded in section 8 | Steve, MJ | Section 8 |
 

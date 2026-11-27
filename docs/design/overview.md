@@ -89,7 +89,7 @@ These areas have a first shape in the run path template, or only a placeholder. 
 | Elements | hex8 and tet4 solids on `warp.fem`; hex8 and quad4 shell on a dedicated kernel | Trusses and springs for chordae (valve path, first); the three-field element, penta6 and tri3 shell (device path) | [chordae.md](chordae.md), [elements.md](elements.md) |
 | Loads | Follower pressure on quad4 facets | `mass damping`, nodal forces, pressure on tri3 facets | [dynamics.md](dynamics.md) for `mass damping` |
 | Constraints | Fixed and prescribed displacements by masking | `normal displacement`, linear constraints, rigid bodies and joints | [constraints.md](constraints.md) |
-| Linear solve | Warp's CG, BiCGSTAB and GMRES with a Jacobi preconditioner | A stronger preconditioner or a direct solver on the device, which thin shells need; line search and quasi-Newton | [linear_solve.md](linear_solve.md) |
+| Linear solve | Warp's CG, BiCGSTAB and GMRES with a Jacobi preconditioner | A stronger preconditioner or a direct solver on the device, which thin shells need (Warp's `FSAI` and block Jacobi, and cuDSS, are the candidates); line search and quasi-Newton | [linear_solve.md](linear_solve.md) |
 | Steps | One static step with FEBio's time stepper | Dynamic analysis, several steps, activation by step | [dynamics.md](dynamics.md) |
 | Contact in the run | The contact draft's interface is planned to attach as a term | Its residual sign changed to FEBio's; contact points built from the model's surfaces; pair updates inside the Newton loop | [contact_in_run.md](contact_in_run.md) |
 | Sensitivity | Parameter gradients through one equilibrium solve; the solve as one step on a tape | History, dynamics, contact pairing, shape gradients | [sensitivity.md](sensitivity.md) |

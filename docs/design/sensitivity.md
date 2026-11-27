@@ -11,6 +11,7 @@ First template for discussion, November 26, 2026 (v0.2). Design only: there is n
 - **What exists.** A gradient through one converged static state, with respect to every parameter any term exposes, at the cost of one transpose solve. The solve can sit on a `wp.Tape` as one step. Checked against a closed form and finite differences on the pressure case.
 - **What both applications need.** A gradient through a dynamic run: 200 steps for the mitral input, more than 200 for TPVR.
 - **The extension is a reverse sweep over the stored States**, one transpose solve per step, with the tape giving the dependence of each step on the one before.
+- **The transpose solve is the cost that matters.** With an iterative solver it is a second Krylov solve. With a direct solver that can solve with the transpose from existing factors, as cuDSS can, it is two substitutions where Newton's tangent is the exact one ([linear_solve.md](linear_solve.md), section 4 and decision L5).
 - **Every term must be able to give its exact tangent.** There are now three known places where FEBio's Newton tangent is not the derivative of the residual.
 - **Memory is modest for the first targets** if only converged States are stored.
 

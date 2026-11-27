@@ -13,7 +13,8 @@ First template for discussion, November 26, 2026 (v0.2). Design only: nothing in
 - **The adjoint may need a non-symmetric solve even when Newton's matrix is symmetric.** On a surface with free edges, such as a leaflet, the exact pressure tangent differs from FEBio's symmetrized form, so it is not expected to be symmetric there, and the adjoint must use it. To confirm by measurement.
 - **Slack truss chordae can make the tangent indefinite**, which a preconditioner for positive definite matrices may not accept.
 - **Proposal: one solver interface with a setup, a refit and a solve, and a ladder of methods behind it**, chosen by measurement.
-- **A measurement is recommended before point 6 of the run path note goes to the Warp team**, so that the question about a direct solver is asked with `FSAI` already tried.
+- **A direct solver on the device is available outside Warp: cuDSS.** It was suggested in review. Its transpose solve reuses the factors, which is what the adjoint needs. Read from its documentation, not tried (section 4).
+- **The roadmap is in three steps.** Keep the host direct solve for comparisons with FEBio. Measure Warp's `FSAI` and block Jacobi on suite problem `sh11`. Try cuDSS on the same case on a GPU, with the transpose solve. Then choose (section 8).
 
 ## 2. Choosing a method
 
@@ -36,7 +37,7 @@ flowchart TB
     b1 --> enough
     pre2 --> enough
     enough -- yes --> done["Use it"]
-    enough -- no --> direct["Factorization on the device<br/>Newton's Kamino routines, or another route<br/><i>point 6 of the run path note</i>"]:::todo
+    enough -- no --> direct["Factorization on the device<br/>cuDSS first; Newton's Kamino routines<br/><i>section 4; point 6 of the run path note</i>"]:::todo
 
     classDef todo stroke-dasharray: 5 5
 ```
@@ -122,7 +123,7 @@ Until then, results agree with FEBio's but step sequences under the automatic ti
 
 | ID | Decision | Options | Proposed | For |
 | --- | --- | --- | --- | --- |
-| L1 | Order of work | (a) Measure `FSAI` and block Jacobi first. (b) Ask the Warp team about a direct solver first | (a). Then point 6 of the run path note is asked with data | MJ, then Warp team |
+| L1 | Order of work | (a) Measure `FSAI` and block Jacobi first. (b) Ask the Warp team about a direct solver first | (a), with cuDSS tried alongside (measurement 7) since it was suggested in review. Point 6 of the run path note is then asked with data | MJ, then Warp team |
 | L2 | Iterative or direct at application size | (a) Preconditioned Krylov. (b) A factorization on the device: cuDSS (section 4), or Newton's Kamino routines. (c) A host direct solver as a stopgap | Decide from the measurements below. cuDSS is the first candidate for (b) | Warp team, Ryan |
 | L3 | Symmetry | (a) Follow the solver's `symmetric_stiffness` setting. (b) Always general | (a) for Newton. The adjoint solve is general in either case (L5) | Steve |
 | L4 | Indefinite tangents | (a) Rely on mass and damping. (b) Use methods that do not need a positive definite matrix. (c) A tension-only chord (decision C1) | Measure on a leaflet patch with slack trusses | Steve, Warp team |

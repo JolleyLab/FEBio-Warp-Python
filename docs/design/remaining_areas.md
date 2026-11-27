@@ -195,7 +195,7 @@ A selection. Every decision has an ID and sits in a table in its note with the o
 | ID | Decision | Note |
 | --- | --- | --- |
 | C4, C5 | Trusses before springs; an open valve input with truss chordae | [chordae.md](chordae.md#7-decision-points) |
-| L1 | Measure preconditioners before the direct solver question goes to the Warp team | [linear_solve.md](linear_solve.md#7-decision-points) |
+| L1 | Measure Warp's preconditioners and try cuDSS before choosing between an iterative and a direct solve | [linear_solve.md](linear_solve.md#7-decision-points) |
 | S4 | Which parameters are differentiable from the start | [sensitivity.md](sensitivity.md#6-decision-points) |
 | V3 | Where larger references live once fields are compared | [verification.md](verification.md#decision-points) |
 | M8, R8 | Whether the test fixture of pull request 5 is corrected or left, since the run path replaces it | [model.md](model.md#9-decision-points) |
@@ -215,7 +215,7 @@ What that means for each area:
 | Trusses | Nothing extra: FEBio's truss tangent is exact and the law is smooth. Area, modulus and rest length as arrays | Proposed (C3) |
 | Springs | The corner of the slack curve handled as a fixed choice | Proposed (S3) |
 | Contact | Pairs and gates frozen at each converged state | In the contact draft for one state (K4) |
-| Linear solve | A non-symmetric transpose solve | Proposed (L5) |
+| Linear solve | A non-symmetric transpose solve: GMRES or BiCGSTAB, or the transpose solve of cuDSS from Newton's factors | Proposed (L5) |
 | Boundary values | Prescribed values as device arrays | Proposed (B2) |
 | Output | Outputs used as objectives written as kernels | Proposed (O4) |
 | Three-field solid | Its tangent checked against finite differences before use | Open (E5) |
@@ -261,6 +261,7 @@ Each is stated in the note named, with its source.
 | Both application inputs use `rhoi` 0. No simple suite problem does; the suite's small dynamic problems use the defaults or `rhoi` 1. | [dynamics.md](dynamics.md) |
 | FEBio's `mass damping` stiffness is C/dt, not the derivative of its force. | [dynamics.md](dynamics.md), [sensitivity.md](sensitivity.md) |
 | On a surface with free edges the exact pressure tangent differs from FEBio's symmetrized form, so the adjoint solve is expected to be non-symmetric even for the mitral case. Not yet measured. | [linear_solve.md](linear_solve.md) |
+| cuDSS, suggested in review, solves with the transpose from existing factors. With a direct solver the adjoint then costs two substitutions where Newton's tangent is the exact one. Read from the documentation, not tried. | [linear_solve.md](linear_solve.md) |
 | Both applications set `w_tol` above zero, where the contact draft and FEBio apply the gate differently. | [contact_in_run.md](contact_in_run.md) |
 | FEBio's penta6 solid and tri3 shell use the same six integration points and weights. | [elements.md](elements.md) |
 | FEBio runs uncoupled materials on hex8 and penta6 as `three-field-solid` by default, and not on tet4. | [elements.md](elements.md) |
