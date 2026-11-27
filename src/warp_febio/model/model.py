@@ -35,7 +35,7 @@ This module imports only NumPy and the standard library, so it loads in
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -73,17 +73,17 @@ class Record:
     # The text as it stood in the file. The writer emits it again while
     # `value` is unchanged, so formatting such as "0.10" or "007" survives.
     # Not part of equality.
-    text: Optional[str] = None
+    text: str | None = None
 
     @property
-    def type(self) -> Optional[str]:
+    def type(self) -> str | None:
         return self.attrs.get("type")
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         return self.attrs.get("name")
 
-    def child(self, tag: str) -> Optional["Record"]:
+    def child(self, tag: str) -> Record | None:
         for c in self.children:
             if c.tag == tag:
                 return c
@@ -97,7 +97,7 @@ class Record:
         c = self.child(tag)
         return default if c is None or c.value is None else c.value
 
-    def set(self, tag: str, value, **attrs) -> "Record":
+    def set(self, tag: str, value, **attrs) -> Record:
         c = self.child(tag)
         if c is None:
             c = Record(tag)
@@ -107,21 +107,14 @@ class Record:
         c.attrs.update({k: str(v) for k, v in attrs.items()})
         return c
 
-    def equals(self, other: "Record") -> bool:
+    def equals(self, other: Record) -> bool:
         """Deep equality, with arrays compared by value."""
-        if (
-            self.tag != other.tag
-            or self.attrs != other.attrs
-            or len(self.children) != len(other.children)
-        ):
+        if self.tag != other.tag or self.attrs != other.attrs or len(self.children) != len(other.children):
             return False
         a, b = self.value, other.value
         if isinstance(a, np.ndarray) or isinstance(b, np.ndarray):
             if not (
-                isinstance(a, np.ndarray)
-                and isinstance(b, np.ndarray)
-                and a.shape == b.shape
-                and np.array_equal(a, b)
+                isinstance(a, np.ndarray) and isinstance(b, np.ndarray) and a.shape == b.shape and np.array_equal(a, b)
             ):
                 return False
         elif a != b:
@@ -167,9 +160,7 @@ class Surface:
 class Mesh:
     """Nodes, element blocks and named sets. FEBio counterpart: FEMesh."""
 
-    nodes: np.ndarray = field(
-        default_factory=lambda: np.zeros((0, 3))
-    )  # (N, 3) float64
+    nodes: np.ndarray = field(default_factory=lambda: np.zeros((0, 3)))  # (N, 3) float64
     node_ids: np.ndarray = field(default_factory=lambda: np.zeros(0, np.int32))  # (N,)
     # The <Nodes name="..."> blocks, as (name, first index, count), so the
     # writer can reproduce them.
@@ -272,7 +263,7 @@ class LoadController:
     id: int
     type: str
     params: Record
-    points: Optional[np.ndarray] = None
+    points: np.ndarray | None = None
 
     def value(self, time: float) -> float:
         """Value at `time`, as PointCurve::value
@@ -361,20 +352,18 @@ class Model:
     spec_version: str = "4.0"
     module: str = "solid"
     # The <Module> element as written (it may carry units), for the writer.
-    module_record: Optional[Record] = None
-    globals: Optional[Record] = None
+    module_record: Record | None = None
+    globals: Record | None = None
     materials: list = field(default_factory=list)  # Material
     mesh: Mesh = field(default_factory=Mesh)
     domains: list = field(default_factory=list)  # Domain
-    mesh_data: list = field(
-        default_factory=list
-    )  # Records (ElementData, NodeData, ...)
+    mesh_data: list = field(default_factory=list)  # Records (ElementData, NodeData, ...)
     boundary: list = field(default_factory=list)  # Records (tag "bc"), all steps
     loads: list = field(default_factory=list)  # Records, all steps
     contact: list = field(default_factory=list)  # Records, all steps
     load_controllers: list = field(default_factory=list)  # LoadController
     steps: list = field(default_factory=list)  # Step
-    output: Optional[Record] = None
+    output: Record | None = None
     # True when the file had a top-level <Control> (one implicit step) rather
     # than a <Step> section. Kept so the writer reproduces the layout.
     single_step_layout: bool = True
@@ -415,17 +404,13 @@ class Model:
                 names += [v.attrs.get("type") for v in pf.all("var")]
         return names or ["displacement", "stress"]
 
-    def element_data(self, data_type: str, block_name: str) -> Optional[Record]:
+    def element_data(self, data_type: str, block_name: str) -> Record | None:
         for r in self.mesh_data:
-            if (
-                r.tag == "ElementData"
-                and r.attrs.get("type") == data_type
-                and r.attrs.get("elem_set") == block_name
-            ):
+            if r.tag == "ElementData" and r.attrs.get("type") == data_type and r.attrs.get("elem_set") == block_name:
                 return r
         return None
 
-    def equals(self, other: "Model") -> bool:
+    def equals(self, other: Model) -> bool:
         """Deep equality of everything the reader stores. Used by round-trip tests.
 
         Carried top-level sections are compared tag by tag, in file order
@@ -461,9 +446,7 @@ class Model:
                 return False
         for k in a.surfaces:
             s, t = a.surfaces[k], b.surfaces[k]
-            if s.facet_types != t.facet_types or not all(
-                np.array_equal(p, q) for p, q in zip(s.facets, t.facets)
-            ):
+            if s.facet_types != t.facet_types or not all(np.array_equal(p, q) for p, q in zip(s.facets, t.facets)):
                 return False
 
         def recs(p, q):
@@ -472,14 +455,11 @@ class Model:
         def by_tag(p, q):
             tags = [r.tag for r in p]
             return sorted(tags) == sorted(r.tag for r in q) and all(
-                recs([r for r in p if r.tag == t], [r for r in q if r.tag == t])
-                for t in set(tags)
+                recs([r for r in p if r.tag == t], [r for r in q if r.tag == t]) for t in set(tags)
             )
 
         def opt(p, q):
-            return (p is None and q is None) or (
-                p is not None and q is not None and p.equals(q)
-            )
+            return (p is None and q is None) or (p is not None and q is not None and p.equals(q))
 
         if not (
             self.spec_version == other.spec_version
@@ -504,9 +484,7 @@ class Model:
         ):
             return False
         for x, y in zip(self.materials, other.materials):
-            if (x.id, x.name, x.type) != (y.id, y.name, y.type) or not x.params.equals(
-                y.params
-            ):
+            if (x.id, x.name, x.type) != (y.id, y.name, y.type) or not x.params.equals(y.params):
                 return False
         for x, y in zip(self.domains, other.domains):
             if (x.kind, x.name, x.material) != (

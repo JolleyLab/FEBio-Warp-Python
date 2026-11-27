@@ -69,11 +69,7 @@ def cauchy(F: Any, g: Any, p: Any):
     s = wp.trace(b) - F.dtype(3.0)  # I1 - 3
     I = wp.identity(n=3, dtype=F.dtype)
     eQ = wp.exp(c2 * s * s)  # FEBio calls the exponent Q
-    return (
-        (k * wp.log(J) / J) * I
-        + (c0 / J) * (b - I)
-        + (F.dtype(2.0) * c1 * c2 * s * eQ / J) * b
-    )
+    return (k * wp.log(J) / J) * I + (c0 / J) * (b - I) + (F.dtype(2.0) * c1 * c2 * s * eQ / J) * b
 
 
 @wp.func
@@ -104,11 +100,7 @@ def spatial_tangent_action(F: Any, d: Any, g: Any, p: Any):
     pJ = k * (F.dtype(1.0) - lnJ) / (J * J)  # dp/dJ
     two = F.dtype(2.0)
     cw = F.dtype(4.0) * c1 * c2 * eQ * (F.dtype(1.0) + two * c2 * s * s) / J
-    return (
-        cw * wp.ddot(b, d) * b
-        + (pr + J * pJ) * wp.trace(d) * I
-        + (two * c0 / J - two * pr) * d
-    )
+    return cw * wp.ddot(b, d) * b + (pr + J * pJ) * wp.trace(d) * I + (two * c0 / J - two * pr) * d
 
 
 @wp.func
@@ -134,9 +126,7 @@ def stress_and_tangent(F: Any, g: Any, p: Any):
     two = F.dtype(2.0)
     sigma = pr * I + (c0 / J) * (b - I) + (two * c1 * c2 * s * eQ / J) * b
     tangent = zeros66(F)
-    tangent = add_dyad1s(
-        tangent, b, F.dtype(4.0) * c1 * c2 * eQ * (F.dtype(1.0) + two * c2 * s * s) / J
-    )
+    tangent = add_dyad1s(tangent, b, F.dtype(4.0) * c1 * c2 * eQ * (F.dtype(1.0) + two * c2 * s * s) / J)
     tangent = add_identity_dyad(tangent, pr + J * pJ)
     tangent = add_identity4s(tangent, two * c0 / J - two * pr)
     return sigma, tangent

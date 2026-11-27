@@ -73,9 +73,7 @@ class PotentialParams:
     per class (2 reproduces FEBio's same-surface self-contact, see module notes).
     """
 
-    def __init__(
-        self, kc=1.0, p=4.0, r_in=0.2, r_out=0.5, r_self=None, r_min=0.0, scale=1.0
-    ):
+    def __init__(self, kc=1.0, p=4.0, r_in=0.2, r_out=0.5, r_self=None, r_min=0.0, scale=1.0):
         kc, p, r_in, r_out, scale = np.broadcast_arrays(
             np.atleast_1d(np.asarray(kc, dtype=np.float64)),
             np.atleast_1d(np.asarray(p, dtype=np.float64)),
@@ -136,10 +134,7 @@ class PotentialParams:
             np.where(
                 s >= s_in,
                 c1 * (1.0 - s) ** 3 / 3.0,
-                blend
-                + (np.power(np.maximum(s, 1e-300), 1.0 - p) - s_in ** (1.0 - p))
-                / (p - 1.0)
-                - c2 * (s_in - s),
+                blend + (np.power(np.maximum(s, 1e-300), 1.0 - p) - s_in ** (1.0 - p)) / (p - 1.0) - c2 * (s_in - s),
             ),
         )
         return self.r_out[cls] * self.kcs[cls] * G
@@ -151,9 +146,7 @@ class PotentialParams:
         g = np.where(
             s >= 1.0,
             0.0,
-            np.where(
-                s >= s_in, c1 * (s - 1.0) ** 2, np.power(np.maximum(s, 1e-300), -p) - c2
-            ),
+            np.where(s >= s_in, c1 * (s - 1.0) ** 2, np.power(np.maximum(s, 1e-300), -p) - c2),
         )
         return self.kcs[cls] * g
 
@@ -182,9 +175,7 @@ def from_febio_block(block, scale: float = 1.0):
         # A model Record: parameters are child records under FEBio's tags.
         block = {c.tag: c.value for c in block.children if c.value is not None}
     if "kc" not in block:
-        raise ValueError(
-            "contact potential block has no kc (FEBio's default 0 disables contact)"
-        )
+        raise ValueError("contact potential block has no kc (FEBio's default 0 disables contact)")
 
     def get(key, default):
         return float(block.get(key, default))
@@ -201,9 +192,7 @@ def from_febio_block(block, scale: float = 1.0):
     higher = rule in ("higher-order", "1")
     contact_kwargs = {
         "w_tol": get("w_tol", 0.0),
-        "exclusion": (
-            "neighbors" if int(get("exclude_neighbors", 0)) == 1 else "element"
-        ),
+        "exclusion": ("neighbors" if int(get("exclude_neighbors", 0)) == 1 else "element"),
         "weight_mode": "current",
     }
     point_rule = {
@@ -243,9 +232,7 @@ def G_energy(s: f64, p: f64, s_in: f64, c1: f64, c2: f64) -> f64:
     blend = c1 * (f64(1.0) - s_in) * (f64(1.0) - s_in) * (f64(1.0) - s_in) / f64(3.0)
     if s >= s_in:
         return c1 * (f64(1.0) - s) * (f64(1.0) - s) * (f64(1.0) - s) / f64(3.0)
-    core = (wp.pow(s, f64(1.0) - p) - wp.pow(s_in, f64(1.0) - p)) / (
-        p - f64(1.0)
-    ) - c2 * (s_in - s)
+    core = (wp.pow(s, f64(1.0) - p) - wp.pow(s_in, f64(1.0) - p)) / (p - f64(1.0)) - c2 * (s_in - s)
     return blend + core
 
 
@@ -284,9 +271,7 @@ def pair_energy_force(
     if s >= f64(1.0) or r <= f64(0.0):
         return
     C = weight[i] * weight[j]
-    wp.atomic_add(
-        energy, 0, C * r_out[c] * kcs[c] * G_energy(s, p[c], s_in[c], c1[c], c2[c])
-    )
+    wp.atomic_add(energy, 0, C * r_out[c] * kcs[c] * G_energy(s, p[c], s_in[c], c1[c], c2[c]))
     fmag = C * kcs[c] * g_force(s, p[c], s_in[c], c1[c], c2[c])  # repulsive
     n = d / dist
     wp.atomic_add(f_pts, j, fmag * n)
@@ -474,9 +459,7 @@ class ContactPotential:
         # kcs carries a gradient buffer so parameter adjoints can flow to it; f_pts
         # carries one so that a vector-Jacobian product can be seeded at the forces
         self.tables = params.device_tables(device, requires_grad=True)
-        self.f_pts = wp.zeros(
-            points.count, dtype=vec3d, device=device, requires_grad=True
-        )
+        self.f_pts = wp.zeros(points.count, dtype=vec3d, device=device, requires_grad=True)
         self.energy = wp.zeros(1, dtype=f64, device=device, requires_grad=True)
         self.dmin = wp.zeros(1, dtype=f64, device=device)
         self._trip_rows = self._trip_cols = self._trip_vals = None
@@ -655,9 +638,7 @@ class ContactPotential:
             device=self.device,
         )
         if dest is None:
-            dest = wps.bsr_zeros(
-                self.n_nodes, self.n_nodes, block_type=mat33d, device=self.device
-            )
+            dest = wps.bsr_zeros(self.n_nodes, self.n_nodes, block_type=mat33d, device=self.device)
         wps.bsr_set_from_triplets(
             dest,
             self._trip_rows,
@@ -697,9 +678,7 @@ class ContactPotential:
             mask &= self.points.body == body
         return float(np.sum(self.points.area[mask]))
 
-    def contact_fraction(
-        self, body: int, threshold: float, other_body: int, node_x: np.ndarray
-    ) -> float:
+    def contact_fraction(self, body: int, threshold: float, other_body: int, node_x: np.ndarray) -> float:
         """Zelonis rule: fraction of a body's weight within ``threshold`` of another body
         (host evaluation; brute force over the other body's points)."""
         x = self.points.positions(np.asarray(node_x))
@@ -710,11 +689,7 @@ class ContactPotential:
         chunk = 2048
         for k in range(0, xa.shape[0], chunk):
             d = np.linalg.norm(xa[k : k + chunk, None, :] - xb[None, :, :], axis=2)
-            d = (
-                d
-                - self.points.radius[a][k : k + chunk, None]
-                - self.points.radius[b][None, :]
-            )
+            d = d - self.points.radius[a][k : k + chunk, None] - self.points.radius[b][None, :]
             close[k : k + chunk] = d.min(axis=1) < threshold
         w = self.points.weight[a]
         return float(w[close].sum() / w.sum())

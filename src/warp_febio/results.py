@@ -7,7 +7,6 @@ reach into the solver.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 import numpy as np
 
@@ -27,7 +26,7 @@ class StateResult:
 
     time: float
     displacement: np.ndarray
-    shell_displacement: Optional[np.ndarray] = None
+    shell_displacement: np.ndarray | None = None
     stress: dict = field(default_factory=dict)
     stress_points: dict = field(default_factory=dict)
     iterations: int = 0

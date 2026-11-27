@@ -83,9 +83,7 @@ from ..uniaxial import UniaxialModel
 from . import isotropic_elastic, neo_hookean
 
 
-def effective_modulus_nitinol(
-    E, v, density, release_time, release_factor, law="isotropic elastic"
-):
+def effective_modulus_nitinol(E, v, density, release_time, release_factor, law="isotropic elastic"):
     """Level 1 nitinol: an elastic law with a step load curve on E.
 
     E, v, density: as in the FEBio input.
@@ -105,9 +103,7 @@ def effective_modulus_nitinol(
         values=(1.0, release_factor),
         interpolate="step",
     )
-    return Material(
-        model=model, params={"E": E, "v": v}, density=density, schedules={"E": curve}
-    )
+    return Material(model=model, params={"E": E, "v": v}, density=density, schedules={"E": curve})
 
 
 def published_tpvr_frame():
@@ -116,11 +112,7 @@ def published_tpvr_frame():
         model=isotropic_elastic.ISOTROPIC_ELASTIC,
         params={"E": 4.0e7, "v": 0.33},
         density=6.45e-6,
-        schedules={
-            "E": LoadCurve(
-                times=(0.998063, 1.0), values=(1.0, 0.75), interpolate="step"
-            )
-        },
+        schedules={"E": LoadCurve(times=(0.998063, 1.0), values=(1.0, 0.75), interpolate="step")},
     )
 
 

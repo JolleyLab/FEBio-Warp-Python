@@ -119,19 +119,26 @@ verified benchmarks until then.
 
 ## Install
 
+The project uses [uv](https://docs.astral.sh/uv/) for environments and
+[Ruff](https://docs.astral.sh/ruff/) for linting and formatting, as Warp does.
+
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -e ".[warp]"
-.venv/bin/python -m unittest discover -s tests -v
+uv sync --extra dev
+uv run -m unittest discover -s tests -v
 ```
 
-The `warp` extra installs Warp, which compiling and running a model needs. Without it,
-`pip install -e .` installs only the model and the FEBio file readers and writers
-(`warp_febio.model`, `warp_febio.io`), which depend on NumPy alone and can be used inside 3D Slicer.
+`uv sync` creates `.venv` with the versions recorded in `uv.lock`. The `dev` extra installs
+everything the tests use, including Warp. To use the package, the `warp` extra
+(`uv sync --extra warp`, or `pip install -e ".[warp]"`) installs Warp, which compiling and
+running a model needs. Without it, `pip install -e .` installs only the model and the FEBio
+file readers and writers (`warp_febio.model`, `warp_febio.io`), which depend on NumPy alone
+and can be used inside 3D Slicer.
 
-Python 3.10 or later; 3.11 is the tested version. On Windows use `.venv\Scripts\python.exe`.
-Warp is pinned to 1.19.0; see the
+Python 3.10 or later; 3.11 is the tested version and the one uv selects from
+`.python-version`. Warp is pinned to 1.19.0; see the
 [Warp installation guide](https://nvidia.github.io/warp/v1.19/user_guide/installation.html).
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for formatting and the pre-commit hooks.
 
 ## Acknowledgments
 

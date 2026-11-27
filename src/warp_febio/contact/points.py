@@ -69,9 +69,7 @@ class ContactPoints:
         n, K = self.pt_nodes.shape
         for name in ("pt_w", "weight", "area", "radius", "body", "element"):
             if getattr(self, name).shape[0] != n:
-                raise ValueError(
-                    f"{name} has {getattr(self, name).shape[0]} rows, expected {n}"
-                )
+                raise ValueError(f"{name} has {getattr(self, name).shape[0]} rows, expected {n}")
         self.pt_nodes = np.ascontiguousarray(self.pt_nodes, dtype=np.int32)
         self.pt_w = np.ascontiguousarray(self.pt_w, dtype=np.float64)
         self.weight = np.ascontiguousarray(self.weight, dtype=np.float64)
@@ -106,7 +104,7 @@ class ContactPoints:
         return x
 
     @staticmethod
-    def concatenate(sets: list["ContactPoints"]) -> "ContactPoints":
+    def concatenate(sets: list[ContactPoints]) -> ContactPoints:
         """Merge point sets that share one node numbering (bodies keep their ids)."""
         K = max(s.nodes_per_point for s in sets)
 
@@ -169,9 +167,7 @@ def quad_facet_points(
     X = node_x[quads]  # [nq, 4, 3]
     pt_nodes, pt_w, weight, element, dw1, dw2, rule_w = [], [], [], [], [], [], []
     for r, s, w in zip(r_all, s_all, w_all):
-        N = 0.25 * np.array(
-            [(1 - r) * (1 - s), (1 + r) * (1 - s), (1 + r) * (1 + s), (1 - r) * (1 + s)]
-        )
+        N = 0.25 * np.array([(1 - r) * (1 - s), (1 + r) * (1 - s), (1 + r) * (1 + s), (1 - r) * (1 + s)])
         dNr = 0.25 * np.array([-(1 - s), (1 - s), (1 + s), -(1 + s)])
         dNs = 0.25 * np.array([-(1 - r), -(1 + r), (1 + r), (1 - r)])
         tr = np.einsum("a,qac->qc", dNr, X)
@@ -208,9 +204,7 @@ def _tri_rule(order: str):
     if order == "1":
         return np.array([[1 / 3, 1 / 3, 1 / 3]]), np.array([1.0])
     if order == "3":
-        return np.array(
-            [[2 / 3, 1 / 6, 1 / 6], [1 / 6, 2 / 3, 1 / 6], [1 / 6, 1 / 6, 2 / 3]]
-        ), np.full(3, 1 / 3)
+        return np.array([[2 / 3, 1 / 6, 1 / 6], [1 / 6, 2 / 3, 1 / 6], [1 / 6, 1 / 6, 2 / 3]]), np.full(3, 1 / 3)
     if order == "7":
         a, b = 0.059715871789770, 0.470142064105115
         c, d = 0.797426985353087, 0.101286507323456
@@ -326,11 +320,7 @@ def segment_points(
         raise ValueError("give exactly one of spacing or n_per_segment")
     pt_nodes, pt_w, weight, element, rule_w = [], [], [], [], []
     for e, (seg, L) in enumerate(zip(segments, length)):
-        n = (
-            n_per_segment
-            if n_per_segment is not None
-            else max(1, int(np.ceil(L / spacing)))
-        )
+        n = n_per_segment if n_per_segment is not None else max(1, int(np.ceil(L / spacing)))
         if rule == "nodal":
             n = 2
             t = np.array([0.0, 1.0])
@@ -365,9 +355,7 @@ def segment_points(
     )
 
 
-def node_points(
-    node_ids: np.ndarray, body: int, weight: float = 1.0, radius: float = 0.0
-) -> ContactPoints:
+def node_points(node_ids: np.ndarray, body: int, weight: float = 1.0, radius: float = 0.0) -> ContactPoints:
     """Nodes used directly as contact points (tests, rigid point clouds)."""
     node_ids = np.asarray(node_ids, dtype=np.int32)
     n = node_ids.shape[0]

@@ -221,9 +221,7 @@ def count_pairs(
     while wp.hash_grid_query_next(q, j):
         if j > i:
             if pair_active(i, j, pts, normals, radius, body, pair_class, r_out, w_tol):
-                if not pair_excluded(
-                    i, j, body, element, ref_pts, r_self, pt_nodes, exclusion
-                ):
+                if not pair_excluded(i, j, body, element, ref_pts, r_self, pt_nodes, exclusion):
                     n += 1
     counts[i] = n
 
@@ -255,9 +253,7 @@ def fill_pairs(
     while wp.hash_grid_query_next(q, j):
         if j > i:
             if pair_active(i, j, pts, normals, radius, body, pair_class, r_out, w_tol):
-                if not pair_excluded(
-                    i, j, body, element, ref_pts, r_self, pt_nodes, exclusion
-                ):
+                if not pair_excluded(i, j, body, element, ref_pts, r_self, pt_nodes, exclusion):
                     if k < cap:
                         pairs[k] = wp.vec2i(i, j)
                     k += 1
@@ -345,9 +341,7 @@ class PairSearch:
         self.search_radius = float(r_out.max() + 2.0 * points.radius.max())
         self.n_pairs = 0
 
-        ref_x = wp.array(
-            np.asarray(ref_node_x, dtype=np.float64), dtype=vec3d, device=device
-        )
+        ref_x = wp.array(np.asarray(ref_node_x, dtype=np.float64), dtype=vec3d, device=device)
         self.ref_pts = wp.zeros(self.n_pts, dtype=vec3d, device=device)
         wp.launch(
             interpolate_points,

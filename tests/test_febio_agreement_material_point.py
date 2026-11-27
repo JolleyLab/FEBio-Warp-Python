@@ -42,9 +42,9 @@ VOIGT = ((0, 0), (1, 1), (2, 2), (0, 1), (1, 2), (0, 2))
 C_INDEX = [(n % 6, n // 6) for n in range(21)]
 
 try:
+    import warp_febio.materials.models  # noqa: F401  (registers the models)
     from warp_febio.materials import model as api
     from warp_febio.materials.geometry import axes_from_vectors
-    import warp_febio.materials.models  # noqa: F401  (registers the models)
 except ImportError:
     api = None
 
@@ -89,10 +89,7 @@ def read_input(path):
         )
     bc = root.find("Boundary/bc[@type='prescribed deformation']")
     F = np.array([float(x) for x in bc.find("F").text.split(",")]).reshape(3, 3)
-    points = [
-        tuple(float(x) for x in pt.text.split(","))
-        for pt in root.find("LoadData/load_controller/points")
-    ]
+    points = [tuple(float(x) for x in pt.text.split(",")) for pt in root.find("LoadData/load_controller/points")]
     return mat.get("type"), params, F, np.array(points)
 
 
@@ -116,9 +113,7 @@ def febio_warp(febio_type, params, F):
         d[k, l] += 0.5
         d[l, k] += 0.5
         H = np.einsum("ij,njk->nik", d, F)  # so that sym(H F^-1) = d
-        cd = api.evaluate(model, F, values, H=H, geometry=geometry)[
-            "spatial_tangent_action"
-        ]
+        cd = api.evaluate(model, F, values, H=H, geometry=geometry)["spatial_tangent_action"]
         for a, (i, j) in enumerate(VOIGT):
             c[:, a, b] = cd[:, i, j]
     if model.formulation == "uncoupled":
@@ -129,11 +124,7 @@ def febio_warp(febio_type, params, F):
         J = np.linalg.det(F)
         p = dU(J, values["k"])
         sigma = sigma + p[:, None, None] * np.eye(3)
-        c = (
-            c
-            + p[:, None, None] * (IxI - 2 * I4)
-            + (J * d2U(J, values["k"]))[:, None, None] * IxI
-        )
+        c = c + p[:, None, None] * (IxI - 2 * I4) + (J * d2U(J, values["k"]))[:, None, None] * IxI
     return (
         np.array([[s[i, j] for i, j in VOIGT] for s in sigma]),
         np.array([[m[a, b] for a, b in C_INDEX] for m in c]),
@@ -179,6 +170,7 @@ class ChordAgreementTest(unittest.TestCase):
     def test_spring_force_matches_febio(self):
         try:
             import warp as wp
+
             from warp_febio.materials.models.nonlinear_spring import nonlinear_spring
             from warp_febio.materials.uniaxial import make_update_kernel
         except ImportError:
@@ -192,13 +184,8 @@ class ChordAgreementTest(unittest.TestCase):
         )
         mat = ET.parse(deck).getroot().find("Discrete/discrete_material")
         self.assertEqual(mat.get("type"), "nonlinear spring")
-        points = [
-            tuple(float(x) for x in pt.text.split(","))
-            for pt in mat.find("force/points")
-        ]
-        model = nonlinear_spring(
-            len(points), mat.findtext("measure"), mat.findtext("force/extend")
-        )
+        points = [tuple(float(x) for x in pt.text.split(",")) for pt in mat.find("force/points")]
+        model = nonlinear_spring(len(points), mat.findtext("measure"), mat.findtext("force/extend"))
         values = {"scale": float(mat.findtext("scale"))}
         for k, (x, y) in enumerate(points):
             values[f"x{k}"] = x

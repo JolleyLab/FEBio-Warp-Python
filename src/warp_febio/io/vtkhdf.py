@@ -54,12 +54,8 @@ def write_vtkhdf(model: Model, results: Results, path) -> None:
         point_data["node_id"] = model.mesh.node_ids.astype(np.int32)
         cell_data["element_id"] = elem_ids
         cell_data["part"] = part
-        point_data["displacement"] = np.concatenate(
-            [s.displacement for s in results.states]
-        ).astype(np.float64)
-        cell_data["stress"] = np.concatenate(
-            [cell_stress(model, s) for s in results.states]
-        ).astype(np.float64)
+        point_data["displacement"] = np.concatenate([s.displacement for s in results.states]).astype(np.float64)
+        cell_data["stress"] = np.concatenate([cell_stress(model, s) for s in results.states]).astype(np.float64)
 
         steps = root.create_group("Steps")
         steps.attrs["NSteps"] = np.int64(nsteps)

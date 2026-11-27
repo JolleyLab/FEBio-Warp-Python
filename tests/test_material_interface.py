@@ -9,10 +9,10 @@ import json
 import pathlib
 import unittest
 
+import febio_closed_forms
 import numpy as np
 import warp as wp
 
-import febio_closed_forms
 from warp_febio.materials import model as model_api
 from warp_febio.materials import models  # noqa: F401  (registers the models)
 from warp_febio.materials.conformance import check_model, sample_states
@@ -41,14 +41,10 @@ PARAMETERS = {
     "isotropic_elastic": dict(E=1.0e6, v=0.3),
     # Right ventricular outflow tract values of Zelonis et al., Table 1 (kPa),
     # used here with the coupled form of the model.
-    "hgo_unconstrained": dict(
-        c=200.0, k1=13480.0, k2=1.06, kappa=0.33, gamma=18.85, k=1500.0
-    ),
+    "hgo_unconstrained": dict(c=200.0, k1=13480.0, k2=1.06, kappa=0.33, gamma=18.85, k=1500.0),
     # The same values with the uncoupled form the paper names. Only the
     # deviatoric part is checked here; k does not enter it.
-    "hgo_uncoupled": dict(
-        c=200.0, k1=13480.0, k2=1.06, kappa=0.33, gamma=18.85, k=1500.0
-    ),
+    "hgo_uncoupled": dict(c=200.0, k1=13480.0, k2=1.06, kappa=0.33, gamma=18.85, k=1500.0),
 }
 
 # Material axes for models that need them: an arbitrary rotation, so that no
@@ -71,9 +67,7 @@ PILOT = ("lee_sacks_isotropic", "neo_hookean", "isotropic_elastic")
 def closed_form_for(name):
     """FEBio closed form for a model, with its geometry bound, or None."""
     if name == "hgo_unconstrained":
-        return lambda F, **params: febio_closed_forms.hgo_unconstrained(
-            F, AXES, **params
-        )
+        return lambda F, **params: febio_closed_forms.hgo_unconstrained(F, AXES, **params)
     return febio_closed_forms.CLOSED_FORMS.get(name)
 
 
@@ -195,21 +189,13 @@ class MaterialInterfaceTests(unittest.TestCase):
                     (new["pk1"], P),
                     (new["tangent_action"], dP),
                 ):
-                    self.assertLess(
-                        np.abs(value - reference).max() / np.abs(reference).max(), 1e-12
-                    )
+                    self.assertLess(np.abs(value - reference).max() / np.abs(reference).max(), 1e-12)
 
     def test_lookup_by_febio_type(self):
-        self.assertEqual(
-            model_api.by_febio_type("isotropic Lee-Sacks").name, "lee_sacks_isotropic"
-        )
+        self.assertEqual(model_api.by_febio_type("isotropic Lee-Sacks").name, "lee_sacks_isotropic")
         self.assertEqual(model_api.by_febio_type("neo-Hookean").name, "neo_hookean")
-        self.assertEqual(
-            model_api.by_febio_type("isotropic elastic").name, "isotropic_elastic"
-        )
-        self.assertEqual(
-            model_api.by_febio_type("HGO unconstrained").name, "hgo_unconstrained"
-        )
+        self.assertEqual(model_api.by_febio_type("isotropic elastic").name, "isotropic_elastic")
+        self.assertEqual(model_api.by_febio_type("HGO unconstrained").name, "hgo_unconstrained")
         with self.assertRaises(KeyError):
             model_api.by_febio_type("not a material")
 
@@ -227,15 +213,9 @@ class MaterialInterfaceTests(unittest.TestCase):
         F = sample_states()
         for model in model_api.all_models():
             geometry = GEOMETRY.get(model.name)
-            cpu = model_api.evaluate(
-                model, F, PARAMETERS[model.name], geometry=geometry
-            )
-            gpu = model_api.evaluate(
-                model, F, PARAMETERS[model.name], geometry=geometry, device=devices[0]
-            )
-            np.testing.assert_allclose(
-                gpu["cauchy"], cpu["cauchy"], rtol=1e-11, atol=1e-8
-            )
+            cpu = model_api.evaluate(model, F, PARAMETERS[model.name], geometry=geometry)
+            gpu = model_api.evaluate(model, F, PARAMETERS[model.name], geometry=geometry, device=devices[0])
+            np.testing.assert_allclose(gpu["cauchy"], cpu["cauchy"], rtol=1e-11, atol=1e-8)
 
 
 class FebioSuiteParameterTests(unittest.TestCase):
@@ -259,11 +239,7 @@ class FebioSuiteParameterTests(unittest.TestCase):
     }
 
     def test_all_suite_parameter_sets(self):
-        record = json.loads(
-            (
-                pathlib.Path(__file__).parent / "data" / "febio_suite_materials.json"
-            ).read_text()
-        )
+        record = json.loads((pathlib.Path(__file__).parent / "data" / "febio_suite_materials.json").read_text())
         # Small deformations for sets whose exponent makes large ones meaningless.
         small = np.eye(3) + 0.02 * np.random.default_rng(5).normal(size=(40, 3, 3))
         checked = 0

@@ -33,9 +33,7 @@ def compare(path, febio, work, linear_solver, timeout):
         compiled = compile(model, device="cpu")
     except CoverageError as err:
         row["status"] = "not yet runnable"
-        row["missing"] = sorted(
-            {f"{e.category}: {e.febio_name}" for e in err.report.missing()}
-        )
+        row["missing"] = sorted({f"{e.category}: {e.febio_name}" for e in err.report.missing()})
         return row
     shutil.copy(path, os.path.join(work, name + ".feb"))
     try:
@@ -49,9 +47,7 @@ def compare(path, febio, work, linear_solver, timeout):
         row["status"] = "FEBio timed out"
         return row
     log = os.path.join(work, name + ".log")
-    if not (
-        os.path.exists(log) and "N O R M A L" in open(log, errors="replace").read()
-    ):
+    if not (os.path.exists(log) and "N O R M A L" in open(log, errors="replace").read()):
         row["status"] = "FEBio did not finish"
         return row
     ref = read_xplt(os.path.join(work, name + ".xplt"))
@@ -70,11 +66,7 @@ def compare(path, febio, work, linear_solver, timeout):
     )
     # Compare at the times both wrote.
     pairs = [(i, int(np.argmin(abs(ours.times - t)))) for i, t in enumerate(ref.times)]
-    pairs = [
-        (i, j)
-        for i, j in pairs
-        if abs(ours.times[j] - ref.times[i]) <= 1e-6 * max(1.0, abs(ref.times[i]))
-    ]
+    pairs = [(i, j) for i, j in pairs if abs(ours.times[j] - ref.times[i]) <= 1e-6 * max(1.0, abs(ref.times[i]))]
     row["states_compared"] = len(pairs)
     if pairs:
         i, j = map(list, zip(*pairs))
@@ -92,9 +84,7 @@ def compare(path, febio, work, linear_solver, timeout):
         row["max_stress"] = float(abs(sa).max())
         # Differences are relative to the largest value. A stress field that is
         # zero in both codes (below 1e-10) is reported as agreeing.
-        row["stress"] = (
-            float(abs(sa - sb).max() / abs(sa).max()) if abs(sa).max() > 1e-10 else 0.0
-        )
+        row["stress"] = float(abs(sa - sb).max() / abs(sa).max()) if abs(sa).max() > 1e-10 else 0.0
     row["status"] = "compared"
     return row
 

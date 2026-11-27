@@ -9,10 +9,10 @@ it uses.
 import pathlib
 import unittest
 
+import febio_closed_forms
 import numpy as np
 import warp as wp
 
-import febio_closed_forms
 from warp_febio.materials.models.linear_truss import LINEAR_TRUSS, make_truss_function
 from warp_febio.materials.models.nonlinear_spring import (
     make_point_function,
@@ -24,17 +24,12 @@ from warp_febio.materials.uniaxial import make_update_kernel
 wp.config.quiet = True
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-MITRAL = (
-    ROOT
-    / "references/febio/originals/cardiofem/valve_pressurization/mitral_p2prolapse.feb"
-)
+MITRAL = ROOT / "references/febio/originals/cardiofem/valve_pressurization/mitral_p2prolapse.feb"
 
 # Slack of 4 with unit slope beyond it, as in the mitral input's group A1.
 CHORD = dict(scale=60.0, points=[(0.0, 0.0), (4.0, 0.0), (5.0, 1.0)])
 # A curve with distinct slopes on every segment, to exercise segment selection.
-GENERAL = dict(
-    scale=2.5, points=[(-1.0, -0.2), (0.5, 0.1), (2.0, 0.1), (3.0, 1.4), (6.0, 2.0)]
-)
+GENERAL = dict(scale=2.5, points=[(-1.0, -0.2), (0.5, 0.1), (2.0, 0.1), (3.0, 1.4), (6.0, 2.0)])
 
 
 def params_of(model, scale, points):
@@ -108,10 +103,7 @@ def read_mitral_chords():
         mat = materials[link.get("dmat")]
         force = mat.find("force")
         pairs = np.array(
-            [
-                [index_of[int(v)] for v in e.text.split(",")]
-                for e in sets[link.get("discrete_set")].findall("delem")
-            ]
+            [[index_of[int(v)] for v in e.text.split(",")] for e in sets[link.get("discrete_set")].findall("delem")]
         )
         groups.append(
             dict(
@@ -122,10 +114,7 @@ def read_mitral_chords():
                 function=force.get("type"),
                 interpolate=force.findtext("interpolate", "linear"),
                 extend=force.findtext("extend", "constant"),
-                points=[
-                    tuple(float(v) for v in pt.text.split(","))
-                    for pt in force.find("points").findall("pt")
-                ],
+                points=[tuple(float(v) for v in pt.text.split(",")) for pt in force.find("points").findall("pt")],
                 pairs=pairs,
             )
         )
@@ -153,9 +142,7 @@ class PointFunctionTests(unittest.TestCase):
                 m[i] = b
 
             # Samples inside every segment, beyond both ends, and on every knot.
-            s = np.concatenate(
-                [np.linspace(-3.0, 9.0, 121) + 0.013, [x for x, _ in pts]]
-            )
+            s = np.concatenate([np.linspace(-3.0, 9.0, 121) + 0.013, [x for x, _ in pts]])
             v = wp.zeros(len(s), dtype=wp.float64)
             m = wp.zeros(len(s), dtype=wp.float64)
             flat = [c for pt in pts for c in pt]
@@ -169,9 +156,7 @@ class PointFunctionTests(unittest.TestCase):
                 outputs=[v, m],
             )
             ref_v = [febio_closed_forms.point_curve_linear(t, pts, extend) for t in s]
-            ref_m = [
-                febio_closed_forms.point_curve_linear_slope(t, pts, extend) for t in s
-            ]
+            ref_m = [febio_closed_forms.point_curve_linear_slope(t, pts, extend) for t in s]
             np.testing.assert_allclose(v.numpy(), ref_v, rtol=0, atol=1e-14)
             np.testing.assert_allclose(m.numpy(), ref_m, rtol=0, atol=1e-14)
 
@@ -196,9 +181,7 @@ class PointFunctionTests(unittest.TestCase):
             0.5 * (left + right),
             places=6,
         )
-        self.assertAlmostEqual(
-            febio_closed_forms.point_curve_linear_slope(t, pts), right, places=14
-        )
+        self.assertAlmostEqual(febio_closed_forms.point_curve_linear_slope(t, pts), right, places=14)
 
     def test_rejects_unsupported_choices(self):
         with self.assertRaises(ValueError):
@@ -255,12 +238,7 @@ class NonlinearSpringTests(unittest.TestCase):
                 fm, _, sm = evaluate_springs(model, X, xm, nodes, [row])
                 # Skip springs whose measure crossed a knot between the two samples.
                 knots = np.array([p[0] for p in GENERAL["points"]])
-                same = np.array(
-                    [
-                        np.searchsorted(knots, a) == np.searchsorted(knots, b)
-                        for a, b in zip(sp, sm)
-                    ]
-                )
+                same = np.array([np.searchsorted(knots, a) == np.searchsorted(knots, b) for a, b in zip(sp, sm)])
                 fd = (fp - fm) / (2 * h)
                 worst = max(worst, np.abs(K[same][:, :, j] - fd[same]).max())
                 self.assertGreater(same.sum(), 50)
@@ -322,12 +300,8 @@ class NonlinearSpringTests(unittest.TestCase):
             ],
             outputs=[stress, tangent, trial],
         )
-        np.testing.assert_allclose(
-            stress.numpy(), 60.0 * np.maximum(s - 4.0, 0.0), atol=1e-12
-        )
-        np.testing.assert_allclose(
-            tangent.numpy(), np.where(s >= 4.0, 60.0, 0.0), atol=1e-12
-        )
+        np.testing.assert_allclose(stress.numpy(), 60.0 * np.maximum(s - 4.0, 0.0), atol=1e-12)
+        np.testing.assert_allclose(tangent.numpy(), np.where(s >= 4.0, 60.0, 0.0), atol=1e-12)
 
     def test_gradients_with_respect_to_parameters(self):
         """Tape gradient of the summed force magnitude w.r.t. scale and the points."""
@@ -421,18 +395,14 @@ class MitralChordTests(unittest.TestCase):
         spring = nonlinear_spring(3, "elongation", "extrapolate")
         rows = [params_of(spring, g["scale"], g["points"]) for g in groups]
         pairs = np.concatenate([g["pairs"] for g in groups])
-        region = np.concatenate(
-            [np.full(len(g["pairs"]), k) for k, g in enumerate(groups)]
-        )
+        region = np.concatenate([np.full(len(g["pairs"]), k) for k, g in enumerate(groups)])
         # Move the leaflet end of every chord away from its papillary end so that
         # elongations span the slack and loaded ranges of every group.
         rng = np.random.default_rng(5)
         x = X.copy()
         d = X[pairs[:, 0]] - X[pairs[:, 1]]
         L0 = np.linalg.norm(d, axis=1)
-        x[pairs[:, 0]] = (
-            X[pairs[:, 1]] + d * ((L0 + rng.uniform(-2.0, 16.0, len(L0))) / L0)[:, None]
-        )
+        x[pairs[:, 0]] = X[pairs[:, 1]] + d * ((L0 + rng.uniform(-2.0, 16.0, len(L0))) / L0)[:, None]
         force, stiffness, s = evaluate_springs(spring, X, x, pairs, rows, region)
         loaded = 0
         for i, (a, b) in enumerate(pairs):
@@ -530,9 +500,7 @@ class LinearTrussTests(unittest.TestCase):
             xp, xm = x.copy(), x.copy()
             xp[1::2, j] += h
             xm[1::2, j] -= h
-            fd = (self.evaluate(X, xp, nodes)[0] - self.evaluate(X, xm, nodes)[0]) / (
-                2 * h
-            )
+            fd = (self.evaluate(X, xp, nodes)[0] - self.evaluate(X, xm, nodes)[0]) / (2 * h)
             self.assertLess(np.abs(K[:, :, j] - fd).max() / np.abs(K).max(), 1e-7)
 
 

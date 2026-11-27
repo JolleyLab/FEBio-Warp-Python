@@ -12,13 +12,13 @@ import numpy as np
 import warp as wp
 
 from warp_febio.contact import (
-    from_febio_block,
     ContactInterface,
     ContactPoints,
     ContactPotential,
     ContactPotentialTerm,
     ContactSet,
     PotentialParams,
+    from_febio_block,
     node_points,
     quad_facet_points,
     segment_points,
@@ -86,9 +86,7 @@ class ForceLawTests(unittest.TestCase):
     def test_parameter_table_broadcasts(self):
         P = PotentialParams(kc=[1.0, 2.0], p=4.0, r_in=0.2, r_out=[0.5, 0.5])
         self.assertEqual(P.n_classes, 2)
-        self.assertAlmostEqual(
-            P.force(0.15, cls=1) / P.force(0.15, cls=0), 2.0, places=12
-        )
+        self.assertAlmostEqual(P.force(0.15, cls=1) / P.force(0.15, cls=0), 2.0, places=12)
         Q = PotentialParams(kc=1.0, p=4.0, r_in=[0.2, 0.3], r_out=0.5)
         # each class is continuous at its own R_in (the c1, c2 of that class)
         for cls in (0, 1):
@@ -149,9 +147,7 @@ class PairKernelTests(unittest.TestCase):
         self.assertLess(rel, 1e-7)
         # assembled matrix agrees with the action and is symmetric
         K = self.cp.hessian_dense(project=False)
-        self.assertLess(
-            np.linalg.norm(K @ v.ravel() - Kv.ravel()) / np.linalg.norm(Kv), 1e-12
-        )
+        self.assertLess(np.linalg.norm(K @ v.ravel() - Kv.ravel()) / np.linalg.norm(Kv), 1e-12)
         self.assertLess(np.abs(K - K.T).max() / np.abs(K).max(), 1e-12)
 
     def test_projected_tangent_is_positive_semidefinite(self):
@@ -201,9 +197,7 @@ class PairKernelTests(unittest.TestCase):
         # tape gradient through the term equals the residual (custom-op building block)
         xg = wp_nodes(self.nodes, requires_grad=True)
         E, g = term.energy_and_gradient(xg)
-        self.assertLess(
-            np.linalg.norm(g.numpy() - R.numpy()) / np.linalg.norm(R.numpy()), 1e-12
-        )
+        self.assertLess(np.linalg.norm(g.numpy() - R.numpy()) / np.linalg.norm(R.numpy()), 1e-12)
         self.assertAlmostEqual(float(E.numpy()[0]) / term.energy(), 1.0, places=12)
         # the term satisfies the generic interface and composes in a ContactSet
         self.assertIsInstance(term, ContactInterface)
@@ -224,9 +218,7 @@ class CapsuleDerivativeTests(unittest.TestCase):
         pts.radius[pts.body == 1] = 0.08
         pts.radius[pts.body == 0] = 0.03
         n = len(nodes)
-        cp = ContactPotential(
-            pts, P, np.zeros((2, 2), dtype=int), nodes, n, device=DEVICE
-        )
+        cp = ContactPotential(pts, P, np.zeros((2, 2), dtype=int), nodes, n, device=DEVICE)
         cp.build_pairs(wp_nodes(nodes))
         self.assertGreater(cp.search.n_pairs, 0)
 
@@ -245,9 +237,7 @@ class CapsuleDerivativeTests(unittest.TestCase):
         out = wp.zeros(n, dtype=vec3d, device=DEVICE)
         cp.hessian_matvec(wp_nodes(d), out, project=False)
         Kd_fd = -(fp - fm) / (2 * h)
-        self.assertLess(
-            np.linalg.norm(out.numpy() - Kd_fd) / np.linalg.norm(Kd_fd), 1e-7
-        )
+        self.assertLess(np.linalg.norm(out.numpy() - Kd_fd) / np.linalg.norm(Kd_fd), 1e-7)
 
 
 class CoreBranchTests(unittest.TestCase):
@@ -257,9 +247,7 @@ class CoreBranchTests(unittest.TestCase):
         P = PotentialParams(kc=1.0, p=4.0, r_in=0.2, r_out=0.5)
         nodes, pts = two_plates(gap=0.15)
         n = len(nodes)
-        cp = ContactPotential(
-            pts, P, np.zeros((2, 2), dtype=int), nodes, n, device=DEVICE
-        )
+        cp = ContactPotential(pts, P, np.zeros((2, 2), dtype=int), nodes, n, device=DEVICE)
         cp.build_pairs(wp_nodes(nodes))
         self.assertLess(cp.min_distance(wp_nodes(nodes)), P.r_in[0])
 
@@ -278,9 +266,7 @@ class CoreBranchTests(unittest.TestCase):
         out = wp.zeros(n, dtype=vec3d, device=DEVICE)
         cp.hessian_matvec(wp_nodes(d), out, project=False)
         Kd_fd = -(fp - fm) / (2 * h)
-        self.assertLess(
-            np.linalg.norm(out.numpy() - Kd_fd) / np.linalg.norm(Kd_fd), 1e-6
-        )
+        self.assertLess(np.linalg.norm(out.numpy() - Kd_fd) / np.linalg.norm(Kd_fd), 1e-6)
 
 
 class GuardTests(unittest.TestCase):
@@ -288,31 +274,21 @@ class GuardTests(unittest.TestCase):
         P = PotentialParams(kc=1.0, p=4.0, r_in=0.2, r_out=0.5)
         # nodes 0 and 1 coincide (different bodies); node 2 overlaps node 0's capsule
         nodes = np.array([[0.0, 0, 0], [0.0, 0, 0], [0.05, 0, 0], [0.3, 0, 0]])
-        pts = ContactPoints.concatenate(
-            [node_points([0], body=0, radius=0.1), node_points([1, 2, 3], body=1)]
-        )
-        cp = ContactPotential(
-            pts, P, np.zeros((2, 2), dtype=int), nodes, 4, device=DEVICE
-        )
+        pts = ContactPoints.concatenate([node_points([0], body=0, radius=0.1), node_points([1, 2, 3], body=1)])
+        cp = ContactPotential(pts, P, np.zeros((2, 2), dtype=int), nodes, 4, device=DEVICE)
         cp.build_pairs(wp_nodes(nodes))
         f = wp.zeros(4, dtype=vec3d, device=DEVICE)
         cp.energy_force(wp_nodes(nodes), f)
         self.assertTrue(np.all(np.isfinite(f.numpy())))
         self.assertTrue(np.isfinite(cp.energy_value()))
-        self.assertGreater(
-            f.numpy()[3, 0], 0.0
-        )  # the one valid pair (0, 3) still repels
+        self.assertGreater(f.numpy()[3, 0], 0.0)  # the one valid pair (0, 3) still repels
 
     def test_asymmetric_pair_class_is_rejected(self):
         P = PotentialParams(kc=[1.0, 1.0], p=4.0, r_in=0.2, r_out=0.5)
         nodes = np.array([[0.0, 0, 0], [0.3, 0, 0]])
-        pts = ContactPoints.concatenate(
-            [node_points([0], body=0), node_points([1], body=1)]
-        )
+        pts = ContactPoints.concatenate([node_points([0], body=0), node_points([1], body=1)])
         with self.assertRaises(ValueError):
-            ContactPotential(
-                pts, P, np.array([[0, 1], [0, 0]]), nodes, 2, device=DEVICE
-            )
+            ContactPotential(pts, P, np.array([[0, 1], [0, 0]]), nodes, 2, device=DEVICE)
 
     def test_febio_block_requires_kc(self):
         with self.assertRaises(ValueError):
@@ -323,9 +299,7 @@ class ExclusionTests(unittest.TestCase):
     def pairs_for(self, nodes, ref_nodes, body, exclusion, pt_nodes=None, r_self=0.75):
         n = len(nodes)
         if pt_nodes is None:
-            pts = ContactPoints.concatenate(
-                [node_points(np.where(body == b)[0], body=b) for b in np.unique(body)]
-            )
+            pts = ContactPoints.concatenate([node_points(np.where(body == b)[0], body=b) for b in np.unique(body)])
         else:
             pts = pt_nodes
         P = PotentialParams(kc=1.0, p=4.0, r_in=0.2, r_out=0.5, r_self=r_self)
@@ -390,30 +364,20 @@ class ExclusionTests(unittest.TestCase):
             len(self.pairs_for(cur2, ref, None, "element", pt_nodes=same, r_self=0.01)),
             0,
         )
-        self.assertEqual(
-            len(self.pairs_for(cur2, ref, None, "none", pt_nodes=same, r_self=0.01)), 1
-        )
-        self.assertEqual(
-            len(self.pairs_for(cur, ref, None, "element", pt_nodes=pts, r_self=0.01)), 1
-        )
+        self.assertEqual(len(self.pairs_for(cur2, ref, None, "none", pt_nodes=same, r_self=0.01)), 1)
+        self.assertEqual(len(self.pairs_for(cur, ref, None, "element", pt_nodes=pts, r_self=0.01)), 1)
 
     def test_pair_class_minus_one_disables_a_body_pair(self):
         ref = np.array([[0.0, 0, 0], [0.3, 0, 0]])
-        pts = ContactPoints.concatenate(
-            [node_points([0], body=0), node_points([1], body=1)]
-        )
+        pts = ContactPoints.concatenate([node_points([0], body=0), node_points([1], body=1)])
         P = PotentialParams(kc=1.0, p=4.0, r_in=0.2, r_out=0.5)
-        cp = ContactPotential(
-            pts, P, np.array([[0, -1], [-1, 0]]), ref, 2, device=DEVICE
-        )
+        cp = ContactPotential(pts, P, np.array([[0, -1], [-1, 0]]), ref, 2, device=DEVICE)
         cp.build_pairs(wp_nodes(ref))
         self.assertEqual(len(cp.search.pair_array()), 0)
 
 
 class CapsuleAndClassTests(unittest.TestCase):
-    def point_pair_force(
-        self, d, radius_a, radius_b, kc_table=(1.0,), pair_class=((0, 0), (0, 0))
-    ):
+    def point_pair_force(self, d, radius_a, radius_b, kc_table=(1.0,), pair_class=((0, 0), (0, 0))):
         nodes = np.array([[0.0, 0, 0], [0.0, 0, d]])
         pts = ContactPoints.concatenate(
             [
@@ -436,12 +400,8 @@ class CapsuleAndClassTests(unittest.TestCase):
         self.assertGreater(f0, 0.0)
 
     def test_pair_class_selects_parameters(self):
-        f_a, _ = self.point_pair_force(
-            0.30, 0.0, 0.0, kc_table=(1.0, 3.0), pair_class=((0, 0), (0, 0))
-        )
-        f_b, _ = self.point_pair_force(
-            0.30, 0.0, 0.0, kc_table=(1.0, 3.0), pair_class=((0, 1), (1, 0))
-        )
+        f_a, _ = self.point_pair_force(0.30, 0.0, 0.0, kc_table=(1.0, 3.0), pair_class=((0, 0), (0, 0)))
+        f_b, _ = self.point_pair_force(0.30, 0.0, 0.0, kc_table=(1.0, 3.0), pair_class=((0, 1), (1, 0)))
         self.assertAlmostEqual(f_b / f_a, 3.0, places=12)
 
     def test_crossing_wires_repel_through_their_radii(self):
@@ -451,24 +411,16 @@ class CapsuleAndClassTests(unittest.TestCase):
 
         # wire 0 along x at z = 0, wire 1 along y at height h (nodes 0,1 and 2,3)
         def nodes_at(h):
-            return np.array(
-                [[-L / 2, 0, 0], [L / 2, 0, 0], [0, -L / 2, h], [0, L / 2, h]]
-            )
+            return np.array([[-L / 2, 0, 0], [L / 2, 0, 0], [0, -L / 2, h], [0, L / 2, h]])
 
         ref = nodes_at(1.0)
         pts = ContactPoints.concatenate(
             [
-                segment_points(
-                    np.array([[0, 1]]), ref, body=0, spacing=P.r_out[0] / 4, radius=r_w
-                ),
-                segment_points(
-                    np.array([[2, 3]]), ref, body=1, spacing=P.r_out[0] / 4, radius=r_w
-                ),
+                segment_points(np.array([[0, 1]]), ref, body=0, spacing=P.r_out[0] / 4, radius=r_w),
+                segment_points(np.array([[2, 3]]), ref, body=1, spacing=P.r_out[0] / 4, radius=r_w),
             ]
         )
-        cp = ContactPotential(
-            pts, P, np.zeros((2, 2), dtype=int), ref, 4, device=DEVICE
-        )
+        cp = ContactPotential(pts, P, np.zeros((2, 2), dtype=int), ref, 4, device=DEVICE)
 
         def vertical_force(h):
             x = wp_nodes(nodes_at(h))
@@ -486,9 +438,7 @@ class CapsuleAndClassTests(unittest.TestCase):
         self.assertEqual(vertical_force(2 * r_w + 1.01 * P.r_out[0]), 0.0)
         h = 2 * r_w + 0.5 * P.r_out[0]
         vertical_force(h)
-        dmin = cp.min_distance(
-            wp_nodes(nodes_at(h))
-        )  # sampled points straddle the crossing
+        dmin = cp.min_distance(wp_nodes(nodes_at(h)))  # sampled points straddle the crossing
         self.assertGreaterEqual(dmin, 0.5 * P.r_out[0])
         self.assertLess(dmin, 0.5 * P.r_out[0] + 0.01)
 
@@ -509,17 +459,13 @@ class MetricTests(unittest.TestCase):
     def test_contact_area_and_fraction(self):
         P = PotentialParams(kc=1.0, p=4.0, r_in=0.2, r_out=0.5)
         nodes, pts = two_plates(gap=0.3, nx=4, size=1.0)
-        cp = ContactPotential(
-            pts, P, np.zeros((2, 2), dtype=int), nodes, len(nodes), device=DEVICE
-        )
+        cp = ContactPotential(pts, P, np.zeros((2, 2), dtype=int), nodes, len(nodes), device=DEVICE)
         x = wp_nodes(nodes)
         cp.build_pairs(x)
         f = wp.zeros(len(nodes), dtype=vec3d, device=DEVICE)
         cp.energy_force(x, f)
         area0 = cp.contact_area(body=0)
-        self.assertGreater(
-            area0, 0.5
-        )  # most of a unit plate is within r_out of the other
+        self.assertGreater(area0, 0.5)  # most of a unit plate is within r_out of the other
         self.assertLessEqual(area0, 1.0 + 1e-12)
         self.assertAlmostEqual(cp.contact_fraction(0, 0.5, 1, nodes), area0, places=12)
         self.assertEqual(cp.contact_fraction(0, 0.1, 1, nodes), 0.0)
@@ -583,9 +529,7 @@ class ReferenceTierTests(unittest.TestCase):
             device=DEVICE,
         )
         # undeformed: identical
-        f_ref, f_cur = wp.zeros(self.n, dtype=vec3d, device=DEVICE), wp.zeros(
-            self.n, dtype=vec3d, device=DEVICE
-        )
+        f_ref, f_cur = wp.zeros(self.n, dtype=vec3d, device=DEVICE), wp.zeros(self.n, dtype=vec3d, device=DEVICE)
         x = wp_nodes(self.nodes)
         cp_ref.build_pairs(x)
         cp_ref.energy_force(x, f_ref)
@@ -607,9 +551,7 @@ class ReferenceTierTests(unittest.TestCase):
 
     def test_scale_two_doubles_the_pair_force(self):
         P2 = PotentialParams(kc=1.0, p=4.0, r_in=0.2, r_out=0.5, scale=2.0)
-        f1, f2 = wp.zeros(self.n, dtype=vec3d, device=DEVICE), wp.zeros(
-            self.n, dtype=vec3d, device=DEVICE
-        )
+        f1, f2 = wp.zeros(self.n, dtype=vec3d, device=DEVICE), wp.zeros(self.n, dtype=vec3d, device=DEVICE)
         x = wp_nodes(self.nodes)
         for P, f in ((self.P, f1), (P2, f2)):
             cp = ContactPotential(
@@ -622,9 +564,7 @@ class ReferenceTierTests(unittest.TestCase):
             )
             cp.build_pairs(x)
             cp.energy_force(x, f)
-        self.assertAlmostEqual(
-            np.linalg.norm(f2.numpy()) / np.linalg.norm(f1.numpy()), 2.0, places=12
-        )
+        self.assertAlmostEqual(np.linalg.norm(f2.numpy()) / np.linalg.norm(f1.numpy()), 2.0, places=12)
 
 
 class FebioBlockTests(unittest.TestCase):
@@ -644,18 +584,12 @@ class FebioBlockTests(unittest.TestCase):
         self.assertAlmostEqual(P.r_in[0], 0.2)
         self.assertAlmostEqual(P.r_out[0], 0.5)
         self.assertAlmostEqual(P.scale[0], 2.0)
-        self.assertEqual(
-            kw, {"w_tol": 0.6, "exclusion": "element", "weight_mode": "current"}
-        )
+        self.assertEqual(kw, {"w_tol": 0.6, "exclusion": "element", "weight_mode": "current"})
         self.assertEqual(rule, {"quad_n_per_edge": 2, "tri_order": "3"})
         nodes, pts = two_plates(gap=0.3, n_per_edge=rule["quad_n_per_edge"])
-        cp = ContactPotential(
-            pts, P, np.zeros((2, 2), dtype=int), nodes, len(nodes), device=DEVICE, **kw
-        )
+        cp = ContactPotential(pts, P, np.zeros((2, 2), dtype=int), nodes, len(nodes), device=DEVICE, **kw)
         self.assertGreater(cp.build_pairs(wp_nodes(nodes)), 0)
-        _, kw2, rule2 = from_febio_block(
-            {**block, "integration_rule": "higher-order", "exclude_neighbors": 1}
-        )
+        _, kw2, rule2 = from_febio_block({**block, "integration_rule": "higher-order", "exclude_neighbors": 1})
         self.assertEqual(kw2["exclusion"], "neighbors")
         self.assertEqual(rule2, {"quad_n_per_edge": 4, "tri_order": "7"})
 
@@ -667,9 +601,7 @@ class AssemblyTests(unittest.TestCase):
         P = PotentialParams(kc=1.0, p=4.0, r_in=0.2, r_out=0.5)
         nodes, pts = two_plates(gap=0.3)
         n = len(nodes)
-        cp = ContactPotential(
-            pts, P, np.zeros((2, 2), dtype=int), nodes, n, device=DEVICE
-        )
+        cp = ContactPotential(pts, P, np.zeros((2, 2), dtype=int), nodes, n, device=DEVICE)
         x = wp_nodes(nodes)
         cp.build_pairs(x)
         f = wp.zeros(n, dtype=vec3d, device=DEVICE)
@@ -679,9 +611,7 @@ class AssemblyTests(unittest.TestCase):
         y = wps.bsr_mv(A, wp_nodes(v))
         ref = wp.zeros(n, dtype=vec3d, device=DEVICE)
         cp.hessian_matvec(wp_nodes(v), ref, project=False)
-        self.assertLess(
-            np.linalg.norm(y.numpy() - ref.numpy()) / np.linalg.norm(ref.numpy()), 1e-12
-        )
+        self.assertLess(np.linalg.norm(y.numpy() - ref.numpy()) / np.linalg.norm(ref.numpy()), 1e-12)
         # reuse of the destination matrix
         A2 = cp.hessian_bsr(project=True, dest=A)
         y2 = wps.bsr_mv(A2, wp_nodes(v))
@@ -692,17 +622,13 @@ class AssemblyTests(unittest.TestCase):
             1e-12,
         )
 
-    @unittest.skipUnless(
-        wp.get_cuda_device_count() > 0, "CUDA graph capture needs a GPU"
-    )
+    @unittest.skipUnless(wp.get_cuda_device_count() > 0, "CUDA graph capture needs a GPU")
     def test_newton_body_is_graph_capturable(self):
         device = "cuda:0"
         P = PotentialParams(kc=1.0, p=4.0, r_in=0.2, r_out=0.5)
         nodes, pts = two_plates(gap=0.3)
         n = len(nodes)
-        cp = ContactPotential(
-            pts, P, np.zeros((2, 2), dtype=int), nodes, n, device=device
-        )
+        cp = ContactPotential(pts, P, np.zeros((2, 2), dtype=int), nodes, n, device=device)
         x = wp.array(nodes, dtype=vec3d, device=device)
         f = wp.zeros(n, dtype=vec3d, device=device)
         cp.build_pairs(x)  # warm up and size the buffers
@@ -760,9 +686,7 @@ class FebioDiagnosticTests(unittest.TestCase):
         )
         P = PotentialParams(kc=1.0, p=4.0, r_in=0.4, r_out=1.0)
         n = len(nodes)
-        cp = ContactPotential(
-            pts, P, np.zeros((2, 2), dtype=int), nodes, n, device=DEVICE
-        )
+        cp = ContactPotential(pts, P, np.zeros((2, 2), dtype=int), nodes, n, device=DEVICE)
 
         def residual(x_np):
             f = wp.zeros(n, dtype=vec3d, device=DEVICE)
@@ -779,9 +703,7 @@ class FebioDiagnosticTests(unittest.TestCase):
             xp[j] += dx
             xm = nodes.copy().ravel()
             xm[j] -= dx
-            K1[:, j] = (residual(xp.reshape(-1, 3)) - residual(xm.reshape(-1, 3))) / (
-                2 * dx
-            )
+            K1[:, j] = (residual(xp.reshape(-1, 3)) - residual(xm.reshape(-1, 3))) / (2 * dx)
         denom = np.abs(K0)
         denom[denom < 1e-15] = 1.0
         kmax_percent = 100.0 * np.max(np.abs(K1 - K0) / denom)
@@ -833,9 +755,7 @@ class DifferentiabilityTests(unittest.TestCase):
 
         def lam_R(kc1):
             P = PotentialParams(kc=[1.0, kc1], p=4.0, r_in=0.2, r_out=0.5)
-            tt = ContactPotentialTerm(
-                self.pts, P, self.pair_class, self.nodes, self.n, device=DEVICE
-            )
+            tt = ContactPotentialTerm(self.pts, P, self.pair_class, self.nodes, self.n, device=DEVICE)
             tt.update_pairs(wp_nodes(self.nodes))
             R = wp.zeros(self.n, dtype=vec3d, device=DEVICE)
             tt.residual(wp_nodes(self.nodes), None, R)
@@ -856,9 +776,7 @@ class DifferentiabilityTests(unittest.TestCase):
         tape.backward(E2)
         g_kc = pot.kc_gradient_from_tables()
         # E is linear in kc per class: sum_c kc_c dE/dkc_c = E (kc = [1, 2])
-        self.assertAlmostEqual(
-            (g_kc[0] * 1.0 + g_kc[1] * 2.0) / float(E2.numpy()[0]), 1.0, places=10
-        )
+        self.assertAlmostEqual((g_kc[0] * 1.0 + g_kc[1] * 2.0) / float(E2.numpy()[0]), 1.0, places=10)
         tape.zero()
 
 

@@ -51,8 +51,9 @@ Everything is generic in the float type (functions use F.dtype for constants),
 so one source compiles for FP32 and FP64.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Any
 
 import numpy as np
 import warp as wp
@@ -90,33 +91,21 @@ class ParamRange:
     """
 
     name: str
-    low: Optional[float] = None
-    high: Optional[float] = None
+    low: float | None = None
+    high: float | None = None
     low_closed: bool = True  # True: value >= low is allowed; False: value > low
     high_closed: bool = True
 
     def check(self, value):
-        if self.low is not None and (
-            value < self.low or (value == self.low and not self.low_closed)
-        ):
+        if self.low is not None and (value < self.low or (value == self.low and not self.low_closed)):
             return False
-        if self.high is not None and (
-            value > self.high or (value == self.high and not self.high_closed)
-        ):
+        if self.high is not None and (value > self.high or (value == self.high and not self.high_closed)):
             return False
         return bool(np.isfinite(value))
 
     def describe(self):
-        left = (
-            ""
-            if self.low is None
-            else f"{self.low} {'<=' if self.low_closed else '<'} "
-        )
-        right = (
-            ""
-            if self.high is None
-            else f" {'<=' if self.high_closed else '<'} {self.high}"
-        )
+        left = "" if self.low is None else f"{self.low} {'<=' if self.low_closed else '<'} "
+        right = "" if self.high is None else f" {'<=' if self.high_closed else '<'} {self.high}"
         return f"{left}{self.name}{right}"
 
 
@@ -149,7 +138,7 @@ class MaterialModel:
     # elements and the exchange kernel use it when present; otherwise the 6x6
     # is built from six tangent actions. The two must agree, and the
     # conformance checks compare them.
-    stress_and_tangent: Optional[Callable] = None
+    stress_and_tangent: Callable | None = None
 
     @property
     def geometry_size(self):
@@ -167,9 +156,7 @@ class MaterialModel:
         missing = set(self.param_names) - set(values)
         extra = set(values) - set(self.param_names)
         if missing or extra:
-            raise ValueError(
-                f"{self.name}: missing {sorted(missing)}, unknown {sorted(extra)}"
-            )
+            raise ValueError(f"{self.name}: missing {sorted(missing)}, unknown {sorted(extra)}")
         self.validate(values)
         return self.param_vector(dtype)(*[values[k] for k in self.param_names])
 
@@ -230,9 +217,7 @@ class Material:
         return values
 
 
-def from_spatial(
-    name, febio_type, param_names, energy, cauchy, spatial_tangent_action, **kw
-):
+def from_spatial(name, febio_type, param_names, energy, cauchy, spatial_tangent_action, **kw):
     """Build a model from FEBio-style spatial functions.
 
     The author supplies the Cauchy stress and the spatial tangent contracted

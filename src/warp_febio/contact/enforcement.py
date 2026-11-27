@@ -54,16 +54,14 @@ class ContactTangent:
     matrix when a preconditioner or direct solver needs one.
     """
 
-    def __init__(self, term: "ContactPotentialTerm", project: bool):
+    def __init__(self, term: ContactPotentialTerm, project: bool):
         self.term = term
         self.project = project
         self.height = self.width = 3 * term.potential.n_nodes
         self.term.potential.hessian_blocks(project)
 
     def apply(self, vector: wp.array, out: wp.array) -> None:
-        self.term.potential.hessian_matvec(
-            vector, out, project=self.project, rebuild_blocks=False
-        )
+        self.term.potential.hessian_matvec(vector, out, project=self.project, rebuild_blocks=False)
 
     def apply_transpose(self, vector: wp.array, out: wp.array) -> None:
         # the contact Hessian is symmetric (projected or not)

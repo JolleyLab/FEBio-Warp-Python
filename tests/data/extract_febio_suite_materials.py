@@ -65,14 +65,10 @@ def main(suite):
             if not plain:
                 skipped[name] += 1
                 continue
-            entry = found[name].setdefault(
-                tuple(values), {"problems": [], "load_curve": False}
-            )
+            entry = found[name].setdefault(tuple(values), {"problems": [], "load_curve": False})
             if path.stem not in entry["problems"]:
                 entry["problems"].append(path.stem)
-            entry["load_curve"] |= any(
-                element.find(tag).get("lc") is not None for tag in tags
-            )
+            entry["load_curve"] |= any(element.find(tag).get("lc") is not None for tag in tags)
     commit = subprocess.run(
         ["git", "-C", str(suite), "rev-parse", "HEAD"], capture_output=True, text=True
     ).stdout.strip()

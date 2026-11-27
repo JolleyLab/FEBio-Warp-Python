@@ -17,7 +17,6 @@ It is not a comparison with a FEBio run.
 import unittest
 
 import numpy as np
-import warp as wp
 
 from warp_febio.materials import model as model_api
 from warp_febio.materials import models  # noqa: F401
@@ -40,9 +39,7 @@ CORNERS = np.array(
     ],
     dtype=float,
 )
-GAUSS = np.array(
-    [[a, b, c] for a in (-1, 1) for b in (-1, 1) for c in (-1, 1)], dtype=float
-) / np.sqrt(3.0)
+GAUSS = np.array([[a, b, c] for a in (-1, 1) for b in (-1, 1) for c in (-1, 1)], dtype=float) / np.sqrt(3.0)
 
 # Fourth-order tensor from its 6x6 storage: index pair (i, j) -> row.
 PAIR = np.zeros((3, 3), dtype=int)
@@ -141,12 +138,8 @@ class ElementConsumerTests(unittest.TestCase):
                 for column in range(24):
                     step = np.zeros(24)
                     step[column] = h
-                    up, _ = element(
-                        model, params, geometry, self.X, self.u + step.reshape(8, 3)
-                    )
-                    down, _ = element(
-                        model, params, geometry, self.X, self.u - step.reshape(8, 3)
-                    )
+                    up, _ = element(model, params, geometry, self.X, self.u + step.reshape(8, 3))
+                    down, _ = element(model, params, geometry, self.X, self.u - step.reshape(8, 3))
                     numeric[:, column] = (up - down) / (2 * h)
                 scale = np.abs(numeric).max()
                 self.assertLess(np.abs(K - numeric).max() / scale, 1e-7)

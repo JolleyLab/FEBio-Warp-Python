@@ -43,11 +43,7 @@ def lee_sacks_isotropic(F, c0, c1, c2, k):
     pJ = k * (1.0 - lnJ) / J**2
     sigma = p * _I + (c0 / J) * (b - _I) + (2.0 * c1 * c2 * s * eQ / J) * b
     cw = 4.0 * c1 * c2 * eQ * (1.0 + 2.0 * c2 * s * s) / J
-    c4 = (
-        cw * _dyad1s(b)
-        + (p + J * pJ) * _dyad1s(_I)
-        + (2.0 * c0 / J - 2.0 * p) * _dyad4s(_I)
-    )
+    c4 = cw * _dyad1s(b) + (p + J * pJ) * _dyad1s(_I) + (2.0 * c0 / J - 2.0 * p) * _dyad4s(_I)
     return sigma, _voigt(c4)
 
 
@@ -91,9 +87,7 @@ def hgo_unconstrained(F, Q, c, k1, k2, kappa, gamma, k):
         if E >= 0:
             h = kappa * b + (1.0 - 3.0 * kappa) * np.outer(a, a)
             s = s + h * (2.0 * k1 * E * np.exp(k2 * E * E))
-            c4 = c4 + _dyad1s(h) * (
-                4.0 * k1 * (1.0 + 2.0 * k2 * E * E) * np.exp(k2 * E * E)
-            )
+            c4 = c4 + _dyad1s(h) * (4.0 * k1 * (1.0 + 2.0 * k2 * E * E) * np.exp(k2 * E * E))
     return s / J, _voigt(c4 / J)
 
 
@@ -147,7 +141,7 @@ def febio_point_curve_derive(t, points, extend="extrapolate"):
     pts = np.asarray(points, dtype=float)
     span = pts[-1, 0] - pts[0, 0]
     dt = span * 1e-9
-    value = lambda s: point_curve_linear(s, points, extend)  # noqa: E731
+    value = lambda s: point_curve_linear(s, points, extend)
     if t >= pts[-1, 0]:
         return (value(t - 2 * dt) - 4 * value(t - dt) + 3 * value(t)) / (2 * dt)
     if t < pts[0, 0]:
