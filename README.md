@@ -2,7 +2,7 @@
 
 GPU-accelerated, differentiable finite element mechanics for cardiovascular simulation,
 written in Python on [Warp](https://github.com/NVIDIA/warp) and built in concert with the
-[FEBio](https://febio.org) team. The formulations follow FEBio. The architecture is designed
+[FEBio](https://febio.org) team. The formulations follow FEBio, but deviate where it makes sense for warp. The architecture is designed
 for the GPU and for differentiation, follows the development conventions of Warp, and is
 meant to work with [Newton](https://github.com/newton-physics/newton),
 [3D Slicer](https://www.slicer.org) and [SlicerHeart](https://github.com/SlicerHeart/SlicerHeart).
