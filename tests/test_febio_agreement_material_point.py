@@ -42,9 +42,9 @@ VOIGT = ((0, 0), (1, 1), (2, 2), (0, 1), (1, 2), (0, 2))
 C_INDEX = [(n % 6, n // 6) for n in range(21)]
 
 try:
+    import warp_febio.materials.models  # noqa: F401  (registers the models)
     from warp_febio.materials import model as api
     from warp_febio.materials.geometry import axes_from_vectors
-    import warp_febio.materials.models  # noqa: F401  (registers the models)
 except ImportError:
     api = None
 
@@ -170,6 +170,7 @@ class ChordAgreementTest(unittest.TestCase):
     def test_spring_force_matches_febio(self):
         try:
             import warp as wp
+
             from warp_febio.materials.models.nonlinear_spring import nonlinear_spring
             from warp_febio.materials.uniaxial import make_update_kernel
         except ImportError:
