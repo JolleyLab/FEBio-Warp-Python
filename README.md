@@ -134,7 +134,7 @@ running a model needs. Without it, `pip install -e .` installs only the model an
 file readers and writers (`warp_febio.model`, `warp_febio.io`), which depend on NumPy alone
 and can be used inside 3D Slicer.
 
-Python 3.10 or later; 3.11 is the tested version and the one uv selects from
+Python 3.11 or later; 3.12 is the tested version and the one uv selects from
 `.python-version`. Warp is pinned to 1.19.0; see the
 [Warp installation guide](https://nvidia.github.io/warp/v1.19/user_guide/installation.html).
 
