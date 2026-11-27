@@ -77,9 +77,7 @@ def model_to_vtk(model: Model, state: StateResult = None):
         ns.numpy_to_vtkIdTypeArray(offsets, deep=True),
         ns.numpy_to_vtkIdTypeArray(conn, deep=True),
     )
-    grid.SetCells(
-        ns.numpy_to_vtk(types, deep=True, array_type=vtk.VTK_UNSIGNED_CHAR), cells
-    )
+    grid.SetCells(ns.numpy_to_vtk(types, deep=True, array_type=vtk.VTK_UNSIGNED_CHAR), cells)
 
     def add(data, name, array, components=None):
         a = ns.numpy_to_vtk(np.ascontiguousarray(array), deep=True)
@@ -129,11 +127,7 @@ def mesh_from_vtk(grid, part_prefix: str = "Part") -> Mesh:
             [[grid.GetCell(c).GetPointId(i) for i in range(n)] for c in cells],
             dtype=np.int32,
         )
-        ids = (
-            eid[cells]
-            if eid is not None
-            else np.arange(next_id, next_id + len(cells), dtype=np.int32)
-        )
+        ids = eid[cells] if eid is not None else np.arange(next_id, next_id + len(cells), dtype=np.int32)
         next_id += len(cells)
         mesh.blocks.append(
             ElementBlock(
@@ -146,9 +140,7 @@ def mesh_from_vtk(grid, part_prefix: str = "Part") -> Mesh:
     return mesh
 
 
-def model_from_vtk(
-    grid, material_type="neo-Hookean", material_params=None, shell_thickness=None
-) -> Model:
+def model_from_vtk(grid, material_type="neo-Hookean", material_params=None, shell_thickness=None) -> Model:
     """A minimal Model around a VTK mesh: one material on every part.
 
     Meant as the starting point for an export from Slicer: the caller adds
@@ -160,9 +152,7 @@ def model_from_vtk(
     rec = Record("material", {"id": "1", "name": "Material1", "type": material_type})
     for tag, value in (material_params or {}).items():
         rec.set(tag, value)
-    model.materials.append(
-        Material(id=1, name="Material1", type=material_type, params=rec)
-    )
+    model.materials.append(Material(id=1, name="Material1", type=material_type, params=rec))
     for b in model.mesh.blocks:
         if b.febio_type in ("quad4", "tri3"):
             p = Record("ShellDomain", {"name": b.name, "mat": "Material1"})
