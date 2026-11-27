@@ -54,25 +54,28 @@ follows FEBio and where it differs, and what is only a first template. It is the
 
 ## Development areas
 
-Status as of November 2026. "Design" means a design note is in progress. "Draft" means code
-exists on a branch or draft pull request and is under review. "Not started" means the package
-directory exists as a place for the work and holds no code yet.
+Status as of November 26, 2026. "Draft" means code exists in a draft pull request and is under
+review. "Template" means a first working shape exists in the run path draft
+([PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6)), checked against FEBio on small
+cases and not settled. "Design" means a design note with a proposed approach exists and no code.
+No application input runs end to end yet.
 
 | Area | Package | Scope for the first targets | Status |
 |---|---|---|---|
 | Materials | `materials/` | Common material interface; neo-Hookean, HGO, Ogden, Lee-Sacks, nitinol | Draft ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)), under redesign |
-| Contact | `contact/` | Potential-based contact for leaflets and devices; sliding contact later | Draft ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)) |
-| Assembly | `assembly/` | Full assembly of residual and tangent on the GPU | Design |
-| Elements | `elements/` | Shells, solids, beams, springs | Not started |
-| Mesh and discretization | `mesh/`, `discretization/` | Mesh types, degree-of-freedom maps, quadrature | Not started |
-| Loads and constraints | `loads/`, `constraints/` | Follower pressure, nodal loads, prescribed and multipoint constraints | Not started |
-| Solvers | `solvers/` | Newton with line search; iterative linear solvers and preconditioners | Not started |
-| Analysis | `analysis/` | Static and implicit dynamic steps, load stepping, staged procedures | Not started |
-| Sensitivity | `sensitivity/` | Gradients through equilibrium and through trajectories | Not started |
-| Central model, input and output | `model/`, `io/` | One model object holding what a FEBio input defines; FEBio input (`.feb`) and plot (`.xplt`) files read and written here; VTKHDF output and a VTK adapter for 3D Slicer | Draft ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)) |
+| Contact | `contact/` | Potential-based contact for leaflets and devices; sliding contact later | Draft ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)). Design: [contact in a run](docs/design/contact_in_run.md) |
+| Assembly | `assembly/` | Full assembly of residual and tangent on the GPU | Decided ([note](docs/design/assembly.md)). Template: one block buffer and pattern map |
+| Elements | `elements/` | Shells, solids, beams, springs | Template: hex8, tet4, quad4 shell. Design: [tri3 shell, penta6, three-field solid](docs/design/elements.md), [springs](docs/design/discrete.md). Beams: design shell |
+| Mesh and discretization | `mesh/`, `discretization/` | Mesh types, degree-of-freedom maps, quadrature | Template: unknowns by (node, variable). `mesh/` holds no code; the mesh is in the central model |
+| Loads and constraints | `loads/`, `constraints/` | Follower pressure, nodal loads, prescribed and multipoint constraints | Template: pressure, fixed and prescribed displacements. Design: [mass damping](docs/design/dynamics.md), [normal displacement](docs/design/constraints.md) |
+| Solvers | `solvers/` | Newton with line search; iterative linear solvers and preconditioners | Template: full Newton, Warp's iterative solvers. Design: [preconditioning for shells, line search, quasi-Newton](docs/design/linear_solve.md) |
+| Analysis | `analysis/` | Static and implicit dynamic steps, load stepping, staged procedures | Template: one static step with FEBio's time stepper. Design: [dynamics and several steps](docs/design/dynamics.md) |
+| Sensitivity | `sensitivity/` | Gradients through equilibrium and through trajectories | Template: adjoint through one equilibrium solve. Design: [over steps](docs/design/sensitivity.md) |
+| Central model, input and output | `model/`, `io/` | One model object holding what a FEBio input defines; FEBio input (`.feb`) and plot (`.xplt`) files read and written here; VTKHDF output and a VTK adapter for 3D Slicer | Draft ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)). Design: [output registry](docs/design/output.md) |
 | Verification | `tests/`, `references/` | FEBio-Warp run on FEBio input files and compared with pinned FEBio references; cases from the FEBio test suite and the driving applications | Draft ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)), tabled until input and output |
 
-Design notes live in [`docs/design/`](docs/design/README.md).
+Design notes live in [`docs/design/`](docs/design/README.md). What is left before the application
+inputs run, in order, is in [remaining areas](docs/design/remaining_areas.md).
 
 The four drafts are reviewed separately. They are also merged, and made consistent where they
 meet, on the branch

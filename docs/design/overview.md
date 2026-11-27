@@ -82,20 +82,20 @@ flowchart TB
 
 ## 5. First templates: nothing here is settled
 
-These areas have a first shape in the run path template, or only a placeholder. Each will get its own note when it is taken up.
+These areas have a first shape in the run path template, or only a placeholder. Each now has a short design note with a flow diagram and a proposed approach, and no code beyond the template. [remaining_areas.md](remaining_areas.md) orders them along the path to the first application runs.
 
-| Area | First template | Not yet |
-| --- | --- | --- |
-| Elements | hex8 and tet4 solids on `warp.fem`; hex8 and quad4 shell on a dedicated kernel | penta6, tri3 shell, the three-field element, springs for chordae |
-| Loads | Follower pressure on quad4 facets | `mass damping`, nodal forces, pressure on tri3 facets |
-| Constraints | Fixed and prescribed displacements by masking | `normal displacement`, linear constraints, rigid bodies and joints |
-| Linear solve | Warp's CG, BiCGSTAB and GMRES with block preconditioners | A direct solver or stronger preconditioner on the device, which thin shells need |
-| Steps | One static step with FEBio's time stepper | Dynamic analysis, several steps, activation by step |
-| Contact in the run | The contact draft's interface is planned to attach as a term | Its residual sign changed to FEBio's; contact points built from the model's surfaces; pair updates inside the Newton loop |
-| Sensitivity | Parameter gradients through one equilibrium solve; the solve as one step on a tape | History, dynamics, contact pairing, shape gradients |
-| Output | Displacement, stress, reaction force | The registry of FEBio plot variables |
-| Newton (the physics library) | The step is functional and state is separate, as Newton's solvers expect | A wrapper with Newton's `step` signature; nodal forces in, positions out |
-| Performance | CPU, double precision, for correctness | GPU runs and timing; single precision where it is adequate |
+| Area | First template | Not yet | Design note |
+| --- | --- | --- | --- |
+| Elements | hex8 and tet4 solids on `warp.fem`; hex8 and quad4 shell on a dedicated kernel | penta6, tri3 shell, the three-field element, springs for chordae | [elements.md](elements.md), [discrete.md](discrete.md) |
+| Loads | Follower pressure on quad4 facets | `mass damping`, nodal forces, pressure on tri3 facets | [dynamics.md](dynamics.md) for `mass damping` |
+| Constraints | Fixed and prescribed displacements by masking | `normal displacement`, linear constraints, rigid bodies and joints | [constraints.md](constraints.md) |
+| Linear solve | Warp's CG, BiCGSTAB and GMRES with a Jacobi preconditioner | A stronger preconditioner or a direct solver on the device, which thin shells need; line search and quasi-Newton | [linear_solve.md](linear_solve.md) |
+| Steps | One static step with FEBio's time stepper | Dynamic analysis, several steps, activation by step | [dynamics.md](dynamics.md) |
+| Contact in the run | The contact draft's interface is planned to attach as a term | Its residual sign changed to FEBio's; contact points built from the model's surfaces; pair updates inside the Newton loop | [contact_in_run.md](contact_in_run.md) |
+| Sensitivity | Parameter gradients through one equilibrium solve; the solve as one step on a tape | History, dynamics, contact pairing, shape gradients | [sensitivity.md](sensitivity.md) |
+| Output | Displacement, stress, reaction force | The registry of FEBio plot variables | [output.md](output.md) |
+| Newton (the physics library) | The step is functional and state is separate, as Newton's solvers expect | A wrapper with Newton's `step` signature; nodal forces in, positions out | [run_path.md](run_path.md), section 6 |
+| Performance | CPU, double precision, for correctness | GPU runs and timing; single precision where it is adequate | [linear_solve.md](linear_solve.md), section 6 |
 
 Design shells, kept in view so that nothing built now closes them off: beam elements for device frames, a superelastic nitinol law for those beams, rigid bodies and joints, sliding and sticky contact.
 
@@ -107,7 +107,7 @@ Design shells, kept in view so that nothing built now closes them off: beam elem
 | Transcatheter pulmonary valve replacement | Six deployments (files 3598 to 3603), for example `RVOT1_TPV25.feb` | Two steps, tet4 device, penta6 vessel with uncoupled HGO, tri3 shell tubes, three contact pairs |
 | Patch and verification problems | Small inputs in `references/` | One feature each |
 
-The shared core every application needs: dynamic analysis, pressure, mass damping and the contact potential.
+The shared core both applications need: dynamic analysis, mass damping and the contact potential. Pressure is a valve load; TPVR file 3599 has none ([remaining_areas.md](remaining_areas.md), section 1).
 
 Checks so far compare with FEBio on the same input, in double precision on CPU: material points, single elements, small meshes, pressure, two materials in two domains, reaction forces, and the automatic time stepper. Figures are in the notes linked above. No application input runs end to end yet.
 
@@ -118,3 +118,4 @@ Checks so far compare with FEBio on the same input, in double precision on CPU: 
 3. [model.md](model.md), then [materials.md](materials.md) and [contact.md](contact.md).
 4. [run_path.md](run_path.md): the path through all of them on small cases.
 5. [verification.md](verification.md): how results are compared with FEBio.
+6. [remaining_areas.md](remaining_areas.md): what is left before the application inputs run, with one short note per area.
