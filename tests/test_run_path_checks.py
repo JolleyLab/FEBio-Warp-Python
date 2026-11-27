@@ -11,7 +11,7 @@ import numpy as np
 from warp_febio.io import read_feb
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
-DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")  # "cuda:0" runs these on a GPU
+DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
 SINGLE = os.path.join(ROOT, "references", "single_element")
 SMALL = os.path.join(ROOT, "references", "small_meshes")
 
@@ -22,6 +22,22 @@ try:
     HAVE_WARP = True
 except ImportError:
     HAVE_WARP = False
+
+# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
+# GPU). It becomes Warp's current device while this module's tests run, so
+# calls that do not name a device follow it.
+_device_scope = []
+
+
+def setUpModule():
+    if HAVE_WARP:
+        _device_scope.append(wp.ScopedDevice(DEVICE))
+        _device_scope[0].__enter__()
+
+
+def tearDownModule():
+    while _device_scope:
+        _device_scope.pop().__exit__(None, None, None)
 
 
 def febio_log(path, states, columns):
