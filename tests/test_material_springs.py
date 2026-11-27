@@ -6,6 +6,7 @@ FEBio run is in the verification draft (pull request 4), next to the reference
 it uses.
 """
 
+import os
 import pathlib
 import unittest
 
@@ -20,6 +21,21 @@ from warp_febio.materials.models.nonlinear_spring import (
     nonlinear_spring,
 )
 from warp_febio.materials.uniaxial import make_update_kernel
+
+# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
+# GPU). It becomes Warp's current device while this module's tests run, so
+# calls that do not name a device follow it.
+DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
+_device_scope = wp.ScopedDevice(DEVICE)
+
+
+def setUpModule():
+    _device_scope.__enter__()
+
+
+def tearDownModule():
+    _device_scope.__exit__(None, None, None)
+
 
 wp.config.quiet = True
 

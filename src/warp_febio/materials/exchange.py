@@ -101,7 +101,7 @@ def wrap(ptr, count, dtype, device="cpu"):
     return wp.array(ptr=ptr, shape=(count,), dtype=dtype, device=device)
 
 
-def evaluate_exchange(model, F, params, geometry=None, device="cpu", combined=None):
+def evaluate_exchange(model, F, params, geometry=None, device=None, combined=None):
     """Host convenience (FP64): Cauchy stress (n,3,3) and tangent (n,6,6).
 
     Outputs are written by the kernel directly into NumPy buffers allocated
@@ -111,7 +111,7 @@ def evaluate_exchange(model, F, params, geometry=None, device="cpu", combined=No
     n = len(F)
     g = model.pack_geometry(n, **(geometry or {}))
     mat66 = wp.types.matrix(shape=(6, 6), dtype=wp.float64)
-    if device == "cpu":
+    if wp.get_device(device).is_cpu:
         sigma = np.zeros((n, 3, 3))
         c = np.zeros((n, 6, 6))
         sigma_wp = wrap(sigma.ctypes.data, n, wp.mat33d)
@@ -132,6 +132,6 @@ def evaluate_exchange(model, F, params, geometry=None, device="cpu", combined=No
         outputs=[sigma_wp, c_wp, status],
         device=device,
     )
-    if device != "cpu":
+    if not wp.get_device(device).is_cpu:
         sigma, c = sigma_wp.numpy(), c_wp.numpy()
     return {"cauchy": sigma, "tangent": c, "status": status.numpy()}

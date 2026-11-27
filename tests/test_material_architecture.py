@@ -6,6 +6,7 @@ travel through the geometry vector, independently of any material axes, and that
 a mixture hands each child its own slice. It is not a tissue model.
 """
 
+import os
 import unittest
 from typing import Any
 
@@ -28,6 +29,20 @@ from warp_febio.materials.models.nitinol import (
 from warp_febio.materials.schedule import LoadCurve
 from warp_febio.materials.uniaxial import integrate, make_update_kernel
 from warp_febio.materials.volumetric import PRESSURE_MODELS, make_volumetric
+
+# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
+# GPU). It becomes Warp's current device while this module's tests run, so
+# calls that do not name a device follow it.
+DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
+_device_scope = wp.ScopedDevice(DEVICE)
+
+
+def setUpModule():
+    _device_scope.__enter__()
+
+
+def tearDownModule():
+    _device_scope.__exit__(None, None, None)
 
 
 # Test-only fiber model:  W = (ksi / 4) (I4 - 1)^2,  I4 = a0 . C a0.

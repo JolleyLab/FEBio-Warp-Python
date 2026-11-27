@@ -192,7 +192,7 @@ def geometry_gradient_error(model, F, params, geometry=None):
     return float(np.abs(from_tape - numeric).max() / scale)
 
 
-def check_model(model, params, closed_form=None, geometry=None, states=None, device="cpu"):
+def check_model(model, params, closed_form=None, geometry=None, states=None, device=None):
     """Return a dict of conformance metrics for one model and one parameter set.
 
     geometry: optional dict of named geometry fields, each of shape (size,),
@@ -276,7 +276,7 @@ def check_model(model, params, closed_form=None, geometry=None, states=None, dev
         metrics["tangent_vs_febio"] = _rel(spatial["tangent"], np.array([r[1] for r in ref]))
 
     # 8. Gradient with respect to the parameters, tape against central differences.
-    if device == "cpu":
+    with wp.ScopedDevice(device):
         gradient = parameter_gradient(model, F, params, geometry)
         # A parameter sitting on a bound of its admissible range cannot be
         # perturbed to both sides, so it is left out of the comparison.
