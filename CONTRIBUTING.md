@@ -132,14 +132,23 @@ Every contribution that changes numerical behavior needs evidence that it is cor
 Tests use `unittest` and live in `tests/`.
 
 ```bash
-# full suite
+# full suite, on CPU (the default)
 uv run -m unittest discover -s tests -v
+
+# the same suite on a GPU
+WARP_FEBIO_TEST_DEVICE=cuda:0 uv run -m unittest discover -s tests -v
+
+# CPU with CUDA hidden, which shows that nothing reaches the GPU
+CUDA_VISIBLE_DEVICES= uv run -m unittest discover -s tests -v
 
 # a subset
 uv run -m unittest discover -s tests -p 'test_material*.py' -v
 ```
 
-- Run kernel tests on CPU and, where available, on CUDA. Pass the device explicitly, through `wp.ScopedDevice(device)` or `device=device`, instead of relying on the default device.
+- Run kernel tests on CPU and, where available, on CUDA. Pass the device explicitly, through `wp.ScopedDevice(device)` or `device=device`, instead of relying on the default device. On a machine with a GPU, Warp's default device is `cuda:0`, so a test that relies on it runs on the GPU even in a CPU run.
+- `WARP_FEBIO_TEST_DEVICE` names the device the tests run on (`cpu` by default). Each test module that uses Warp reads it into `DEVICE`, makes it Warp's current device for the module (`wp.ScopedDevice(DEVICE)` entered in `setUpModule` and left in `tearDownModule`), and passes `device=DEVICE` where a call names a device. A test that compares CUDA with CPU on purpose names both devices.
+- Library functions take `device=None`, meaning Warp's current device, rather than `device="cpu"`, so that a `wp.ScopedDevice` takes effect.
+- To confirm that a run stayed on one device, look for `load on device` in the output: each Warp module load names its device.
 - When a test cannot run in an environment (no CUDA device, missing optional dependency), skip it with a `unittest` skip decorator so it shows up in the skip count. Do not leave it out silently.
 - Compare arrays with a stated tolerance, and choose the tolerance deliberately. For FEBio comparisons, record where the tolerance came from.
 - Never call `wp.clear_kernel_cache()` or `wp.clear_lto_cache()` from a test. It is unsafe when tests run in parallel.
