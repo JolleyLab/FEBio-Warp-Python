@@ -72,8 +72,11 @@ Data moves host to device once, when a `Model` is compiled, and device to host a
 The mesh is bulk data and becomes arrays. Every other feature is kept as a `Record`: a small tree with the tag, attributes, value and children exactly as in the file, with numbers parsed.
 
 ```python
-Record(tag="material", attrs={"id": "1", "name": "Valve", "type": "isotropic Lee-Sacks"},
-       children=[Record("density", value=1e-9), Record("c0", value=...), ...])
+Record(
+    tag="material",
+    attrs={"id": "1", "name": "Valve", "type": "isotropic Lee-Sacks"},
+    children=[Record("density", value=1e-9), Record("c0", value=...), ...],
+)
 ```
 
 A record also keeps the text as it stood in the file and writes it back while the value is unchanged. It loses nothing, which is what lets every input in section 7 read and write back equal, including features and modules FEBio-Warp will not implement for a long time. The cost is that a record is not validated when it is read: a misspelled parameter is caught later, by the coverage report. Whether features should be typed classes in the model is question 1.
@@ -92,17 +95,17 @@ A record also keeps the text as it stood in the file and writes it back while th
 ```python
 from warp_febio.io import read_feb, write_feb, write_xplt
 
-model = read_feb("valve.feb")                        # reader fills the model
+model = read_feb("valve.feb")  # reader fills the model
 
-model.mesh.nodes                                     # (N, 3) float64
-model.mesh.block("Part3").connectivity               # (E, 4) int32, zero-based
-model.mesh.node_set_indices("@surface:Pressure1")    # FEBio's set references resolve here
-model.material("Valve").value("c0")                  # by FEBio tag
-model.load_controller(1).value(0.5)                  # FEBio's interpolation
-model.plot_variables()                               # what the file asks to be written
+model.mesh.nodes  # (N, 3) float64
+model.mesh.block("Part3").connectivity  # (E, 4) int32, zero-based
+model.mesh.node_set_indices("@surface:Pressure1")  # FEBio's set references resolve here
+model.material("Valve").value("c0")  # by FEBio tag
+model.load_controller(1).value(0.5)  # FEBio's interpolation
+model.plot_variables()  # what the file asks to be written
 
-write_feb(model, "valve_copy.feb")                   # a file FEBio runs
-write_xplt(model, results, "valve.xplt")             # results, through the model's IDs and sets
+write_feb(model, "valve_copy.feb")  # a file FEBio runs
+write_xplt(model, results, "valve.xplt")  # results, through the model's IDs and sets
 ```
 
 The model layer imports only NumPy, so it is the attachment point for Slicer, for tests, and later for other platforms, without Warp or a GPU.

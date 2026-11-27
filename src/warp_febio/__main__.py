@@ -19,9 +19,7 @@ def main(argv=None):
     for name in ("inspect", "run"):
         p = sub.add_parser(name)
         p.add_argument("input")
-        p.add_argument(
-            "--materials", choices=("minimal", "interface"), default="minimal"
-        )
+        p.add_argument("--materials", choices=("minimal", "interface"), default="minimal")
         if name == "run":
             p.add_argument(
                 "-o",

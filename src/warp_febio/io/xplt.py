@@ -250,17 +250,10 @@ class PlotFile:
                     continue
                 size = VAR_SIZE[item.type]
                 if category == "nodal":
-                    return np.stack(
-                        [s.data[category][k][0].reshape(-1, size) for s in self.states]
-                    )
+                    return np.stack([s.data[category][k][0].reshape(-1, size) for s in self.states])
                 if category == "domain":
                     return [
-                        np.stack(
-                            [
-                                s.data[category][k][d + 1].reshape(-1, size)
-                                for s in self.states
-                            ]
-                        )
+                        np.stack([s.data[category][k][d + 1].reshape(-1, size) for s in self.states])
                         for d in range(len(self.domains))
                         if (d + 1) in self.states[0].data[category][k]
                     ]
@@ -288,8 +281,7 @@ def _chunks(buf, start, end):
         cid, size = struct.unpack_from("<II", buf, pos)
         if pos + 8 + size > end:
             raise ValueError(
-                f"plot file is truncated or corrupt: chunk 0x{cid:08X} at byte "
-                f"{pos} runs past the end of its section"
+                f"plot file is truncated or corrupt: chunk 0x{cid:08X} at byte {pos} runs past the end of its section"
             )
         yield cid, pos + 8, pos + 8 + size
         pos += 8 + size
@@ -353,27 +345,20 @@ def read_xplt(path) -> PlotFile:
                     name=_fixed_string(_first(item, PLT_DIC_ITEM_NAME)),
                     type=_int(_first(item, PLT_DIC_ITEM_TYPE)),
                     fmt=_int(_first(item, PLT_DIC_ITEM_FMT)),
-                    array_size=_int(
-                        _first(item, PLT_DIC_ITEM_ARRAYSIZE, struct.pack("<i", 0))
-                    ),
+                    array_size=_int(_first(item, PLT_DIC_ITEM_ARRAYSIZE, struct.pack("<i", 0))),
                     units=_fixed_string(units) if units is not None else None,
                 )
             )
         pf.dictionary[_CATEGORY[cid]] = items
 
     mesh = _first(top, PLT_MESH)
-    coords = np.frombuffer(
-        _first(_first(mesh, PLT_NODE_SECTION), PLT_NODE_COORDS), dtype="<f4"
-    ).reshape(-1, 4)
+    coords = np.frombuffer(_first(_first(mesh, PLT_NODE_SECTION), PLT_NODE_COORDS), dtype="<f4").reshape(-1, 4)
     pf.node_ids = coords[:, 0].copy().view("<i4")
     pf.nodes = coords[:, 1:].copy()
     for dom in _all(_first(mesh, PLT_DOMAIN_SECTION), PLT_DOMAIN):
         hdr = _first(dom, PLT_DOMAIN_HDR)
         name = _first(hdr, PLT_DOM_NAME)
-        elems = [
-            np.frombuffer(e, dtype="<i4")
-            for e in _all(_first(dom, PLT_DOM_ELEM_LIST), PLT_ELEMENT)
-        ]
+        elems = [np.frombuffer(e, dtype="<i4") for e in _all(_first(dom, PLT_DOM_ELEM_LIST), PLT_ELEMENT)]
         table = np.vstack(elems) if elems else np.zeros((0, 1), np.int32)
         pf.domains.append(
             PlotDomain(
@@ -385,16 +370,11 @@ def read_xplt(path) -> PlotFile:
             )
         )
 
-    def surfaces(
-        section, item, hdr_tag, id_tag, size_tag, name_tag, max_tag, list_tag, face_tag
-    ):
+    def surfaces(section, item, hdr_tag, id_tag, size_tag, name_tag, max_tag, list_tag, face_tag):
         out = []
         for s in _all(_first(mesh, section, []), item):
             hdr = _first(s, hdr_tag)
-            faces = [
-                np.frombuffer(f, dtype="<i4")
-                for f in _all(_first(s, list_tag), face_tag)
-            ]
+            faces = [np.frombuffer(f, dtype="<i4") for f in _all(_first(s, list_tag), face_tag)]
             out.append(
                 PlotSurface(
                     id=_int(_first(hdr, id_tag)),
@@ -424,9 +404,7 @@ def read_xplt(path) -> PlotFile:
              np.frombuffer(_first(s, PLT_ELEMENTSET_LIST, b""), dtype="<i4").copy())
         )  # fmt: skip
     for p in _all(_first(mesh, PLT_PARTS_SECTION, []), PLT_PART):
-        pf.parts.append(
-            (_int(_first(p, PLT_PART_ID)), _fixed_string(_first(p, PLT_PART_NAME)))
-        )
+        pf.parts.append((_int(_first(p, PLT_PART_ID)), _fixed_string(_first(p, PLT_PART_NAME))))
 
     for st in _all(top, PLT_STATE):
         hdr = _first(st, PLT_STATE_HEADER)
@@ -436,9 +414,7 @@ def read_xplt(path) -> PlotFile:
         )
         ms = _first(st, PLT_MESH_STATE)
         if ms is not None:
-            state.element_state = np.frombuffer(
-                _first(ms, PLT_ELEMENT_STATE, b""), dtype="<u4"
-            ).copy()
+            state.element_state = np.frombuffer(_first(ms, PLT_ELEMENT_STATE, b""), dtype="<u4").copy()
         for cid, sub in _first(st, PLT_STATE_DATA, []):
             per_var = []
             for var in _all(sub, PLT_STATE_VARIABLE):
@@ -542,9 +518,7 @@ def plot_file_from_results(model: Model, results: Results) -> PlotFile:
                 faces[i, 0] = i + 1
                 faces[i, 1] = len(f)
                 faces[i, 2 : 2 + len(f)] = f
-            target.append(
-                PlotSurface(id=k + 1, name=name, max_nodes=width, faces=faces)
-            )
+            target.append(PlotSurface(id=k + 1, name=name, max_nodes=width, faces=faces))
     # Node sets, in FEBio's order (checked against FEBio 4.9 and 4.13 files):
     # one per <Nodes> block, then the named node sets, then one per edge that
     # a boundary condition uses as "@edge:Name".
@@ -567,9 +541,7 @@ def plot_file_from_results(model: Model, results: Results) -> PlotFile:
     # Element status flags: 1 is an active element (FEElement::status).
     count = sum(b.count for b in mesh.blocks)
     for s in results.states:
-        state = PlotState(
-            time=s.time, status=0, element_state=np.ones(count, np.uint32)
-        )
+        state = PlotState(time=s.time, status=0, element_state=np.ones(count, np.uint32))
         for category, items in pf.dictionary.items():
             per_var = []
             for item in items:
@@ -577,10 +549,7 @@ def plot_file_from_results(model: Model, results: Results) -> PlotFile:
                     per_var.append({0: s.displacement.astype(np.float32).ravel()})
                 elif item.name == "stress":
                     per_var.append(
-                        {
-                            d + 1: s.stress[b.name].astype(np.float32).ravel()
-                            for d, b in enumerate(mesh.blocks)
-                        }
+                        {d + 1: s.stress[b.name].astype(np.float32).ravel() for d, b in enumerate(mesh.blocks)}
                     )
             state.data[category] = per_var
         pf.states.append(state)

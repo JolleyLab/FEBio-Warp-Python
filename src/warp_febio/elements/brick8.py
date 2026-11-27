@@ -191,13 +191,8 @@ def make_brick_kernel(material):
                             val = wp.float64(0.0)
                             for m in range(3):
                                 for n in range(3):
-                                    val = (
-                                        val
-                                        + gi[m] * c[voigt(a, m), voigt(b, n)] * gj[n]
-                                    )
-                            ke[e, 3 * i + a, 3 * j + b] = (
-                                ke[e, 3 * i + a, 3 * j + b] + val * w
-                            )
+                                    val = val + gi[m] * c[voigt(a, m), voigt(b, n)] * gj[n]
+                            ke[e, 3 * i + a, 3 * j + b] = ke[e, 3 * i + a, 3 * j + b] + val * w
                         ke[e, 3 * i + a, 3 * j + a] = ke[e, 3 * i + a, 3 * j + a] + kg
 
     kernel = wp.kernel(brick, module="unique")

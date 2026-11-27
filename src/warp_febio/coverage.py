@@ -51,10 +51,7 @@ class CoverageReport:
         widths = [max(len(r[i]) for r in rows) for i in range(4)]
         lines = []
         for k, r in enumerate(rows):
-            lines.append(
-                "  ".join(r[i].ljust(widths[i]) for i in range(4))
-                + ("  " + r[4] if r[4] else "")
-            )
+            lines.append("  ".join(r[i].ljust(widths[i]) for i in range(4)) + ("  " + r[4] if r[4] else ""))
             if k == 0:
                 lines.append("  ".join("-" * w for w in widths))
         verdict = "runnable" if self.runnable else "not yet runnable"
@@ -67,9 +64,7 @@ class CoverageError(RuntimeError):
     def __init__(self, report: CoverageReport):
         self.report = report
         missing = ", ".join(f"{e.category} {e.febio_name!r}" for e in report.missing())
-        super().__init__(
-            f"model is not yet runnable in FEBio-Warp: {missing}\n\n{report.table()}"
-        )
+        super().__init__(f"model is not yet runnable in FEBio-Warp: {missing}\n\n{report.table()}")
 
 
 # Control settings and what this draft does with them. Anything not listed is

@@ -84,11 +84,7 @@ def evaluate(cm: CompiledModel, state: State, tangent: bool = True):
         # FEBio would throw NegativeJacobian.
         worst = int(d.status.numpy().max()) if d.count else OK
         if worst != OK:
-            kind = (
-                "negative Jacobian"
-                if worst == NEGATIVE_JACOBIAN
-                else "non-finite stress"
-            )
+            kind = "negative Jacobian" if worst == NEGATIVE_JACOBIAN else "non-finite stress"
             raise SolveError(f"{kind} in part {d.name!r}")
         wp.launch(
             scatter_internal_force,
@@ -112,9 +108,7 @@ def evaluate(cm: CompiledModel, state: State, tangent: bool = True):
 def tangent_matrix(cm: CompiledModel, triplets):
     """The unconstrained tangent as a warp.sparse BSR matrix (scalar blocks)."""
     rows, cols, vals = triplets
-    return warp.sparse.bsr_from_triplets(
-        cm.ndof, cm.ndof, rows, cols, vals, prune_numerical_zeros=False
-    )
+    return warp.sparse.bsr_from_triplets(cm.ndof, cm.ndof, rows, cols, vals, prune_numerical_zeros=False)
 
 
 @wp.kernel
@@ -160,10 +154,7 @@ def _mask(x: wp.array(dtype=wp.float64), constrained: wp.array(dtype=wp.int32)):
 def constrained_matrix(cm: CompiledModel, triplets, constrained):
     rows, cols, vals = triplets
     n = rows.shape[0]
-    out = [
-        wp.zeros(n + cm.ndof, dtype=t, device=cm.device)
-        for t in (wp.int32, wp.int32, wp.float64)
-    ]
+    out = [wp.zeros(n + cm.ndof, dtype=t, device=cm.device) for t in (wp.int32, wp.int32, wp.float64)]
     wp.launch(
         _constrain_triplets,
         dim=n + cm.ndof,
@@ -171,9 +162,7 @@ def constrained_matrix(cm: CompiledModel, triplets, constrained):
         outputs=out,
         device=cm.device,
     )
-    return warp.sparse.bsr_from_triplets(
-        cm.ndof, cm.ndof, *out, prune_numerical_zeros=False
-    )
+    return warp.sparse.bsr_from_triplets(cm.ndof, cm.ndof, *out, prune_numerical_zeros=False)
 
 
 def dense(A) -> np.ndarray:
@@ -209,13 +198,9 @@ def solve_linear(A, b, method: str, tol: float = 1e-13):
         return x, 0
     M = warp.optim.linear.preconditioner(A, "diag")
     maxiter = max(200, 20 * n)
-    iterations, error, atol = solver(
-        A, b, x, tol=tol, maxiter=maxiter, M=M, check_every=1, use_cuda_graph=False
-    )
+    iterations, error, atol = solver(A, b, x, tol=tol, maxiter=maxiter, M=M, check_every=1, use_cuda_graph=False)
     if not np.isfinite(error) or error > max(atol, 10 * tol * bnorm):
-        raise SolveError(
-            f"linear solver {method} stopped at residual {error:.3e} after {iterations} iterations"
-        )
+        raise SolveError(f"linear solver {method} stopped at residual {error:.3e} after {iterations} iterations")
     return x, int(iterations)
 
 
@@ -289,9 +274,7 @@ class TimeStepController:
 
     def auto(self, niter, time, dt):
         dtn = max(self.dtp, self.dtmin)
-        dtmax = (
-            self.must_curve.value(time) if self.must_curve is not None else self.dtmax
-        )
+        dtmax = self.must_curve.value(time) if self.must_curve is not None else self.dtmax
         if self.dtforce:
             dtn = dtmax
         elif niter > 0:
@@ -370,9 +353,7 @@ def solve_step(cm, u0, time, settings, linear_solver, say):
     Ui = np.zeros(cm.ndof)  # total increment of the free equations in this step
     free = cm.free
     for it in range(max_refs + 1):
-        residual, triplets = evaluate(
-            cm, State(time, wp.array(u, dtype=wp.float64, device=device))
-        )
+        residual, triplets = evaluate(cm, State(time, wp.array(u, dtype=wp.float64, device=device)))
         rhs = residual
         if it == 0 and len(pdofs):
             # FEBio moves K * (prescribed increment) to the right-hand side in
@@ -395,9 +376,7 @@ def solve_step(cm, u0, time, settings, linear_solver, say):
             u[pdofs] = pvals
         u[free] += ui[free]
         Ui[free] += ui[free]
-        R1 = evaluate(
-            cm, State(time, wp.array(u, dtype=wp.float64, device=device)), tangent=False
-        )[0].numpy()[free]
+        R1 = evaluate(cm, State(time, wp.array(u, dtype=wp.float64, device=device)), tangent=False)[0].numpy()[free]
         uf = ui[free]
         normR1, normu, normU, normE1 = R1 @ R1, uf @ uf, Ui @ Ui, abs(uf @ R1)
         if not (np.isfinite(normR1) and np.isfinite(normu)):
@@ -431,11 +410,7 @@ def run(cm: CompiledModel, log=None, linear_solver: str = "cg") -> Results:
     model = cm.model
     control = model.steps[0].control
     solver = control.child("solver")
-    get = (
-        (lambda tag, default: solver.get(tag, default))
-        if solver is not None
-        else (lambda tag, default: default)
-    )
+    get = (lambda tag, default: solver.get(tag, default)) if solver is not None else (lambda tag, default: default)
     # Defaults from the FENewtonSolver and FESolidSolver2 constructors.
     settings = (
         float(get("dtol", 0.001)),
@@ -450,9 +425,7 @@ def run(cm: CompiledModel, log=None, linear_solver: str = "cg") -> Results:
     eps = tend * 1e-12
     must_only = str(control.get("plot_level", "PLOT_MAJOR_ITRS")) == "PLOT_MUST_POINTS"
     stepper = control.child("time_stepper")
-    controller = (
-        TimeStepController(stepper, model, dt0, tend) if stepper is not None else None
-    )
+    controller = TimeStepController(stepper, model, dt0, tend) if stepper is not None else None
 
     state = cm.state()
     results = Results()
@@ -469,15 +442,11 @@ def run(cm: CompiledModel, log=None, linear_solver: str = "cg") -> Results:
     while tend - time > eps:
         new_time = min(time + dt, tend)
         try:
-            u_new, iterations = solve_step(
-                cm, u, new_time, settings, linear_solver, say
-            )
+            u_new, iterations = solve_step(cm, u, new_time, settings, linear_solver, say)
         except SolveError as err:
             if controller is not None and controller.retries < controller.max_retries:
                 dt = controller.retry(dt)
-                say(
-                    f"step to time {new_time:g} failed ({err}); retrying with dt {dt:g}"
-                )
+                say(f"step to time {new_time:g} failed ({err}); retrying with dt {dt:g}")
                 continue
             raise
         at_must = controller.at_must if controller is not None else True

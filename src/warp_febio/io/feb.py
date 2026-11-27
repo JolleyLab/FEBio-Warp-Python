@@ -196,9 +196,7 @@ def _note_attributes(elem, expected, where, model):
     """
     extra = sorted(set(elem.attrib) - set(expected))
     if extra:
-        model.issues.append(
-            Issue(where, f"attribute(s) {', '.join(extra)} not read; not written back")
-        )
+        model.issues.append(Issue(where, f"attribute(s) {', '.join(extra)} not read; not written back"))
 
 
 def _note_row_attributes(elems, where, model):
@@ -206,11 +204,7 @@ def _note_row_attributes(elems, where, model):
     if any(len(e.attrib) != 1 for e in elems):
         extra = sorted({k for e in elems for k in e.attrib} - {"id"})
         if extra:
-            model.issues.append(
-                Issue(
-                    where, f"attribute(s) {', '.join(extra)} not read; not written back"
-                )
-            )
+            model.issues.append(Issue(where, f"attribute(s) {', '.join(extra)} not read; not written back"))
 
 
 # ---------------------------------------------------------------------------
@@ -234,8 +228,7 @@ def _read_root(root) -> Model:
     version = root.get("version")
     if version != SUPPORTED_SPEC:
         raise FebFormatError(
-            f"febio_spec version {version!r}: only {SUPPORTED_SPEC} is read. "
-            "FEBio Studio can convert older files."
+            f"febio_spec version {version!r}: only {SUPPORTED_SPEC} is read. FEBio Studio can convert older files."
         )
     model = Model(spec_version=version)
     top_control = None
@@ -245,9 +238,7 @@ def _read_root(root) -> Model:
             # FEBio can pull a section from another file. That is not followed
             # here, so it is reported and the model cannot run.
             model.other_sections.append(_record(sec))
-            model.issues.append(
-                Issue(tag, "refers to another file; included files are not read")
-            )
+            model.issues.append(Issue(tag, "refers to another file; included files are not read"))
             continue
         if tag in _SECTIONS_WITHOUT_ATTRIBUTES:
             _note_attributes(sec, (), tag, model)
@@ -293,14 +284,10 @@ def _read_root(root) -> Model:
             model.other_sections.append(_record(sec))
         else:
             model.other_sections.append(_record(sec))
-            model.issues.append(
-                Issue(tag, "section not known to the reader; carried as written")
-            )
+            model.issues.append(Issue(tag, "section not known to the reader; carried as written"))
     if top_control is not None:
         if model.steps:
-            model.issues.append(
-                Issue("Control", "top-level Control together with Step: not read")
-            )
+            model.issues.append(Issue("Control", "top-level Control together with Step: not read"))
         else:
             model.steps.append(Step(id=1, name="Step1", control=top_control))
     return model
@@ -312,11 +299,7 @@ def _read_materials(sec, model):
             model.issues.append(Issue(f"Material/{m.tag}", "not a <material>; skipped"))
             continue
         rec = _record(m)
-        model.materials.append(
-            Material(
-                id=int(m.get("id")), name=m.get("name"), type=m.get("type"), params=rec
-            )
-        )
+        model.materials.append(Material(id=int(m.get("id")), name=m.get("name"), type=m.get("type"), params=rec))
 
 
 def _read_mesh(sec, model):
@@ -329,9 +312,7 @@ def _read_mesh(sec, model):
             nodes = list(item)
             _note_attributes(item, ("name",), "Mesh/Nodes", model)
             _note_row_attributes(nodes, "Mesh/Nodes/node", model)
-            mesh.node_blocks.append(
-                (item.get("name"), sum(len(c) for c in coords), len(nodes))
-            )
+            mesh.node_blocks.append((item.get("name"), sum(len(c) for c in coords), len(nodes)))
             if nodes:
                 coords.append(_rows(nodes, np.float64))
                 node_ids.append(_ids(nodes))
@@ -361,14 +342,9 @@ def _read_mesh(sec, model):
         where = f"Mesh/Elements {item.get('name')!r}"
         _note_row_attributes(elems, where + "/elem", model)
         conn = _rows(elems, np.int64)
-        if (
-            etype in ELEMENT_NODES
-            and conn.size
-            and conn.shape[1] != ELEMENT_NODES[etype]
-        ):
+        if etype in ELEMENT_NODES and conn.size and conn.shape[1] != ELEMENT_NODES[etype]:
             raise FebFormatError(
-                f"Elements {item.get('name')!r}: {etype} needs "
-                f"{ELEMENT_NODES[etype]} nodes, found {conn.shape[1]}"
+                f"Elements {item.get('name')!r}: {etype} needs {ELEMENT_NODES[etype]} nodes, found {conn.shape[1]}"
             )
         mesh.blocks.append(
             ElementBlock(
@@ -376,32 +352,24 @@ def _read_mesh(sec, model):
                 febio_type=etype,
                 connectivity=_node_index(mesh, conn.ravel(), where).reshape(conn.shape),
                 ids=_ids(elems),
-                attrs={
-                    k: v for k, v in item.attrib.items() if k not in ("type", "name")
-                },
+                attrs={k: v for k, v in item.attrib.items() if k not in ("type", "name")},
             )
         )
     for item in raw_sets:
         _note_set(item, mesh.node_sets, model)
-        mesh.node_sets[item.get("name")] = _node_index(
-            mesh, _id_list(item, "n"), f"Mesh/NodeSet {item.get('name')!r}"
-        )
+        mesh.node_sets[item.get("name")] = _node_index(mesh, _id_list(item, "n"), f"Mesh/NodeSet {item.get('name')!r}")
     for item in raw_surfaces:
         _note_set(item, mesh.surfaces, model)
         facets = list(item)
         _note_row_attributes(facets, f"Mesh/Surface {item.get('name')!r}/facet", model)
         for f in facets:
             if f.tag not in FACET_NODES:
-                model.issues.append(
-                    Issue(f"Mesh/Surface/{f.tag}", "facet type not known to the reader")
-                )
+                model.issues.append(Issue(f"Mesh/Surface/{f.tag}", "facet type not known to the reader"))
         # Convert all facets of the surface in one lookup.
         lists = [np.array(f.text.split(","), dtype=np.int64) for f in facets]
         sizes = [len(x) for x in lists]
         flat = (
-            _node_index(
-                mesh, np.concatenate(lists), f"Mesh/Surface {item.get('name')!r}"
-            )
+            _node_index(mesh, np.concatenate(lists), f"Mesh/Surface {item.get('name')!r}")
             if lists
             else np.zeros(0, np.int32)
         )
@@ -418,9 +386,7 @@ def _node_index(mesh, node_ids, where):
     try:
         return mesh.node_index(node_ids)
     except KeyError:
-        raise FebFormatError(
-            f"{where}: refers to a node ID that is not in the mesh"
-        ) from None
+        raise FebFormatError(f"{where}: refers to a node ID that is not in the mesh") from None
 
 
 def _note_set(item, existing, model):
@@ -430,9 +396,7 @@ def _note_set(item, existing, model):
     where = f"Mesh/{item.tag} {item.get('name')!r}"
     _note_attributes(item, ("name",), where, model)
     if item.get("name") in existing:
-        model.issues.append(
-            Issue(where, "name used more than once; only the last definition is kept")
-        )
+        model.issues.append(Issue(where, "name used more than once; only the last definition is kept"))
 
 
 def _id_list(item, child_tag):
@@ -502,9 +466,7 @@ def _read_load_data(sec, model):
             else:
                 rec.children.append(_record(c))
         model.load_controllers.append(
-            LoadController(
-                id=int(lc.get("id")), type=lc.get("type"), params=rec, points=points
-            )
+            LoadController(id=int(lc.get("id")), type=lc.get("type"), params=rec, points=points)
         )
 
 
@@ -590,11 +552,7 @@ def write_feb(model: Model, path) -> None:
             for c in lc.params.children:
                 if c.tag == "points":
                     pe = ET.SubElement(e, "points", c.attrs)
-                    for row in (
-                        np.atleast_2d(c.value)
-                        if c.value is not None and len(c.value)
-                        else []
-                    ):
+                    for row in np.atleast_2d(c.value) if c.value is not None and len(c.value) else []:
                         ET.SubElement(pe, "pt").text = _format_value(row)
                 else:
                     e.append(_element(c))
@@ -631,36 +589,24 @@ def _mesh_element(mesh: Mesh):
     for name, start, count in mesh.node_blocks:
         e = ET.SubElement(sec, "Nodes", {"name": name} if name else {})
         for i in range(start, start + count):
-            ET.SubElement(e, "node", {"id": str(int(mesh.node_ids[i]))}).text = (
-                _format_value(mesh.nodes[i])
-            )
+            ET.SubElement(e, "node", {"id": str(int(mesh.node_ids[i]))}).text = _format_value(mesh.nodes[i])
     for b in mesh.blocks:
-        e = ET.SubElement(
-            sec, "Elements", {"type": b.febio_type, "name": b.name, **b.attrs}
-        )
+        e = ET.SubElement(sec, "Elements", {"type": b.febio_type, "name": b.name, **b.attrs})
         ids = mesh.node_ids[b.connectivity]
         for eid, row in zip(b.ids, ids):
-            ET.SubElement(e, "elem", {"id": str(int(eid))}).text = ",".join(
-                str(int(n)) for n in row
-            )
+            ET.SubElement(e, "elem", {"id": str(int(eid))}).text = ",".join(str(int(n)) for n in row)
     # Edge items sit between Elements and NodeSet in FEBio Studio's output.
     for r in mesh.other:
         if r.tag == "Edge":
             sec.append(_element(r))
     for name, idx in mesh.node_sets.items():
-        ET.SubElement(sec, "NodeSet", {"name": name}).text = ",".join(
-            str(int(n)) for n in mesh.node_ids[idx]
-        )
+        ET.SubElement(sec, "NodeSet", {"name": name}).text = ",".join(str(int(n)) for n in mesh.node_ids[idx])
     for name, s in mesh.surfaces.items():
         e = ET.SubElement(sec, "Surface", {"name": name})
         for fid, ftype, f in zip(s.ids, s.facet_types, s.facets):
-            ET.SubElement(e, ftype, {"id": str(int(fid))}).text = ",".join(
-                str(int(n)) for n in mesh.node_ids[f]
-            )
+            ET.SubElement(e, ftype, {"id": str(int(fid))}).text = ",".join(str(int(n)) for n in mesh.node_ids[f])
     for name, ids in mesh.element_sets.items():
-        ET.SubElement(sec, "ElementSet", {"name": name}).text = ",".join(
-            str(int(n)) for n in ids
-        )
+        ET.SubElement(sec, "ElementSet", {"name": name}).text = ",".join(str(int(n)) for n in ids)
     for r in mesh.other:
         if r.tag != "Edge":
             sec.append(_element(r))

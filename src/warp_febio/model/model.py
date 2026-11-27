@@ -109,19 +109,12 @@ class Record:
 
     def equals(self, other: "Record") -> bool:
         """Deep equality, with arrays compared by value."""
-        if (
-            self.tag != other.tag
-            or self.attrs != other.attrs
-            or len(self.children) != len(other.children)
-        ):
+        if self.tag != other.tag or self.attrs != other.attrs or len(self.children) != len(other.children):
             return False
         a, b = self.value, other.value
         if isinstance(a, np.ndarray) or isinstance(b, np.ndarray):
             if not (
-                isinstance(a, np.ndarray)
-                and isinstance(b, np.ndarray)
-                and a.shape == b.shape
-                and np.array_equal(a, b)
+                isinstance(a, np.ndarray) and isinstance(b, np.ndarray) and a.shape == b.shape and np.array_equal(a, b)
             ):
                 return False
         elif a != b:
@@ -167,9 +160,7 @@ class Surface:
 class Mesh:
     """Nodes, element blocks and named sets. FEBio counterpart: FEMesh."""
 
-    nodes: np.ndarray = field(
-        default_factory=lambda: np.zeros((0, 3))
-    )  # (N, 3) float64
+    nodes: np.ndarray = field(default_factory=lambda: np.zeros((0, 3)))  # (N, 3) float64
     node_ids: np.ndarray = field(default_factory=lambda: np.zeros(0, np.int32))  # (N,)
     # The <Nodes name="..."> blocks, as (name, first index, count), so the
     # writer can reproduce them.
@@ -366,9 +357,7 @@ class Model:
     materials: list = field(default_factory=list)  # Material
     mesh: Mesh = field(default_factory=Mesh)
     domains: list = field(default_factory=list)  # Domain
-    mesh_data: list = field(
-        default_factory=list
-    )  # Records (ElementData, NodeData, ...)
+    mesh_data: list = field(default_factory=list)  # Records (ElementData, NodeData, ...)
     boundary: list = field(default_factory=list)  # Records (tag "bc"), all steps
     loads: list = field(default_factory=list)  # Records, all steps
     contact: list = field(default_factory=list)  # Records, all steps
@@ -417,11 +406,7 @@ class Model:
 
     def element_data(self, data_type: str, block_name: str) -> Optional[Record]:
         for r in self.mesh_data:
-            if (
-                r.tag == "ElementData"
-                and r.attrs.get("type") == data_type
-                and r.attrs.get("elem_set") == block_name
-            ):
+            if r.tag == "ElementData" and r.attrs.get("type") == data_type and r.attrs.get("elem_set") == block_name:
                 return r
         return None
 
@@ -461,9 +446,7 @@ class Model:
                 return False
         for k in a.surfaces:
             s, t = a.surfaces[k], b.surfaces[k]
-            if s.facet_types != t.facet_types or not all(
-                np.array_equal(p, q) for p, q in zip(s.facets, t.facets)
-            ):
+            if s.facet_types != t.facet_types or not all(np.array_equal(p, q) for p, q in zip(s.facets, t.facets)):
                 return False
 
         def recs(p, q):
@@ -472,14 +455,11 @@ class Model:
         def by_tag(p, q):
             tags = [r.tag for r in p]
             return sorted(tags) == sorted(r.tag for r in q) and all(
-                recs([r for r in p if r.tag == t], [r for r in q if r.tag == t])
-                for t in set(tags)
+                recs([r for r in p if r.tag == t], [r for r in q if r.tag == t]) for t in set(tags)
             )
 
         def opt(p, q):
-            return (p is None and q is None) or (
-                p is not None and q is not None and p.equals(q)
-            )
+            return (p is None and q is None) or (p is not None and q is not None and p.equals(q))
 
         if not (
             self.spec_version == other.spec_version
@@ -504,9 +484,7 @@ class Model:
         ):
             return False
         for x, y in zip(self.materials, other.materials):
-            if (x.id, x.name, x.type) != (y.id, y.name, y.type) or not x.params.equals(
-                y.params
-            ):
+            if (x.id, x.name, x.type) != (y.id, y.name, y.type) or not x.params.equals(y.params):
                 return False
         for x, y in zip(self.domains, other.domains):
             if (x.kind, x.name, x.material) != (
