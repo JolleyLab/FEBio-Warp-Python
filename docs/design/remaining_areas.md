@@ -140,7 +140,7 @@ Running the suite problems named above needs three small load terms the run path
 
 ## 5. Decisions, by who is best placed to make them
 
-A selection. Every decision has an ID and sits in a table in its note with the options and what is proposed.
+A selection. Every decision has an ID and sits in a table in its note with the options and what is proposed. This includes the notes of the earlier pull requests (M model and I/O, T materials, N contact law, V verification, R run path).
 
 **Steve and Jeff (formulation and fidelity to FEBio)**
 
@@ -153,6 +153,12 @@ A selection. Every decision has an ID and sits in a table in its note with the o
 | O1 | How suite problems are compared: plot file, or a copy with log data added | [output.md](output.md#5-decision-points) |
 | E1 | Quad shell formulation for valves | [elements.md](elements.md#7-decision-points) |
 | S2 | The exact-tangent contract for every term | [sensitivity.md](sensitivity.md#6-decision-points) |
+| R1, R2, R3 | Contract v0: unknowns by (node, variable), one term contract, FEBio's residual sign | [run_path.md](run_path.md#12-decision-points) |
+| M1, M2 | Features as generic records or typed classes; where FEBio's parameter defaults come from | [model.md](model.md#9-decision-points) |
+| T1 to T6 | Material trees composed before compilation, fiber geometry, fixed options, Lee-Sacks ranges, HGO at k2 = 0, the material-point reference | [materials.md](materials.md#decision-points) |
+| T8, T14 | Uncoupled or coupled HGO for the vessel wall; the true tangent beside `tangent_scale` | [materials.md](materials.md#decision-points) |
+| N1, N2 | Pair multiplicity in self-contact; how `kc` is specified with more than one pair class | [contact.md](contact.md#decision-points) |
+| V1, V2 | The FEBio build references are pinned to; suite inputs referenced by commit, not copied | [verification.md](verification.md#decision-points) |
 
 **Warp team (device-side structure and differentiation)**
 
@@ -165,6 +171,10 @@ A selection. Every decision has an ID and sits in a table in its note with the o
 | K2 | Contact blocks in their own matrix | [contact_in_run.md](contact_in_run.md#7-decision-points) |
 | E2 | Whether shells belong in `warp.fem` | [elements.md](elements.md#7-decision-points) |
 | S9 | A nodal-force term as the port to Newton, the physics library | [sensitivity.md](sensitivity.md#6-decision-points) |
+| M3, M4 | Precision where a model meets Newton; elements Newton does not have | [model.md](model.md#9-decision-points) |
+| T10 to T13 | How kernels are grouped and shipped, precision by domain, `warp.fem` for nonlinear solids, shells | [materials.md](materials.md#decision-points) |
+| R5, R6 | Running the forward solve without recording it; a direct solver or stronger preconditioner for shells | [run_path.md](run_path.md#12-decision-points) |
+| N3, N7 | Integration weights where exact derivatives matter; precision of contact queries and kernels | [contact.md](contact.md#decision-points) |
 
 **Ryan (solvers and assembly)**
 
@@ -172,6 +182,13 @@ A selection. Every decision has an ID and sits in a table in its note with the o
 | --- | --- | --- |
 | L2, L4 | Solver choice, and indefinite tangents from slack chords and contact | [linear_solve.md](linear_solve.md#7-decision-points) |
 | K2 | One operator or a summed matrix for structure and contact | [contact_in_run.md](contact_in_run.md#7-decision-points) |
+| T9 | What the MFEM exchange returns from the material layer | [materials.md](materials.md#decision-points) |
+
+**Andras (3D Slicer and SlicerHeart)**
+
+| ID | Decision | Note |
+| --- | --- | --- |
+| M5, M6, M7 | How SlicerHeart gets the code; units and coordinate system; a FEBio model in the Slicer scene | [model.md](model.md#9-decision-points) |
 
 **MJ (scope and order)**
 
@@ -180,6 +197,8 @@ A selection. Every decision has an ID and sits in a table in its note with the o
 | C4, C5 | Trusses before springs; an open valve input with truss chordae | [chordae.md](chordae.md#7-decision-points) |
 | L1 | Measure preconditioners before the direct solver question goes to the Warp team | [linear_solve.md](linear_solve.md#7-decision-points) |
 | S4 | Which parameters are differentiable from the start | [sensitivity.md](sensitivity.md#6-decision-points) |
+| V3 | Where larger references live once fields are compared | [verification.md](verification.md#decision-points) |
+| M8, R8 | Whether the test fixture of pull request 5 is corrected or left, since the run path replaces it | [model.md](model.md#9-decision-points) |
 
 ## 6. Adjoints and automatic differentiation
 
