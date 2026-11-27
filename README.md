@@ -2,8 +2,10 @@
 
 GPU-accelerated, differentiable finite element mechanics for cardiovascular simulation,
 written in Python on [Warp](https://github.com/NVIDIA/warp) and built in concert with the
-[FEBio](https://febio.org) team and warp teams. The formulations follow FEBio. The architecture is designed
-for the GPU, for differentiation, and compatibility with Newton and 3D Slicer.
+[FEBio](https://febio.org) team. The formulations follow FEBio. The architecture is designed
+for the GPU and for differentiation, follows the development conventions of Warp, and is
+meant to work with [Newton](https://github.com/newton-physics/newton),
+[3D Slicer](https://www.slicer.org) and [SlicerHeart](https://github.com/SlicerHeart/SlicerHeart).
 
 FEBio-Warp is intended to stand next to FEBio, not to replace it. FEBio remains the place for
 broad constitutive modeling and general biomechanics. FEBio-Warp targets a focused set of
@@ -15,7 +17,7 @@ This project is at an early stage. Interfaces will change, and most areas listed
 design or draft. Nothing here is released.
 
 Development has now moved to a design-led process. Each area is specified in a design note,
-reviewed by the FEBio and Warp developers involved, implemented, and verified against FEBio
+reviewed by the developers involved, implemented, and verified against FEBio
 reference problems where one exists. The pilot work is preserved in [`pilots/`](pilots/README.md) and at the
 [`pilot-2026-11`](https://github.com/JolleyLab/FEBio-Warp-Python/tree/pilot-2026-11) tag.
 
