@@ -113,9 +113,7 @@ def _make_forms(bound):
             gu[1, 2] + gu[2, 1],
             gu[0, 2] + gu[2, 0],
         )
-        return (
-            wp.dot(a, c * b) + wp.ddot(sigma, wp.transpose(gu) * gv)
-        ) * wp.determinant(F)
+        return (wp.dot(a, c * b) + wp.ddot(sigma, wp.transpose(gu) * gv)) * wp.determinant(F)
 
     def point_jacobian(s: fem.Sample, u: fem.Field):
         return wp.determinant(deformation_gradient(fem.grad(u, s)))
@@ -173,9 +171,7 @@ class FemSolidDomain(Term):
 
     internal = True
 
-    def __init__(
-        self, name, element_type, bound, nodes, connectivity, entry, n_entries, device
-    ):
+    def __init__(self, name, element_type, bound, nodes, connectivity, entry, n_entries, device):
         geometry, order, points = ELEMENTS[element_type]
         self.name = name
         self.element_type = element_type
@@ -197,18 +193,14 @@ class FemSolidDomain(Term):
         )
         self.space = fem.make_polynomial_space(self.geometry, degree=1, dtype=vec3d)
         self.cells = fem.Cells(self.geometry)
-        self.quadrature = fem.RegularQuadrature(
-            self.cells, order=order, family=fem.Polynomial.GAUSS_LEGENDRE
-        )
+        self.quadrature = fem.RegularQuadrature(self.cells, order=order, family=fem.Polynomial.GAUSS_LEGENDRE)
         assert self.quadrature.total_point_count() == E * points
         self.test = fem.make_test(self.space, domain=self.cells)
         self.trial = fem.make_trial(self.space, domain=self.cells)
         self.u = self.space.make_field()
         self.u.dof_values = wp.zeros(len(nodes), dtype=vec3d, requires_grad=True, **dev)
 
-        self.entry = wp.array(
-            entry.astype(np.int32), dtype=wp.int32, **dev
-        )  # node -> entry
+        self.entry = wp.array(entry.astype(np.int32), dtype=wp.int32, **dev)  # node -> entry
         self.geom = wp.array(bound.geometry_array(E), dtype=gvec, **dev)
         self.params = wp.array(
             [self.pvec(*bound.param_values(0.0))],
@@ -264,9 +256,7 @@ class FemSolidDomain(Term):
             device=self.device,
         )
         # A kernel cannot throw; the worst Jacobian is read on the host.
-        fem.interpolate(
-            self._jacobian, at=self.quadrature, fields={"u": self.u}, dest=self.detF
-        )
+        fem.interpolate(self._jacobian, at=self.quadrature, fields={"u": self.u}, dest=self.detF)
         det = self.detF.numpy()
         if not np.isfinite(det).all():
             return NON_FINITE
@@ -288,9 +278,7 @@ class FemSolidDomain(Term):
             device=self.device,
         )
 
-    def linearize(
-        self, state: State, history: Any, exact: bool = False
-    ) -> BlockTangent:
+    def linearize(self, state: State, history: Any, exact: bool = False) -> BlockTangent:
         # Always the exact derivative of the internal force.
         self._integrate_stiffness(self.K)
         wp.copy(self.vals, self.K.values, count=self.block_count)

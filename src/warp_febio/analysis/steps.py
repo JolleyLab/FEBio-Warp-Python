@@ -50,11 +50,7 @@ from .static import TimeStepController
 
 def domain_support(kind, element_type, domain_type) -> bool:
     """Element types this run path has beyond the fixture's hex8 and quad4."""
-    return (
-        kind == "SolidDomain"
-        and element_type in FEM_ELEMENTS
-        and domain_type in (None, "elastic-solid")
-    )
+    return kind == "SolidDomain" and element_type in FEM_ELEMENTS and domain_type in (None, "elastic-solid")
 
 
 def select_domain(model, block, fields, directors, device, solids="dedicated"):
@@ -102,9 +98,7 @@ def select_domain(model, block, fields, directors, device, solids="dedicated"):
             axis=1,
         )
         febio_type = "elastic-shell"
-    return BrickDomain(
-        block.name, febio_type, bound, X, emap, fields.count, model, device
-    )
+    return BrickDomain(block.name, febio_type, bound, X, emap, fields.count, model, device)
 
 
 # Loads this run path can build: FEBio type -> module with inspect_load and a Term.
@@ -137,10 +131,7 @@ def build_system(model, device=None, solids: str = "dedicated") -> System:
     device = wp.get_device(device)
     fields = build_field_table(model)
     directors = shell_directors(model)
-    terms = [
-        select_domain(model, b, fields, directors, device, solids)
-        for b in model.mesh.blocks
-    ]
+    terms = [select_domain(model, b, fields, directors, device, solids) for b in model.mesh.blocks]
     for record in model.loads:
         terms.append(select_load(record, model, fields, directors, device))
     # Discrete elements and contact interfaces are appended here as further
@@ -183,18 +174,13 @@ def collect(system: System, state: State, iterations: int = 0) -> StateResult:
         # FEBio's order xx, yy, zz, xy, yz, xz; plain mean over points, as
         # FEBio's plot variable "stress".
         out.stress[term.name] = np.stack(
-            [
-                mean[:, i, j]
-                for i, j in ((0, 0), (1, 1), (2, 2), (0, 1), (1, 2), (0, 2))
-            ],
+            [mean[:, i, j] for i, j in ((0, 0), (1, 1), (2, 2), (0, 1), (1, 2), (0, 2))],
             axis=1,
         )
     return out
 
 
-def run(
-    system: System, log=None, linear_solver: str = "direct", keep_states: bool = False
-):
+def run(system: System, log=None, linear_solver: str = "direct", keep_states: bool = False):
     """Run the model's step. Returns Results (the states FEBio would plot);
     with keep_states=True, also the list of converged device States."""
     say = log or (lambda *_: None)
@@ -209,9 +195,7 @@ def run(
     eps = tend * 1e-12
     must_only = str(control.get("plot_level", "PLOT_MAJOR_ITRS")) == "PLOT_MUST_POINTS"
     stepper = control.child("time_stepper")
-    controller = (
-        TimeStepController(stepper, model, dt0, tend) if stepper is not None else None
-    )
+    controller = TimeStepController(stepper, model, dt0, tend) if stepper is not None else None
 
     state = system.state()
     results = Results()
@@ -225,15 +209,11 @@ def run(
     while tend - time > eps:
         new_time = min(time + dt, tend)
         try:
-            new_state, iterations = solve_step(
-                system, state, new_time, settings, linear_solver, say
-            )
+            new_state, iterations = solve_step(system, state, new_time, settings, linear_solver, say)
         except SolveError as err:
             if controller is not None and controller.retries < controller.max_retries:
                 dt = controller.retry(dt)
-                say(
-                    f"step to time {new_time:g} failed ({err}); retrying with dt {dt:g}"
-                )
+                say(f"step to time {new_time:g} failed ({err}); retrying with dt {dt:g}")
                 continue
             raise
         at_must = controller.at_must if controller is not None else True

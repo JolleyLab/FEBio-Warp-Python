@@ -43,9 +43,7 @@ def build(folder, name):
     return build_system(read_feb(os.path.join(folder, name + ".feb")), device="cpu")
 
 
-@unittest.skipUnless(
-    HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')"
-)
+@unittest.skipUnless(HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')")
 class RunPath(unittest.TestCase):
     def test_field_table(self):
         """One 3-vector entry per (node, variable); FEBio's three states."""
@@ -67,12 +65,8 @@ class RunPath(unittest.TestCase):
             with self.subTest(name):
                 results = run(build(folder, name))
                 n = len(results.states)
-                u_ref = febio_log(
-                    os.path.join(folder, "febio", name + "_nodes.txt"), n, 3
-                )
-                s_ref = febio_log(
-                    os.path.join(folder, "febio", name + "_elements.txt"), n, 6
-                )
+                u_ref = febio_log(os.path.join(folder, "febio", name + "_nodes.txt"), n, 3)
+                s_ref = febio_log(os.path.join(folder, "febio", name + "_elements.txt"), n, 6)
                 u = np.stack([s.displacement for s in results.states])
                 s = np.stack([s.stress["Part1"] for s in results.states])
                 # FEBio prints 12 significant digits; 1e-10 leaves margin.
@@ -87,9 +81,7 @@ class RunPath(unittest.TestCase):
                 with self.subTest(method=method, name=name):
                     results = run(build(folder, name), linear_solver=method)
                     n = len(results.states)
-                    u_ref = febio_log(
-                        os.path.join(folder, "febio", name + "_nodes.txt"), n, 3
-                    )
+                    u_ref = febio_log(os.path.join(folder, "febio", name + "_nodes.txt"), n, 3)
                     u = np.stack([s.displacement for s in results.states])
                     self.assertLess(abs(u - u_ref).max() / abs(u_ref).max(), 1e-9)
 
@@ -111,9 +103,7 @@ class RunPath(unittest.TestCase):
                 for a, b in zip(old.states, new.states):
                     self.assertEqual(a.time, b.time)
                     scale = max(abs(a.displacement).max(), 1e-30)
-                    self.assertLess(
-                        abs(a.displacement - b.displacement).max() / scale, 1e-11
-                    )
+                    self.assertLess(abs(a.displacement - b.displacement).max() / scale, 1e-11)
 
     def test_tangent_is_minus_the_derivative_of_the_residual(self):
         from warp_febio.assembly.system import State

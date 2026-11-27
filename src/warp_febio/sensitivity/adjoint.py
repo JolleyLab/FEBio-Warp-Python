@@ -67,9 +67,7 @@ def adjoint_solve(
     system.update(state)
     system.tangent(state, exact=exact)
     A = system.constrained_matrix()
-    rhs = wp.array(
-        np.asarray(dJ_du) * system.fields.free, dtype=wp.vec3d, device=system.device
-    )
+    rhs = wp.array(np.asarray(dJ_du) * system.fields.free, dtype=wp.vec3d, device=system.device)
     lam, _ = solve(warp.sparse.bsr_transposed(A), rhs, linear_solver)
     system.mask(lam)
     return lam
@@ -128,9 +126,7 @@ def _active_tape():
         return None
 
 
-def solve_on_tape(
-    system: System, tape: wp.Tape, linear_solver: str = "direct"
-) -> State:
+def solve_on_tape(system: System, tape: wp.Tape, linear_solver: str = "direct") -> State:
     """Run the model and put the solve on `tape` as one differentiable step.
 
     Returns the final State; its `u` has requires_grad. In the reverse pass

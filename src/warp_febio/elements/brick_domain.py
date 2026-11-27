@@ -146,9 +146,7 @@ def _make_kernels(bound):
         cols[t] = emap[e, j]
         vals[t] = k
 
-    kernels = tuple(
-        wp.kernel(f, module="unique") for f in (update, internal_force, stiffness)
-    )
+    kernels = tuple(wp.kernel(f, module="unique") for f in (update, internal_force, stiffness))
     _KERNELS[key] = kernels
     return kernels
 
@@ -230,9 +228,7 @@ class BrickDomain(Term):
             device=self.device,
         )
 
-    def linearize(
-        self, state: State, history: Any, exact: bool = False
-    ) -> BlockTangent:
+    def linearize(self, state: State, history: Any, exact: bool = False) -> BlockTangent:
         # Always the exact derivative of the internal force.
         wp.launch(
             self._stiffness,

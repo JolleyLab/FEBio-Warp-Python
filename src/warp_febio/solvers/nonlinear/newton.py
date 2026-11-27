@@ -109,12 +109,8 @@ def solve_step(
     state = State(time, u)
 
     # Prescribed components: target values at this time, and their increment.
-    target = wp.array(
-        fields.prescribed_values(system.model, time), dtype=vec3d, device=device
-    )
-    pmask = wp.array(
-        (fields.bc == PRESCRIBED).astype(np.float64), dtype=vec3d, device=device
-    )
+    target = wp.array(fields.prescribed_values(system.model, time), dtype=vec3d, device=device)
+    pmask = wp.array((fields.bc == PRESCRIBED).astype(np.float64), dtype=vec3d, device=device)
     du_p = wp.zeros(n, dtype=vec3d, device=device)
     wp.launch(
         _prescribed_increment,
@@ -172,6 +168,4 @@ def solve_step(
             return state, it + 1
     for term in system.terms:
         term.rollback()
-    raise SolveError(
-        f"no convergence at time {time:g} in {settings.max_refs} reformations"
-    )
+    raise SolveError(f"no convergence at time {time:g} in {settings.max_refs} reformations")

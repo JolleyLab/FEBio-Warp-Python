@@ -101,11 +101,7 @@ class FieldTable:
         """
         target = np.zeros((self.count, 3))
         for p in self.prescribed:
-            f = (
-                1.0
-                if p.load_controller is None
-                else model.load_controller(p.load_controller).value(time)
-            )
+            f = 1.0 if p.load_controller is None else model.load_controller(p.load_controller).value(time)
             target[p.entries, p.component] = p.scale * f
         return target
 
@@ -147,7 +143,5 @@ def build_field_table(model) -> FieldTable:
             value = r.child("value")
             lc = value.attrs.get("lc")
             table.bc[e, comp] = PRESCRIBED
-            table.prescribed.append(
-                Prescribed(e, comp, float(value.value), int(lc) if lc else None)
-            )
+            table.prescribed.append(Prescribed(e, comp, float(value.value), int(lc) if lc else None))
     return table

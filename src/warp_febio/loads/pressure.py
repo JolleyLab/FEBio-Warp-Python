@@ -130,10 +130,9 @@ def _load_stiffness(
     for n in range(4):
         dxr, dxs = _tangents(f, n, emap, X, u, one, Gr, Gs)
         if symmetric != 0:
-            v = (
-                dxr * (H[n, j] * Gs[n, i] - H[n, i] * Gs[n, j])
-                - dxs * (H[n, j] * Gr[n, i] - H[n, i] * Gr[n, j])
-            ) * (wp.float64(0.5) * P)
+            v = (dxr * (H[n, j] * Gs[n, i] - H[n, i] * Gs[n, j]) - dxs * (H[n, j] * Gr[n, i] - H[n, i] * Gr[n, j])) * (
+                wp.float64(0.5) * P
+            )
         else:
             v = (dxs * Gr[n, j] - dxr * Gs[n, j]) * (P * H[n, i])
         k = k + wp.skew(v)
@@ -191,9 +190,7 @@ class PressureLoad(Term):
         else:
             emap = fields.entries_of("displacement", facets)
         if (emap < 0).any():
-            raise ValueError(
-                f"pressure load {self.name!r}: facet nodes without the variable"
-            )
+            raise ValueError(f"pressure load {self.name!r}: facet nodes without the variable")
 
         H, Gr, Gs = _shape_tables()
         dev = dict(device=device)
@@ -203,9 +200,7 @@ class PressureLoad(Term):
         self.Gr = wp.array(Gr, dtype=wp.float64, **dev)
         self.Gs = wp.array(Gs, dtype=wp.float64, **dev)
         # The parameter, on the device so it can carry a gradient.
-        self.pressure = wp.array(
-            [float(p.value)], dtype=wp.float64, requires_grad=True, **dev
-        )
+        self.pressure = wp.array([float(p.value)], dtype=wp.float64, requires_grad=True, **dev)
         self.block_count = F * 16  # written into the system's block buffer
 
     def factor(self, time: float) -> float:
@@ -236,9 +231,7 @@ class PressureLoad(Term):
             device=self.device,
         )
 
-    def linearize(
-        self, state: State, history: Any, exact: bool = False
-    ) -> Optional[BlockTangent]:
+    def linearize(self, state: State, history: Any, exact: bool = False) -> Optional[BlockTangent]:
         if self.linear:
             return None  # the load does not depend on the solution
         symmetric = 0 if exact else self.symmetric

@@ -62,7 +62,5 @@ def solve(A, b: wp.array, method: str = "direct", tol: float = 1e-13):
         use_cuda_graph=False,
     )
     if not np.isfinite(error) or error > max(atol, 10 * tol * bnorm):
-        raise SolveError(
-            f"linear solver {method} stopped at residual {error:.3e} after {iterations} iterations"
-        )
+        raise SolveError(f"linear solver {method} stopped at residual {error:.3e} after {iterations} iterations")
     return x, int(iterations)

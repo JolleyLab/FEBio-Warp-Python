@@ -41,12 +41,7 @@ names = {
     "Part1.material": system.terms[0].parameter_names,
     "TopPressure.pressure": ("pressure",),
 }
-print(
-    f"{'parameter':<32}{'value':>8}{'adjoint':>16}{'central diff.':>16}{'rel. error':>12}"
-)
+print(f"{'parameter':<32}{'value':>8}{'adjoint':>16}{'central diff.':>16}{'rel. error':>12}")
 for row in check_parameter_gradients(system, output):
     label = f"{row.parameter} [{names[row.parameter][row.index[-1]]}]"
-    print(
-        f"{label:<32}{row.value:>8.3g}{row.adjoint:>16.9f}{row.finite_difference:>16.9f}"
-        f"{row.relative_error:>12.1e}"
-    )
+    print(f"{label:<32}{row.value:>8.3g}{row.adjoint:>16.9f}{row.finite_difference:>16.9f}{row.relative_error:>12.1e}")

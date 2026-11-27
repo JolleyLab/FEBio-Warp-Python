@@ -29,9 +29,7 @@ def febio_log(path, states, columns):
     return np.array(rows, dtype=float)[:, 1:].reshape(states, -1, columns)
 
 
-@unittest.skipUnless(
-    HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')"
-)
+@unittest.skipUnless(HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')")
 class TwoMaterialTests(unittest.TestCase):
     """references/small_meshes/two_material_pressure.feb: two hex8 domains
     (neo-Hookean and isotropic elastic), pressure on the top."""
@@ -48,12 +46,7 @@ class TwoMaterialTests(unittest.TestCase):
         s_ref = febio_log(ref + "elements.txt", n, 6)
         u = np.stack([s.displacement for s in results.states])
         r = np.stack([s.reaction_force for s in results.states])
-        s = np.stack(
-            [
-                np.concatenate([s.stress[d.name] for d in model.domains])
-                for s in results.states
-            ]
-        )
+        s = np.stack([np.concatenate([s.stress[d.name] for d in model.domains]) for s in results.states])
         self.assertLess(abs(u - u_ref).max() / abs(u_ref).max(), 1e-9)
         self.assertLess(abs(s - s_ref).max() / abs(s_ref).max(), 1e-9)
         # FEBio's nodal R: minus the internal force, zero at fixed components.
@@ -69,9 +62,7 @@ class TwoMaterialTests(unittest.TestCase):
         self.check("warp.fem")
 
 
-@unittest.skipUnless(
-    HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')"
-)
+@unittest.skipUnless(HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')")
 class AutoStepTests(unittest.TestCase):
     """references/single_element/hex8_pressure_autostep.feb."""
 
@@ -81,17 +72,13 @@ class AutoStepTests(unittest.TestCase):
         from warp_febio.analysis.steps import build_system, run
 
         results = run(build_system(read_feb(self.CASE), device="cpu"))
-        ref = np.loadtxt(
-            os.path.join(SINGLE, "febio", "hex8_pressure_autostep_steps.txt")
-        )
+        ref = np.loadtxt(os.path.join(SINGLE, "febio", "hex8_pressure_autostep_steps.txt"))
         states = results.states[1:]
         self.assertEqual(len(states), len(ref))
         np.testing.assert_allclose([s.time for s in states], ref[:, 0], rtol=2e-6)
         self.assertEqual([s.iterations for s in states], list(ref[:, 1].astype(int)))
         n = len(results.states)
-        u_ref = febio_log(
-            os.path.join(SINGLE, "febio", "hex8_pressure_autostep_nodes.txt"), n, 3
-        )
+        u_ref = febio_log(os.path.join(SINGLE, "febio", "hex8_pressure_autostep_nodes.txt"), n, 3)
         u = np.stack([s.displacement for s in results.states])
         self.assertLess(abs(u - u_ref).max() / abs(u_ref).max(), 1e-6)
 
