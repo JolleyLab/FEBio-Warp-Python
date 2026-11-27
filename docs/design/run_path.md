@@ -8,6 +8,8 @@ Draft v0.3 for discussion, November 26, 2026. For Steve Maas, Jeff Weiss, Ryan B
 
 **What it replaces.** The test fixture of pull request 5 (`compiled.py`, `analysis/static.py`), which ran the basic example in one piece. The model, reader, writers, material layer and contact are used unchanged.
 
+**Layout.** This note follows the layout of the design set: a flow diagram, what has been explored, and decision points with options and a proposal (section 8 for what was explored, section 12 for decision points). The [design overview](overview.md) shows where it sits, [remaining areas](remaining_areas.md) lists every decision by reviewer, and the [work plan](work_plan.md) says what depends on it.
+
 ## 1. Summary
 
 - **The rule followed.** FEBio decides what goes in and what comes out: input files, formulations, parameters and defaults, result files, and the reference every result is compared with. The internals are built for Warp: flat device arrays, one kernel per batch, a matrix whose pattern is fixed, and state kept apart from the model so a solve can be differentiated.
@@ -276,7 +278,7 @@ The time stepper and reformation limit findings apply to `analysis/static.py` in
 
 ### The linear solver on shells
 
-On the 1,863-element shell patch, Warp's CG with a block-diagonal preconditioner took 470 to 990 iterations per solve. The comparison above used a sparse direct solve from SciPy on the host. A better preconditioner or a direct solver on the device is needed before shell models of this size are practical. Newton's Kamino solver has direct factorizations written in Warp (`kamino/_src/linalg/factorize`), which have not been tried here.
+On the 1,863-element shell patch, Warp's CG with the `diag` preconditioner took 470 to 990 iterations per solve. On a block matrix that preconditioner is scalar Jacobi; Warp's block-Jacobi and approximate inverse (`FSAI`) preconditioners were not tried ([linear_solve.md](linear_solve.md)). The comparison above used a sparse direct solve from SciPy on the host. A better preconditioner or a direct solver on the device is needed before shell models of this size are practical. Newton's Kamino solver has direct factorizations written in Warp (`kamino/_src/linalg/factorize`), which have not been tried here.
 
 ### Tests and the FEBio build
 
@@ -324,3 +326,20 @@ Each was checked against the FEBio source (`e4df3f8`), Warp 1.19.0, Newton (`12b
 - The command line (`python -m warp_febio run`) still runs the fixture, which refuses pressure. The run path is reached from Python.
 - There are two hex8 implementations (the dedicated brick domain and `warp.fem`). They agree to round-off on every case here. Keeping one is a decision for after the review.
 - The FEBio references are from a source build without MKL, not an official release.
+
+## 12. Decision points
+
+Each row summarizes a point of section 9, where the full text is given. IDs follow the scheme of the design set (R for the run path). R1 to R3 are the contract every other area builds on; the [work plan](work_plan.md) calls them contract v0.
+
+| ID | Decision | Options | Proposed | For | Detail |
+| --- | --- | --- | --- | --- | --- |
+| R1 | How unknowns are numbered | (a) By (node, variable), each a 3-vector, with constrained components masked. (b) FEBio's equation numbers, with constrained ones removed | (a). 3x3 blocks throughout and a pattern that never changes | Steve, Jeff | Point 1 |
+| R2 | One contract for domains, loads and contact | (a) One `Term` contract and a list. (b) Separate families called in turn, as FEBio | (a) | Steve, Jeff | Point 2 |
+| R3 | Residual sign | (a) FEBio's, external minus internal, everywhere. (b) The sign the contact draft documents | (a) | Steve | Point 3 |
+| R4 | Tangents Newton and the adjoint do not share | A term returns FEBio's tangent for Newton and the true derivative on request | Keep `linearize(exact=True)`. Known cases: symmetrized pressure, `tangent_scale`, and `mass damping` ([sensitivity.md](sensitivity.md), section 4) | Steve, Jeff | Point 4 |
+| R5 | Running the forward solve without recording it | Call the solve outside the tape block, or a supported way to pause a tape | Open | Warp team | Point 5 |
+| R6 | A direct solver or stronger preconditioner for shells | Warp's `FSAI` and block Jacobi, a factorization on the device, or another route | Measure the preconditioners first ([linear_solve.md](linear_solve.md), decision L1), then ask | Warp team | Point 6 |
+| R7 | Two hex8 implementations | (a) `warp.fem` for solids, dedicated kernels where it has no element. (b) Dedicated kernels throughout | (a) to start; both agree to round-off | Steve, Warp team | Section 5 |
+| R8 | The fixture of pull request 5 | It differs from FEBio in two places found here. Correct it there, or leave it since this path replaces it | Leave it, recorded in section 8 | Steve, MJ | Section 8 |
+
+For gradients: R1, R2 and R4 are the ones the adjoint depends on. State apart from the model, one implementation of each term for the forward and reverse passes, and an exact tangent on request are what make a gradient cost one transpose solve.

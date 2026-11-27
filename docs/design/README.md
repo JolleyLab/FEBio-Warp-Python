@@ -8,12 +8,12 @@ Start with the [design overview](overview.md): one page on how the pieces fit, w
 
 | Area | Note | Status |
 |---|---|---|
-| Materials | [materials.md](materials.md), with [PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2) | Draft, under redesign |
-| Contact | [contact.md](contact.md), with [PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1) | Draft |
+| Materials | [materials.md](materials.md) ([decisions](materials.md#decision-points)), with [PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2) | Draft, under redesign |
+| Contact | [contact.md](contact.md) ([decisions](contact.md#decision-points)), with [PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1) | Draft |
 | Assembly | [assembly.md](assembly.md) | Decided (full assembly); carried out in the run path template |
-| Run path (unknowns, terms, Newton step, steps, pressure, warp.fem solids, gradients) | [run_path.md](run_path.md), with [PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6) | Template, draft |
-| Verification | [verification.md](verification.md) | Draft, tabled until input and output |
-| Central model, input and output | [model.md](model.md), with [PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5) | Draft |
+| Run path (unknowns, terms, Newton step, steps, pressure, warp.fem solids, gradients) | [run_path.md](run_path.md) ([decisions](run_path.md#12-decision-points)), with [PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6) | Template, draft |
+| Verification | [verification.md](verification.md) ([decisions](verification.md#decision-points)) | Draft, tabled until input and output |
+| Central model, input and output | [model.md](model.md) ([decisions](model.md#9-decision-points)), with [PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5) | Draft |
 
 [integration.md](integration.md) says how these drafts fit together on the combined branch and what is left open.
 
