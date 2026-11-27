@@ -89,10 +89,7 @@ def read_input(path):
         )
     bc = root.find("Boundary/bc[@type='prescribed deformation']")
     F = np.array([float(x) for x in bc.find("F").text.split(",")]).reshape(3, 3)
-    points = [
-        tuple(float(x) for x in pt.text.split(","))
-        for pt in root.find("LoadData/load_controller/points")
-    ]
+    points = [tuple(float(x) for x in pt.text.split(",")) for pt in root.find("LoadData/load_controller/points")]
     return mat.get("type"), params, F, np.array(points)
 
 
@@ -116,9 +113,7 @@ def febio_warp(febio_type, params, F):
         d[k, l] += 0.5
         d[l, k] += 0.5
         H = np.einsum("ij,njk->nik", d, F)  # so that sym(H F^-1) = d
-        cd = api.evaluate(model, F, values, H=H, geometry=geometry)[
-            "spatial_tangent_action"
-        ]
+        cd = api.evaluate(model, F, values, H=H, geometry=geometry)["spatial_tangent_action"]
         for a, (i, j) in enumerate(VOIGT):
             c[:, a, b] = cd[:, i, j]
     if model.formulation == "uncoupled":
@@ -129,11 +124,7 @@ def febio_warp(febio_type, params, F):
         J = np.linalg.det(F)
         p = dU(J, values["k"])
         sigma = sigma + p[:, None, None] * np.eye(3)
-        c = (
-            c
-            + p[:, None, None] * (IxI - 2 * I4)
-            + (J * d2U(J, values["k"]))[:, None, None] * IxI
-        )
+        c = c + p[:, None, None] * (IxI - 2 * I4) + (J * d2U(J, values["k"]))[:, None, None] * IxI
     return (
         np.array([[s[i, j] for i, j in VOIGT] for s in sigma]),
         np.array([[m[a, b] for a, b in C_INDEX] for m in c]),
@@ -192,13 +183,8 @@ class ChordAgreementTest(unittest.TestCase):
         )
         mat = ET.parse(deck).getroot().find("Discrete/discrete_material")
         self.assertEqual(mat.get("type"), "nonlinear spring")
-        points = [
-            tuple(float(x) for x in pt.text.split(","))
-            for pt in mat.find("force/points")
-        ]
-        model = nonlinear_spring(
-            len(points), mat.findtext("measure"), mat.findtext("force/extend")
-        )
+        points = [tuple(float(x) for x in pt.text.split(",")) for pt in mat.find("force/points")]
+        model = nonlinear_spring(len(points), mat.findtext("measure"), mat.findtext("force/extend"))
         values = {"scale": float(mat.findtext("scale"))}
         for k, (x, y) in enumerate(points):
             values[f"x{k}"] = x
