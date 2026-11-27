@@ -91,7 +91,7 @@ class ContactSet:
         for ci in self.interfaces:
             ci.residual(state, history, out)
 
-    def linearize(self, state: wp.array, history: Any) -> "_SumTangent":
+    def linearize(self, state: wp.array, history: Any) -> _SumTangent:
         return _SumTangent([ci.linearize(state, history) for ci in self.interfaces])
 
     def augment(self, state: wp.array) -> bool:

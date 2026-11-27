@@ -104,7 +104,7 @@ class ContactPoints:
         return x
 
     @staticmethod
-    def concatenate(sets: list["ContactPoints"]) -> "ContactPoints":
+    def concatenate(sets: list[ContactPoints]) -> ContactPoints:
         """Merge point sets that share one node numbering (bodies keep their ids)."""
         K = max(s.nodes_per_point for s in sets)
 
