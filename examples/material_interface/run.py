@@ -24,6 +24,7 @@ from test_material_interface import (  # noqa: E402
     closed_form_for,
     legacy,
 )
+
 from warp_febio.materials import model as model_api  # noqa: E402
 from warp_febio.materials import models  # noqa: E402,F401
 from warp_febio.materials.conformance import check_model, sample_states  # noqa: E402
@@ -60,7 +61,7 @@ def main():
         if model.name in PILOT:
             new = model_api.evaluate(model, F, params, H)
             W, P, dP = legacy(model.name, F, H, params)
-            rel = lambda a, b: float(np.abs(a - b).max() / np.abs(b).max())  # noqa: E731
+            rel = lambda a, b: float(np.abs(a - b).max() / np.abs(b).max())
             metrics["previous_stress"] = rel(new["pk1"], P)
             metrics["previous_tangent"] = rel(new["tangent_action"], dP)
         results[model.name] = {

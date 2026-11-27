@@ -58,7 +58,7 @@ FEBio does not implement a strain energy for this material
 (FENonlinearSpringMaterial::StrainEnergy asserts), and none is provided here.
 """
 
-from functools import lru_cache
+from functools import cache
 from typing import Any
 
 import warp as wp
@@ -115,7 +115,7 @@ def make_point_function(n_points: int, extend: str = "extrapolate", offset: int 
     return value_and_slope
 
 
-@lru_cache(maxsize=None)
+@cache
 def nonlinear_spring(n_points: int, measure: str = "elongation", extend: str = "extrapolate") -> UniaxialModel:
     """The FEBio nonlinear spring with a linear point function of `n_points` points.
 

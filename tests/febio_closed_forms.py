@@ -141,7 +141,7 @@ def febio_point_curve_derive(t, points, extend="extrapolate"):
     pts = np.asarray(points, dtype=float)
     span = pts[-1, 0] - pts[0, 0]
     dt = span * 1e-9
-    value = lambda s: point_curve_linear(s, points, extend)  # noqa: E731
+    value = lambda s: point_curve_linear(s, points, extend)
     if t >= pts[-1, 0]:
         return (value(t - 2 * dt) - 4 * value(t - dt) + 3 * value(t)) / (2 * dt)
     if t < pts[0, 0]:

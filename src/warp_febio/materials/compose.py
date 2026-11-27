@@ -17,11 +17,10 @@ children with history. Both fit this structure and are left for when a use case
 needs them.
 """
 
+from dataclasses import replace
 from typing import Any
 
 import warp as wp
-
-from dataclasses import replace
 
 from .model import GeometryField, MaterialModel, from_spatial
 

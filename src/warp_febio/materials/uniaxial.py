@@ -25,8 +25,8 @@ in warp_febio/contracts.py, and it keeps the update a pure function, which is
 what makes it differentiable and safe to run in parallel.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 import warp as wp
