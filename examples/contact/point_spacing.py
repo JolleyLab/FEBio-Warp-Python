@@ -39,9 +39,7 @@ def probe_force(P, spacing, gap, over_hole, radius, device="cpu", extent=8.0):
     nodes = np.concatenate([lattice, probe])
     pts = ContactPoints.concatenate(
         [
-            node_points(
-                np.arange(len(lattice)), body=0, weight=spacing * spacing
-            ),  # weight = area per point
+            node_points(np.arange(len(lattice)), body=0, weight=spacing * spacing),  # weight = area per point
             node_points([len(lattice)], body=1, weight=1.0, radius=radius),
         ]
     )
@@ -69,9 +67,7 @@ def continuum_force(P, gap):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument(
-        "--radius", type=float, default=0.0, help="probe radius (capsule offset)"
-    )
+    ap.add_argument("--radius", type=float, default=0.0, help="probe radius (capsule offset)")
     ap.add_argument(
         "--gap-ratio",
         type=float,
@@ -84,9 +80,7 @@ def main():
     P = PotentialParams(kc=1.0, p=4.0, r_in=0.4, r_out=1.0)
     gap = args.gap_ratio * P.r_out[0]
     dense = continuum_force(P, gap)
-    print(
-        f"gap = {gap:.3f} R_out, probe radius = {args.radius:.3f}; continuum force = {dense:.6e}"
-    )
+    print(f"gap = {gap:.3f} R_out, probe radius = {args.radius:.3f}; continuum force = {dense:.6e}")
     print(f"{'spacing/R_out':>14} {'over point':>12} {'over hole':>12}")
     for ratio in (0.2, 0.25, 0.33, 0.4, 0.5, 0.6, 0.75, 0.85, 1.0, 1.25, 1.5):
         a = ratio * P.r_out[0]
