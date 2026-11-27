@@ -92,7 +92,7 @@ def make_update_kernel(model: UniaxialModel, dtype=wp.float64):
     return kernel
 
 
-def integrate(model, strain_path, params, dtype=wp.float64, device="cpu"):
+def integrate(model, strain_path, params, dtype=wp.float64, device=None):
     """Drive fibers through a strain history, committing after every step.
 
     strain_path: array (steps, n). Each column is one fiber's strain history.

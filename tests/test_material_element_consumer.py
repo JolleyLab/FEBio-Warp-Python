@@ -14,9 +14,11 @@ https://github.com/febiosoftware/FEBio/blob/develop/FEBioMech/FEElasticSolidDoma
 It is not a comparison with a FEBio run.
 """
 
+import os
 import unittest
 
 import numpy as np
+import warp as wp
 
 from warp_febio.materials import model as model_api
 from warp_febio.materials import models  # noqa: F401
@@ -24,6 +26,21 @@ from warp_febio.materials import status as material_status
 from warp_febio.materials.compose import solid_mixture
 from warp_febio.materials.exchange import evaluate_exchange
 from warp_febio.materials.voigt import VOIGT
+
+# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
+# GPU). It becomes Warp's current device while this module's tests run, so
+# calls that do not name a device follow it.
+DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
+_device_scope = wp.ScopedDevice(DEVICE)
+
+
+def setUpModule():
+    _device_scope.__enter__()
+
+
+def tearDownModule():
+    _device_scope.__exit__(None, None, None)
+
 
 # Reference hexahedron: unit cube corners in FEBio hex8 node order.
 CORNERS = np.array(

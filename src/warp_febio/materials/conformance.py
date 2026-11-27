@@ -192,7 +192,7 @@ def geometry_gradient_error(model, F, params, geometry=None):
     return float(np.abs(from_tape - numeric).max() / scale)
 
 
-def check_model(model, params, closed_form=None, geometry=None, states=None, device="cpu"):
+def check_model(model, params, closed_form=None, geometry=None, states=None, device=None):
     """Return a dict of conformance metrics for one model and one parameter set.
 
     geometry: optional dict of named geometry fields, each of shape (size,),

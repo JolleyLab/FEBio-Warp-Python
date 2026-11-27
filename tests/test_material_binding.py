@@ -8,6 +8,7 @@ interpreted.
 """
 
 import json
+import os
 import unittest
 from pathlib import Path
 
@@ -23,6 +24,26 @@ try:
     from warp_febio.model import Record
 except ImportError:
     api = None
+
+# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
+# GPU). It becomes Warp's current device while this module's tests run, so
+# calls that do not name a device follow it.
+DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
+_device_scope = []
+
+
+def setUpModule():
+    if api is not None:
+        import warp as wp
+
+        _device_scope.append(wp.ScopedDevice(DEVICE))
+        _device_scope[0].__enter__()
+
+
+def tearDownModule():
+    while _device_scope:
+        _device_scope.pop().__exit__(None, None, None)
+
 
 CASES = Path(__file__).parent.parent / "references" / "small_problems"
 VOIGT = ((0, 0), (1, 1), (2, 2), (0, 1), (1, 2), (0, 2))
@@ -70,18 +91,18 @@ def one_pass_at_points(bound, F):
         _KERNELS[model.name] = (wp.kernel(point, module="unique"), pvec, gvec, mat66)
     kernel, pvec, gvec, mat66 = _KERNELS[model.name]
     n = len(F)
-    sigma = wp.zeros(n, dtype=wp.mat33d, device="cpu")
-    c = wp.zeros(n, dtype=mat66, device="cpu")
+    sigma = wp.zeros(n, dtype=wp.mat33d, device=DEVICE)
+    c = wp.zeros(n, dtype=mat66, device=DEVICE)
     wp.launch(
         kernel,
         dim=n,
         inputs=[
-            wp.array(F, dtype=wp.mat33d, device="cpu"),
-            wp.array(bound.geometry_array(n), dtype=gvec, device="cpu"),
-            wp.array([pvec(*bound.param_values())], dtype=pvec, device="cpu"),
+            wp.array(F, dtype=wp.mat33d, device=DEVICE),
+            wp.array(bound.geometry_array(n), dtype=gvec, device=DEVICE),
+            wp.array([pvec(*bound.param_values())], dtype=pvec, device=DEVICE),
         ],
         outputs=[sigma, c],
-        device="cpu",
+        device=DEVICE,
     )
     return sigma.numpy(), c.numpy()
 
