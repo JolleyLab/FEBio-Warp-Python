@@ -2,6 +2,8 @@
 
 Draft v0.3, November 24, 2026. For Steve Maas, Jeff Weiss, Ryan Black, the Warp team and the FEBio-Warp team. Nothing here is merged. This version replaces v0.2 and follows Steve's review of this pull request and Jeff's earlier comments. The earlier pilot code is no longer the starting point; the question now is what the material layer of FEBio-Warp should be.
 
+**Layout.** This note follows the layout of the design set: a flow diagram, what has been explored, and decision points with options and a proposal ("Initial explorations" and "Decision points" below). The [design overview](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/overview.md) shows where it sits, [remaining areas](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/remaining_areas.md) lists every decision by reviewer, and the [work plan](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/work_plan.md) says what depends on it.
+
 ## For reviewers
 
 **In brief.** Materials follow FEBio's structure (typed parameters with ranges, separate material axes and fibers, solid mixtures, the uncoupled split, history), expressed so that Warp compiles each material tree into one kernel. Four coupled solid models are implemented and checked against FEBio's source and against every parameter set the FEBio test suite uses for them. Added on November 25 for the valve and TPVR inputs: the chordae spring, the linear truss law, and the deviatoric part of uncoupled HGO. Gradients are tested for every model. Everything so far was run on CPU, which is adequate for design and correctness checks at this stage; GPU access for this workflow is being set up for the team, and the timings will be repeated there. The solid models and the spring have since been compared with FEBio runs, through the small problems of the verification draft (pull request 4): stress and tangent, and the spring force, agree to the 12 digits FEBio prints.
@@ -142,7 +144,7 @@ FEBio throws on a non-positive Jacobian and the solver cuts the step. A kernel c
 | Nitinol, superelastic, uniaxial | none | Beam-element devices | Shell: interface and tests in place, law to be refined later |
 | HGO, uncoupled | `Holzapfel-Gasser-Ogden` | Outflow tract as published | Deviatoric part implemented; needs a three-field element to run |
 | Chordae spring | `nonlinear spring` | Valve and patch chordae, tension only | Implemented |
-| Linear truss | `linear truss` | Chordae as trusses, medium term | Law implemented; truss element not started |
+| Linear truss | `linear truss` | Chordae as trusses, which is current practice in the lab's valve models | Law implemented; the truss domain is the first new element ([chordae note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/chordae.md)) |
 
 Deferred until a project needs them: Ogden, anisotropic Lee-Sacks, fiber components and continuous fiber distributions, a three-dimensional superelastic law.
 
@@ -253,7 +255,49 @@ Unchanged in substance. The exchange kernel returns Cauchy stress and the 6x6 sp
 - The pilot implementations are not the basis for the design (MJ, Steve).
 - Superelastic nitinol for beams, kept as a shell for now; no shape-memory material in FEBio for now (MJ).
 - A non-finite result is handled like a negative Jacobian. FEBio retries the step in both cases, so this needed no question.
-- Chordae follow the published valve models (Wu et al. 2022; arXiv 2509.22865): tension-only two-node springs with zero force until the elongation passes a threshold and a linear response beyond it, modeled with FEBio's `nonlinear spring`. The repository's mitral input has eight such groups, with thresholds of 2 to 12 mm. This is now implemented. Trusses for chordae are of interest in the medium term; the linear truss law is in place and the elastic-truss route waits on question 7.
+- Chordae follow the published valve models (Wu et al. 2022; arXiv 2509.22865): tension-only two-node springs with zero force until the elongation passes a threshold and a linear response beyond it, modeled with FEBio's `nonlinear spring`. The repository's mitral input has eight such groups, with thresholds of 2 to 12 mm. This is now implemented. Trusses are now the priority for chordae: current valve models use branched networks of `linear truss` elements (Mangine, Laurence et al., arXiv 2411.09599). The linear truss law is in place, the truss domain is designed in the [chordae note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/chordae.md), and the elastic-truss route waits on question 7.
+
+## Initial explorations
+
+A summary of "What has been checked", in the form used across the design notes.
+
+| Explored | Result |
+| --- | --- |
+| Four coupled solid models against FEBio's closed forms and source | Agree; every parameter set the FEBio test suite uses for them passes (77 sets) |
+| The same models and uncoupled HGO against FEBio runs at a material point | Twelve cases agree to 1e-10 (verification draft) |
+| Solid mixtures composed before compilation | Equal to the sum of their parts to 1e-13; nest; compile in both precisions |
+| Gradients on the tape with respect to parameters, deformation and material axes | Match finite differences for every model |
+| Single precision against double | Adequate for soft tissue at finite strain; not for stiff parts at small strain with large rotation |
+| An element consuming Cauchy stress and the 6x6 tangent | Stiffness equals the derivative of the internal force to 1e-7 |
+| Chordae spring and linear truss laws | Match FEBio's source formulas; one kernel serves all chord groups of the open mitral input |
+| FEBio's `elastic-truss` on one element | Slow or failed convergence with full Newton (question 7) |
+| A material in a run with elements and a solver | In the run path draft, through the binding |
+| Any GPU run | Not explored |
+
+## Decision points
+
+Each row summarizes a question below, where the full text and what was checked are given. IDs follow the scheme of the design set (T for materials).
+
+| ID | Decision | Options | Proposed | For | Detail |
+| --- | --- | --- | --- | --- | --- |
+| T1 | When a material tree is composed | (a) In Python before compilation, one kernel per tree. (b) At run time, as FEBio | (a) | Steve | Question 1 |
+| T2 | Geometry for fibers | (a) One named field per fiber in a flat per-point vector. (b) Something richer, for continuous fiber distributions | (a) for the first models | Steve | Question 2 |
+| T3 | Integer, boolean and enumeration parameters | (a) Fixed when the kernel is built. (b) Changeable during a run | (a) | Steve | Question 3 |
+| T4 | Parameter ranges for Lee-Sacks | Non-negativity for c0, c1, c2 and k was added here; FEBio declares none | Keep, if the FEBio team agrees | Steve | Question 4 |
+| T5 | HGO energy at k2 = 0 | FEBio's energy divides by k2; a finite form is used here | Keep the finite form | Steve | Question 5 |
+| T6 | The FEBio reference at a material point | (a) One element under prescribed deformation with logged values. (b) FEBio's material test diagnostic | (a), which is in use | Steve | Question 6 |
+| T7 | A nonlinear chord material | FEBio's `elastic-truss` with a solid material, or a uniaxial law on the linear-truss structure | Depends on the answer; see decision C2 in the [chordae note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/chordae.md#7-decision-points) | Steve, Jeff | Question 7 |
+| T8 | The vessel wall: uncoupled or coupled HGO | (a) Uncoupled on a three-field element, as published. (b) Coupled on standard elements | See decision E3 in the [elements note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/elements.md#7-decision-points) | Jeff | Question 8 |
+| T9 | What the MFEM exchange returns | Cauchy stress and the full 6x6; whether a secant form is also needed | Open | Ryan | Question 9 |
+| T10 | How kernels are grouped and shipped | One module per material tree, or a named module per model; ahead-of-time compilation | Open | Warp team | Question 10 |
+| T11 | Precision by domain | (a) Double everywhere. (b) Double for stiff parts, single for tissue and for contact queries | (a) for the reference tier; (b) to plan for | Warp team | Question 11 |
+| T12 | `warp.fem` for nonlinear solids | Point data stored once and indexed in the integrand, or a faster route | The run path draft now uses this route for hex8 and tet4 | Warp team | Question 12 |
+| T13 | Shells | Dedicated kernels here, or a shell element in `warp.fem` | See decision E2 in the [elements note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/elements.md#7-decision-points) | Warp team | Question 13 |
+| T14 | Tangents that Newton and the adjoint do not share | `tangent_scale` on isotropic Lee-Sacks scales the tangent only. (a) Carry both the scaled and the true tangent. (b) Drop the scaling | (a). Newton then matches FEBio and the adjoint stays exact; see decision S2 in the [sensitivity note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/sensitivity.md#6-decision-points) | Steve, Jeff | Integration note |
+
+For gradients: parameters are device arrays by region, options are fixed when the kernel is built, and the tape differentiates each model as written. What is still open for gradients at this layer is T14.
+
+In the [work plan](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/work_plan.md) the remaining material items (`tangent_scale`, per-element material axes) are package W12.
 
 ## Questions for reviewers
 
@@ -277,7 +321,7 @@ Each question was checked before being asked: against the FEBio source (develop,
 
 9. The plugin's immersed elastic domain calls `Stress` and `SolidTangent`, takes the tangent as a `tens4dmm`, and has switches for secant stress and secant tangent. The exchange kernel here returns Cauchy stress and a full 6x6 in the same pair order (11, 22, 33, 12, 23, 13), stored by rows where `tens4dmm` stores by columns. Is the secant form needed from the Warp side, and is there anything else the domain reads from the material point?
 
-**Warp team (Eric, Kay)**
+**Warp team**
 
 10. Kernels per material tree. The code generation guide describes building kernels from captured functions, which is what is done here, with one `module="unique"` kernel per material tree. Measured cost is under Kernel build cost above. For a library of this shape, would you keep one module per tree, or group a model's kernels in a named module, and is ahead-of-time compilation the intended route for deployment?
 11. Precision. Single precision loses the stress at small strain (table above), so stiff parts need FP64 while tissue does not. In 1.19.0, `wp.Mesh` and `wp.Bvh` accept only `vec3` (FP32) points and bounds, while `wp.HashGrid` accepts FP64. For contact between FP64 bodies, is casting positions to FP32 for the queries the intended pattern, and is mixed precision by domain reasonable to plan for?
@@ -289,6 +333,6 @@ Each question was checked before being asked: against the FEBio source (develop,
 1. Verification harness (separate draft).
 2. Assembly: assembled against matrix-free, `warp.fem` against dedicated kernels (separate draft).
 3. A three-field element, so the uncoupled HGO can run (element work).
-4. A discrete spring domain and, after question 7, a truss element (element work).
+4. A truss domain on the `linear truss` law, then a discrete spring domain ([chordae note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/chordae.md)). A nonlinear chord material waits on question 7.
 5. A GPU run of the tests and of the timings, once GPU access is in place.
 6. Later, as dedicated work: the superelastic law.
