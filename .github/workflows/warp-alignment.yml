@@ -1,0 +1,77 @@
+name: warp alignment
+
+# Keeps track of Warp without changing anything in this repository.
+#   settings:      compares the tooling here with the latest Warp release and
+#                  keeps one issue up to date when something differs.
+#   compatibility: runs the tests against the newest Warp release and the
+#                  Warp nightly build. A failure here is a signal, not a gate.
+# See docs/WARP_ALIGNMENT.md.
+
+on:
+  schedule:
+    - cron: "17 9 * * 1"  # Mondays, 09:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  settings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e  # v10.3.2
+        with:
+          version: "0.13.6"
+      - name: Compare settings with the latest Warp release
+        id: check
+        run: uv run --no-project tools/check_warp_alignment.py | tee report.md
+      - name: Open, update or close the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DIFFERENCES: ${{ steps.check.outputs.differences }}
+          TITLE: "Warp alignment: differences found"
+        run: |
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number,title \
+            --jq "map(select(.title == \"$TITLE\")) | .[0].number // empty")
+          if [ "${DIFFERENCES:-0}" -gt 0 ]; then
+            if [ -n "$number" ]; then
+              gh issue edit "$number" --repo "$GITHUB_REPOSITORY" --body-file report.md
+            else
+              gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body-file report.md
+            fi
+          elif [ -n "$number" ]; then
+            gh issue close "$number" --repo "$GITHUB_REPOSITORY" --comment "The tracked settings match Warp again."
+          fi
+
+  compatibility:
+    name: tests with Warp ${{ matrix.warp }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        warp: [latest-release, nightly]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e  # v10.3.2
+        with:
+          version: "0.13.6"
+      - name: Install the locked environment
+        run: uv sync --locked --extra dev
+      - name: Replace Warp with the latest release
+        if: matrix.warp == 'latest-release'
+        run: uv pip install --upgrade warp-lang
+      - name: Replace Warp with the nightly build
+        if: matrix.warp == 'nightly'
+        # Nightly builds are published on NVIDIA's package index, as Newton uses them.
+        run: uv pip install --upgrade --prerelease allow --index-url https://pypi.nvidia.com/ warp-lang
+      - name: Report the Warp version under test
+        run: uv run --no-sync python -c "import warp; print('Warp', warp.__version__)" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Unit tests (CPU)
+        run: uv run --no-sync -m unittest discover -s tests -v

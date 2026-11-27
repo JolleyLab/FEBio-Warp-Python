@@ -12,6 +12,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [README](README.md) before chang
 - If a change alters dependencies in `pyproject.toml`, run `uv lock` and commit `uv.lock` with it. Do not change the Warp pin as part of an unrelated change.
 - Never use `python -c "..."` to run temporary scripts that define `@wp.kernel` functions. Always write to a `.py` file, because Warp's code generation calls `inspect.getsourcelines()`, which fails for code that is not in a file.
 - Pin GitHub Actions to commit hashes, not tags, and add a comment with the corresponding tag.
+- Tooling follows Warp. Do not change the Python version, the Ruff or uv versions, the line length or the lint rules on their own; see [docs/WARP_ALIGNMENT.md](docs/WARP_ALIGNMENT.md) for what is tracked and how an update is applied. `uv run tools/check_warp_alignment.py` reports the current differences.
 
 ## Where code goes
 
