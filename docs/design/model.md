@@ -1,8 +1,10 @@
 # Central model and FEBio input and output
 
-Draft v0.3 for discussion, November 25, 2026. For Steve Maas, Jeff Weiss, the Warp and Newton team, Andras Lasso, and Ryan Black.  Happy Thanksgiving! The code is draft pull request 5 on branch `mattjolley/io-model-draft`; nothing is merged.
+Draft v0.3 for discussion, November 25, 2026. For Steve Maas, Jeff Weiss, the Warp team, Andras Lasso, and Ryan Black.  Happy Thanksgiving! The code is draft pull request 5 on branch `mattjolley/io-model-draft`; nothing is merged.
 
 Scope: the model object and the files that go in and out of it. Elements, assembly, solvers, time stepping, contact and materials are separate designs that are still to be made. A minimal version of some of them exists in the draft only so the model could be exercised end to end, as Steve suggested; section 7 says what that was.
+
+**Layout.** This note follows the layout of the design set: a flow diagram, what has been explored, and decision points with options and a proposal (sections 8 and 9). The [design overview](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/overview.md) shows where it sits, [remaining areas](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/remaining_areas.md) lists every decision by reviewer, and the [work plan](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/work_plan.md) says what depends on it.
 
 ## 1. Summary
 
@@ -158,7 +160,7 @@ Questions were kept to those we could not settle ourselves. Each was checked aga
 
 One request: we could not open results in FEBio Studio from this environment. If the two files in `references/single_element/febio_warp/` (`hex8_neo_hookean_warp.xplt`, `quad4_shell_neo_hookean_warp.xplt`) open and display as FEBio's own in `references/single_element/febio/` do, that closes the last check on the writer.
 
-**For the Warp and Newton team (Eric, Kay)**
+**For the Warp team (Warp and Newton)**
 
 3. **Precision where a FEBio-Warp model meets Newton.** The model and state here are float64, which the comparison with FEBio needs. Newton's model and state arrays are `wp.vec3`, single precision (`particle_q` in `newton/_src/sim/model.py`). Would you cast at the boundary each step, or is there a double-precision path in Newton we should target?
 4. **Elements Newton does not have.** Newton's builder adds particles, springs, edges, triangles and tetrahedra. The valve and device models need hex8, wedge and quad4 shells with thickness. We see two extension points, `SolverBase` and `ModelBuilder.add_custom_attribute`. For a FEBio-Warp body in a Newton scene, would you have FEBio-Warp run as its own solver and expose only its surface and nodes to Newton for contact and display, or carry the extra element data in the Newton model as custom attributes?
@@ -229,3 +231,39 @@ CPU only. FEBio is 4.13.0 built from source at `552138d` with GCC and without MK
 - Nothing was opened in FEBio Studio or in 3D Slicer.
 - No GPU run.
 - The FEBio references are from a source build without MKL.
+
+## 8. Initial explorations
+
+A summary of section 7, in the form used across the design notes.
+
+| Explored | Result | Where |
+| --- | --- | --- |
+| Reading and writing back every model input of the FEBio test suite | 538 of 538 equal | Section 7 |
+| The open user project models: six TPVR inputs, two mitral inputs | Read and written back equal | Section 7 |
+| FEBio running inputs written by `write_feb` | Log output identical to its runs of the originals | Section 7 |
+| Plot files: FEBio 4.9 files read and written again | Identical byte for byte | Section 7 |
+| A minimal run behind the model (hex8, quad4 shell, static) against FEBio | 2e-12 to 4e-12 from log data; six suite inputs through the plot file | Section 7 |
+| Building Newton models and OpenUSD meshes from the model | Earlier trials, section 5 | I/O proposal |
+| Opening results in FEBio Studio or 3D Slicer; any GPU run | Not explored | |
+
+## 9. Decision points
+
+Each row summarizes a question of section 6, where the full text and what was checked are given. IDs follow the scheme of the design set (M for the model and I/O).
+
+| ID | Decision | Options | Proposed | For | Detail |
+| --- | --- | --- | --- | --- | --- |
+| M1 | How features are stored in the model | (a) Generic records under FEBio's names, with typed access added where a feature is implemented. (b) Typed feature classes from the start, as FEBio | (a). It is what lets every suite input round-trip, including modules not implemented | Steve, Jeff | Question 1 |
+| M2 | Where FEBio's parameter defaults come from | (a) A table generated from FEBio's own registry by a small program. (b) Transcribed by hand. (c) An existing export, if there is one | (a), unless (c) exists | Steve | Question 2 |
+| M3 | Precision where a FEBio-Warp model meets Newton | (a) Double here, cast at the boundary each step. (b) A double-precision path in Newton | (a) is the working assumption | Warp team | Question 3 |
+| M4 | Elements Newton does not have | (a) FEBio-Warp runs as its own solver and exposes nodes and surfaces. (b) Extra element data carried in the Newton model | (a) is the working assumption; the run path's step has that shape | Warp team | Question 4 |
+| M5 | How SlicerHeart gets the code | (a) Installed by pip from the module. (b) A copy of the model and I/O files inside SlicerHeart | Open | Andras | Question 5 |
+| M6 | Units and coordinate system on the way into Slicer | (a) Through ImportExportSimulationModel, so conversion stays in one place. (b) In the adapter | (a) | Andras | Question 6 |
+| M7 | A FEBio model in the Slicer scene | Arrays on one model node, a node per part, or markups for sets and conditions | Open | Andras | Question 7 |
+| M8 | The test fixture in this draft | The run path draft found two places where the fixture differs from FEBio (the iteration count given to the time step controller, and the reformation limit). (a) Correct the fixture here. (b) Leave it, since the run path replaces it | (b), with the difference recorded in the [run path note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/run_path.md) | Steve, MJ | Run path note, section 8 |
+| M9 | How a suite problem is compared with FEBio | Plot file from a pinned build, or a copy of the input with log data added | See decision O1 in the [output note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/output.md#5-decision-points) | Steve | |
+
+For gradients: the model is frozen once built and `State` is separate from it. That split is what the adjoint of the run path relies on, and it is the reason for the fourth row of the table in section 3.
+
+## 10. Depends on, and what depends on it
+
+Nothing in the package comes before the model. Everything after it reads the model through binding functions: materials, contact, the run path and the comparison runner. In the [work plan](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/work_plan.md) it is item A of the spine.
