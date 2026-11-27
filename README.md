@@ -27,31 +27,43 @@ The first targets set the scope. Capabilities are added because one of these nee
 
 | Application | Needs |
 |---|---|
-| Atrioventricular valve closure and repair | Shell leaflets, fiber-reinforced hyperelastic tissue, chordae, pressure loading, leaflet self-contact |
+| Atrioventricular valve closure and repair | Quadrilateral shell leaflets, fiber-reinforced hyperelastic tissue, chordae as trusses or springs, pressure loading, leaflet self-contact |
 | Self-expanding nitinol devices (transcatheter pulmonary valve replacement, septal occluders) | Beam frames, nitinol material, device-to-vessel contact, hyperelastic vessel wall |
 | Patch and material verification problems | Small problems with known or FEBio reference solutions, used to verify each component |
 
 ## Development areas
 
-Status as of November 2026. "Design" means a design note is in progress. "Draft" means code
-exists on a branch or draft pull request and is under review. "Not started" means the package
-directory exists as a place for the work and holds no code yet.
+Status as of November 26, 2026. "Draft" means code exists in a draft pull request and is under
+review. "Template" means a first working shape exists in the run path draft
+([PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6)), checked against FEBio on small cases and not settled. "Design" means a design
+note exists, with a flow diagram, a proposed approach, what has been explored and the decision
+points for the team, and no code. No application input runs end to end yet.
+
+Start with the [design overview](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/overview.md) for how the pieces fit,
+[remaining areas](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/remaining_areas.md) for what is left and the decisions listed by reviewer, and
+the [work plan](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/work_plan.md) for what has to be agreed first and which work packages can then
+be built in parallel. Until the drafts merge, these notes are on the branch of PR #6.
 
 | Area | Package | Scope for the first targets | Status |
 |---|---|---|---|
 | Materials | `materials/` | Common material interface; neo-Hookean, HGO, Ogden, Lee-Sacks, nitinol | Draft ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)), under redesign |
-| Contact | `contact/` | Potential-based contact for leaflets and devices; sliding contact later | Draft ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)) |
-| Assembly | `assembly/` | Full assembly of residual and tangent on the GPU | Design |
-| Elements | `elements/` | Shells, solids, beams, springs | Not started |
-| Mesh and discretization | `mesh/`, `discretization/` | Mesh types, degree-of-freedom maps, quadrature | Not started |
-| Loads and constraints | `loads/`, `constraints/` | Follower pressure, nodal loads, prescribed and multipoint constraints | Not started |
-| Solvers | `solvers/` | Newton with line search; iterative linear solvers and preconditioners | Not started |
-| Analysis | `analysis/` | Static and implicit dynamic steps, load stepping, staged procedures | Not started |
-| Sensitivity | `sensitivity/` | Gradients through equilibrium and through trajectories | Not started |
-| Central model, input and output | `model/`, `io/` | One model object holding what a FEBio input defines; FEBio input (`.feb`) and plot (`.xplt`) files read and written here; VTKHDF output and a VTK adapter for 3D Slicer | Draft ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)) |
+| Contact | `contact/` | Potential-based contact for leaflets and devices; sliding contact later | Draft ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)). Design: [contact in a run](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/contact_in_run.md) ([decisions](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/contact_in_run.md#7-decision-points)) |
+| Assembly | `assembly/` | Full assembly of residual and tangent on the GPU | Decided ([note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/assembly.md)). Template: one block buffer and pattern map |
+| Elements | `elements/` | Shells, solids, trusses, springs, beams | Template: hex8, tet4, quad4 shell. Design: [trusses and springs for chordae](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/chordae.md) ([decisions](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/chordae.md#7-decision-points)), then [three-field solid, penta6, tri3 shell](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/elements.md) ([decisions](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/elements.md#7-decision-points)). Beams: design shell |
+| Mesh and discretization | `mesh/`, `discretization/` | Mesh types, degree-of-freedom maps, quadrature | Template: unknowns by (node, variable) ([run path](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/run_path.md)). The mesh is in the central model |
+| Loads and constraints | `loads/`, `constraints/` | Follower pressure, nodal loads, prescribed and multipoint constraints | Template: pressure, fixed and prescribed displacements. Design: [mass damping](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/dynamics.md), [normal displacement](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/constraints.md) ([decisions](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/constraints.md#5-decision-points)) |
+| Solvers | `solvers/` | Newton with line search; iterative linear solvers and preconditioners | Template: full Newton, Warp's iterative solvers. Design: [preconditioning for shells, line search, quasi-Newton](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/linear_solve.md) ([decisions](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/linear_solve.md#7-decision-points)) |
+| Analysis | `analysis/` | Static and implicit dynamic steps, load stepping, staged procedures | Template: one static step with FEBio's time stepper ([PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6)). Design: [dynamics and several steps](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/dynamics.md) ([decisions](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/dynamics.md#7-decision-points)) |
+| Sensitivity | `sensitivity/` | Gradients through equilibrium and through trajectories | Template: adjoint through one equilibrium solve. Design: [adjoints over steps](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/sensitivity.md) ([decisions](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/sensitivity.md#6-decision-points)) |
+| Central model, input and output | `model/`, `io/` | One model object holding what a FEBio input defines; FEBio input (`.feb`) and plot (`.xplt`) files read and written here; VTKHDF output and a VTK adapter for 3D Slicer | Draft ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)). Design: [output registry](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/output.md) ([decisions](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/output.md#5-decision-points)) |
 | Verification | `tests/`, `references/` | FEBio-Warp run on FEBio input files and compared with pinned FEBio references; cases from the FEBio test suite and the driving applications | Draft ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)), tabled until input and output |
 
 Design notes live in [`docs/design/`](docs/design/README.md).
+
+Testing uses the [FEBio test suite](https://github.com/febiosoftware/TestSuite) first, then the
+open models in the [FEBio model repository](https://repo.febio.org/modelRepo/UserProjects) user
+projects, with small generated inputs only where neither has a case that fits. The pilot examples
+are not test targets.
 
 The four drafts are reviewed separately. They are also merged, and made consistent where they
 meet, on the branch
