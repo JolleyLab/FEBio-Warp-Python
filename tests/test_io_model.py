@@ -32,6 +32,27 @@ try:
     HAVE_WARP = True
 except ImportError:
     HAVE_WARP = False
+
+# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
+# GPU). It becomes Warp's current device while this module's tests run, so
+# calls that do not name a device follow it.
+DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
+_device_scope = []
+
+
+def setUpModule():
+    if HAVE_WARP:
+        import warp as wp
+
+        _device_scope.append(wp.ScopedDevice(DEVICE))
+        _device_scope[0].__enter__()
+
+
+def tearDownModule():
+    while _device_scope:
+        _device_scope.pop().__exit__(None, None, None)
+
+
 needs_warp = unittest.skipUnless(HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')")
 
 
@@ -317,7 +338,7 @@ class Coverage(unittest.TestCase):
         ):
             self.assertIn(name, missing)
         with self.assertRaises(CoverageError):
-            compile(model, device="cpu")
+            compile(model, device=DEVICE)
 
 
 @needs_warp
@@ -329,7 +350,7 @@ class SingleElement(unittest.TestCase):
         from warp_febio.compiled import compile
 
         model = read_feb(os.path.join(folder, name + ".feb"))
-        compiled = compile(model, device="cpu", material_backend=backend)
+        compiled = compile(model, device=DEVICE, material_backend=backend)
         return model, run(compiled, linear_solver=linear_solver)
 
     def compare(self, name, backend, folder=SINGLE, linear_solver="direct"):
@@ -442,9 +463,9 @@ class SingleElement(unittest.TestCase):
         rng = np.random.default_rng(0)
         for name in CASES:
             with self.subTest(name):
-                cm = compile(read_feb(os.path.join(SINGLE, name + ".feb")), device="cpu")
+                cm = compile(read_feb(os.path.join(SINGLE, name + ".feb")), device=DEVICE)
                 u = 0.05 * rng.standard_normal(cm.ndof)
-                at = lambda v: evaluate(cm, State(0.0, wp.array(v, dtype=wp.float64, device="cpu")))
+                at = lambda v: evaluate(cm, State(0.0, wp.array(v, dtype=wp.float64, device=DEVICE)))
                 K = dense(tangent_matrix(cm, at(u)[1]))
                 h = 1e-6
                 fd = np.zeros_like(K)
