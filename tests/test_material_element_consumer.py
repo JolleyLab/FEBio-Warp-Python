@@ -17,7 +17,6 @@ It is not a comparison with a FEBio run.
 import unittest
 
 import numpy as np
-import warp as wp
 
 from warp_febio.materials import model as model_api
 from warp_febio.materials import models  # noqa: F401

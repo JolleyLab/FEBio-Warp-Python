@@ -12,13 +12,13 @@ import numpy as np
 import warp as wp
 
 from warp_febio.contact import (
-    from_febio_block,
     ContactInterface,
     ContactPoints,
     ContactPotential,
     ContactPotentialTerm,
     ContactSet,
     PotentialParams,
+    from_febio_block,
     node_points,
     quad_facet_points,
     segment_points,

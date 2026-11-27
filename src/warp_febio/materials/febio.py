@@ -29,8 +29,9 @@ dropped, in keeping with the coverage report: a material with an issue of
 status "not yet supported" does not run.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Any
 
 import numpy as np
 import warp as wp

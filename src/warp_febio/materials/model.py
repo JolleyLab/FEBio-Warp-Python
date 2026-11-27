@@ -51,8 +51,9 @@ Everything is generic in the float type (functions use F.dtype for constants),
 so one source compiles for FP32 and FP64.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Any
 
 import numpy as np
 import warp as wp
@@ -90,8 +91,8 @@ class ParamRange:
     """
 
     name: str
-    low: Optional[float] = None
-    high: Optional[float] = None
+    low: float | None = None
+    high: float | None = None
     low_closed: bool = True  # True: value >= low is allowed; False: value > low
     high_closed: bool = True
 
@@ -137,7 +138,7 @@ class MaterialModel:
     # elements and the exchange kernel use it when present; otherwise the 6x6
     # is built from six tangent actions. The two must agree, and the
     # conformance checks compare them.
-    stress_and_tangent: Optional[Callable] = None
+    stress_and_tangent: Callable | None = None
 
     @property
     def geometry_size(self):

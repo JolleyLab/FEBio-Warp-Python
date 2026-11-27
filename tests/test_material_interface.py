@@ -9,10 +9,10 @@ import json
 import pathlib
 import unittest
 
+import febio_closed_forms
 import numpy as np
 import warp as wp
 
-import febio_closed_forms
 from warp_febio.materials import model as model_api
 from warp_febio.materials import models  # noqa: F401  (registers the models)
 from warp_febio.materials.conformance import check_model, sample_states

@@ -9,10 +9,10 @@ it uses.
 import pathlib
 import unittest
 
+import febio_closed_forms
 import numpy as np
 import warp as wp
 
-import febio_closed_forms
 from warp_febio.materials.models.linear_truss import LINEAR_TRUSS, make_truss_function
 from warp_febio.materials.models.nonlinear_spring import (
     make_point_function,

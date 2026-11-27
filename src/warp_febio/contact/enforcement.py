@@ -54,7 +54,7 @@ class ContactTangent:
     matrix when a preconditioner or direct solver needs one.
     """
 
-    def __init__(self, term: "ContactPotentialTerm", project: bool):
+    def __init__(self, term: ContactPotentialTerm, project: bool):
         self.term = term
         self.project = project
         self.height = self.width = 3 * term.potential.n_nodes
