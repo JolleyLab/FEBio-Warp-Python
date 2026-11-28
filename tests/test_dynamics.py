@@ -27,11 +27,11 @@ import unittest
 
 import numpy as np
 import warp as wp
-from support import DEVICE, setUpModule, tearDownModule  # noqa: F401  (device for the module)
+from support import DEVICE, full_tier, setUpModule, tearDownModule  # noqa: F401  (device for the module)
 
 from warp_febio.analysis.dynamics import new_dynamic_state, update_kinematics
 from warp_febio.analysis.steps import build_system, run
-from warp_febio.io import read_feb
+from warp_febio.io import read_feb, read_xplt
 from warp_febio.solvers.linear.warp_linear import dense
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -96,6 +96,47 @@ class FebioAgreementTests(unittest.TestCase):
         _, logged, _ = record(ref, "sx")
         stress = np.stack([s.stress["Part1"] for s in results.states])
         self.assertLess(abs(stress - logged).max() / abs(logged).max(), 5e-7)
+
+
+class DynamicPatchTests(unittest.TestCase):
+    """The dynamic user examples of references/febio/originals/patchwarp: a
+    patch of 1863 quad4 shells, dynamic with FEBio's automatic time stepper,
+
+        a2_dynamic            under a point load
+        pressure_dynamic      under a pressure ramp
+        four_chords_dynamic   under a pressure ramp, held by four chord springs
+
+    each with FEBio's plot file stored beside the input. The stored runs used
+    BFGS (max_ups 10) at dtol 1e-3, so agreement is to that tolerance and not
+    to round-off. Each takes FEBio's 15 steps at FEBio's times, although the
+    iteration counts differ (full Newton here, BFGS there)."""
+
+    PATCHES = ROOT / "references/febio/originals/patchwarp"
+    CASES = (
+        ("a2_dynamic", "patch_a2_point_load"),
+        ("pressure_dynamic", "patch"),
+        ("four_chords_dynamic", "patch_4chords"),
+    )
+
+    @full_tier("three dynamic 1863-shell patches against FEBio; about 20 s each on a GPU")
+    @unittest.skipUnless(
+        wp.get_device(DEVICE).is_cuda,
+        "on a GPU only: with the solvers there are today these patches take far longer on CPU",
+    )
+    def test_same_steps_and_final_state_as_febio(self):
+        for folder, name in self.CASES:
+            with self.subTest(case=folder):
+                ref = read_xplt(self.PATCHES / folder / f"{name}.xplt")
+                system = build_system(read_feb(self.PATCHES / folder / f"{name}.feb"), device=DEVICE)
+                results = run(system, linear_solver="cg")
+                np.testing.assert_allclose(results.times, ref.times, rtol=0, atol=1e-7)
+                for mine, logged in zip(results.states[4:], ref.variable("displacement")[4:]):
+                    febio = np.asarray(logged, dtype=np.float64)
+                    self.assertLess(abs(mine.displacement - febio).max() / abs(febio).max(), 2e-4)
+                final = np.asarray(ref.variable("displacement")[-1], dtype=np.float64)
+                self.assertLess(abs(results.states[-1].displacement - final).max() / abs(final).max(), 5e-5)
+                for forces in results.states[-1].discrete.values():
+                    self.assertTrue((forces["discrete element signed force"] > 0).all())
 
 
 @unittest.skipUnless(SUITE, "set FEBIO_TEST_SUITE to a checkout of the FEBio test suite")
