@@ -39,6 +39,7 @@ The element and the static step of this note are the test fixture of pull reques
 ## Found on the way
 
 - **`tangent_scale` on isotropic Lee-Sacks.** The mitral reference input sets `tangent_scale` to 10. In `FEIsotropicLeeSacks::Tangent` it multiplies `c0` in the tangent only, so the tangent is deliberately not the derivative of the stress. The material layer has no such parameter, and the coverage report names it as what that material is missing. How a scaled tangent should sit beside the differentiated one is a design point for the material layer.
+  Since November 28 the coverage report lists it as having no effect on the solution, with the reason, and the exact tangent is used ([deviations.md](deviations.md), row 3). Carrying FEBio's scaled tangent for Newton is still open.
 
 ## Left open
 

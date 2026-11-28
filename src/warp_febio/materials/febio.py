@@ -199,6 +199,20 @@ def _resolve(record, issues, path=""):
                 curves[tag] = int(c.attrs["lc"])
         elif tag == "density":
             density = float(c.value)
+        elif tag == "tangent_scale":
+            # FEBio (FEIsotropicLeeSacks::Tangent) multiplies c0 by it in the
+            # tangent only, so it changes how Newton converges and not what
+            # it converges to. The exact tangent is used here.
+            if float(c.value) != 1.0:
+                issues.append(
+                    MaterialIssue(
+                        "material parameter",
+                        f"{where}.tangent_scale",
+                        NO_EFFECT,
+                        "scales the Newton tangent only in FEBio; the exact tangent is used here, "
+                        "so iteration counts and step sizes can differ",
+                    )
+                )
         elif tag == "mat_axis":
             kind = c.attrs.get("type")
             if kind != "vector" or c.child("a") is None or c.child("d") is None:

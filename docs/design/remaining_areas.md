@@ -2,6 +2,8 @@
 
 First template for discussion, November 26, 2026 (v0.2). For Steve Maas, Jeff Weiss, Ryan Black and the Warp team. Design only: no code accompanies this note or the notes it links. Nothing here is settled.
 
+**Status, November 28, 2026.** This note is as written on November 26, when no code accompanied it. Since then first templates exist for dynamics and mass damping, trusses and springs, nodal loads, the linear solve and contact in a run; each linked note has a "what changed" paragraph and its measurements, and [deviations.md](deviations.md) lists where the code differs from FEBio. The statements below that nothing has been run, and that no GPU was available, no longer hold for those areas.
+
 **What this is.** A map of what still stands between the run path template (pull request 6) and the first applications, with one short note per area. Each note has a flow diagram, the FEBio source it follows, what Warp already provides, a proposed approach, what has been explored so far, the decision points for the team, and the FEBio test suite problems that would verify it.
 
 **What is asked of a reader.** Not a code review. The notes are meant to help plan the architecture: where a proposal is wrong, which option to take at each decision point, and what is missing. Section 5 lists the decisions by who is best placed to make them. [work_plan.md](work_plan.md) turns the notes into work packages that can proceed in parallel.

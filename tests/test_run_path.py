@@ -86,6 +86,42 @@ class RunPath(unittest.TestCase):
         u = np.stack([s.displacement for s in results.states])
         self.assertLess(abs(u - u_ref).max() / abs(u_ref).max(), 1e-9)
 
+    def test_agrees_with_febio_using_sparse_direct_solvers(self):
+        """The sparse LU on the host ("sparse", SciPy) and, where nvmath-python
+        is installed and the device is a GPU, cuDSS on the device ("cudss")."""
+        import importlib.util
+
+        from warp_febio.analysis.steps import run
+
+        methods = ["sparse"]
+        if wp.get_device(DEVICE).is_cuda and importlib.util.find_spec("nvmath") and importlib.util.find_spec("cupy"):
+            methods.append("cudss")
+        for method in methods:
+            for folder, name in CASES:
+                with self.subTest(method=method, name=name):
+                    results = run(build(folder, name), linear_solver=method)
+                    n = len(results.states)
+                    u_ref = febio_log(os.path.join(folder, "febio", name + "_nodes.txt"), n, 3)
+                    u = np.stack([s.displacement for s in results.states])
+                    self.assertLess(abs(u - u_ref).max() / abs(u_ref).max(), 1e-10)
+
+    def test_cudss_says_what_is_missing(self):
+        import importlib.util
+
+        from warp_febio.analysis.steps import run
+        from warp_febio.assembly.system import SolveError
+        from warp_febio.solvers.linear.cudss import CudssUnavailable
+
+        if importlib.util.find_spec("nvmath") and wp.get_device(DEVICE).is_cuda:
+            self.skipTest("nvmath-python is installed and the device is a GPU")
+        folder, name = CASES[0]
+        # Not a SolveError: a method that is not installed is not a failed
+        # step, and must not be retried with a smaller one.
+        with self.assertRaises(CudssUnavailable) as caught:
+            run(build(folder, name), linear_solver="cudss")
+        self.assertNotIsInstance(caught.exception, SolveError)
+        self.assertRegex(str(caught.exception), "nvmath-python|CUDA device")
+
     @full_tier("CG, BiCGSTAB and GMRES on every reference case, about 4 minutes on CPU")
     def test_agrees_with_febio_using_warp_linear_solvers(self):
         from warp_febio.analysis.steps import run

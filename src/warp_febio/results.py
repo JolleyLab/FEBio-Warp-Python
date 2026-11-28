@@ -37,6 +37,8 @@ class StateResult:
     iterations: int = 0
     #: FEBio's nodal reaction forces (N, 3); set by the run path template.
     reaction_force: np.ndarray | None = None
+    #: Nodal velocity (N, 3) in a dynamic step (FEBio's vx, vy, vz), else None.
+    velocity: np.ndarray | None = None
     truss_stretch: dict = field(default_factory=dict)
     axial_force: dict = field(default_factory=dict)
     discrete: dict = field(default_factory=dict)

@@ -1,8 +1,9 @@
 """Truss domain: two-node trusses of one part as a term.
 
 DRAFT (chordae elements, November 2026). Structure for discussion, not final.
-Static only: mass, inertia and body forces are described in
-docs/design/chordae.md and wait for the dynamics work.
+In a dynamic step the domain gives its consistent mass (mass_coefficients);
+inertia and mass damping are applied by the system through it
+(analysis/dynamics.py).
 
 FEBio counterpart
     FELinearTrussDomain ("linear-truss") with a truss material ("linear
@@ -277,13 +278,18 @@ class TrussDomain(AxialOutputs, Term):
         """Consistent mass per element, (E, 2, 2): rho A L / 3 on the diagonal
         and rho A L / 6 off it (FELinearTrussDomain::ElementMassMatrix). Each
         entry multiplies a 3x3 identity, at the positions of the stiffness
-        blocks. Not used by the static run path."""
+        blocks."""
         # With the geometric length, as FEBio (m_a0 * m_L0), not the rest
         # length parameter: changing a chord's rest length does not change its
         # mass. Computed on the host when the system is built, so the mass does
         # not follow later changes of the area and carries no gradient yet.
         m = self.density * self.area.numpy() * self.geometric_length
         return m[:, None, None] * np.array([[1.0 / 3.0, 1.0 / 6.0], [1.0 / 6.0, 1.0 / 3.0]])
+
+    def mass_coefficients(self) -> np.ndarray:
+        """`mass_blocks` in the order of the four stiffness blocks of an
+        element (node pairs a-a, a-b, b-a, b-b), for a dynamic step."""
+        return self.mass_blocks().reshape(-1)
 
     def plot(self, variable: str) -> np.ndarray:
         """Host copy of a plot variable at the last update, by FEBio's name.
