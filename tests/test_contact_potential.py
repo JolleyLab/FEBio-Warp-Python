@@ -583,7 +583,9 @@ class FebioBlockTests(unittest.TestCase):
         self.assertAlmostEqual(P.r_in[0], 0.2)
         self.assertAlmostEqual(P.r_out[0], 0.5)
         self.assertAlmostEqual(P.scale[0], 2.0)
-        self.assertEqual(kw, {"w_tol": 0.6, "exclusion": "element", "weight_mode": "current"})
+        # No exclude_neighbors in the block: FEBio's default excludes neighbors.
+        self.assertEqual(kw, {"w_tol": 0.6, "exclusion": "neighbors", "weight_mode": "current"})
+        self.assertEqual(from_febio_block({**block, "exclude_neighbors": 0})[1]["exclusion"], "element")
         self.assertEqual(rule, {"quad_n_per_edge": 2, "tri_order": "3"})
         nodes, pts = two_plates(gap=0.3, n_per_edge=rule["quad_n_per_edge"])
         cp = ContactPotential(pts, P, np.zeros((2, 2), dtype=int), nodes, len(nodes), device=DEVICE, **kw)

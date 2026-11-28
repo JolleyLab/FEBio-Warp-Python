@@ -104,8 +104,9 @@ Taken from `FEBioMech/FEContactPotential.cpp` and
   node, weight 1). Weights are current Jacobian times rule weight on each side.
   `kc` is unscaled. The grid cell size is at least `R_out`; pairs are activated
   per element pair; the tangent is the full pair Hessian.
-* By default only an element against itself is skipped; `exclude_neighbors`
-  extends that to element pairs that share a node. `R0_min` (reference distance)
+* By default element pairs that share a node are skipped (`exclude_neighbors`
+  is 1 unless the input sets it; before FEBio 4.12 it was always so). With
+  `exclude_neighbors` 0 only an element against itself is skipped. `R0_min` (reference distance)
   and `w_tol` (cosine between the pair direction and the primary point's current
   facet normal) are element-pair activation gates: one Gauss-point pair that
   passes activates the whole element pair, which is then summed without
@@ -202,10 +203,10 @@ Derived on small test problems and confirmed by the tests and the example:
 * Full tangent first (`project=False`); the projected tangent is the fallback
   when the full one fails to give a descent direction.
 * Self-contact exclusion by body and topology (`exclusion="neighbors"`) plus
-  the reference distance, never the reference distance alone. FEBio's own
-  default is weaker: only an element against itself is skipped
-  (`exclusion="element"`), and `w_tol` is what keeps neighboring facets from
-  repelling each other; `from_febio_block` reproduces that.
+  the reference distance, never the reference distance alone. That is also
+  FEBio's default (`exclude_neighbors` 1), which `from_febio_block` applies
+  when the input does not set it. An earlier version of this note and of the
+  reader had the default the other way round; corrected November 28, 2026.
 
 ## How this lines up with FEBio, MFEM and the FEBio-MFEM framework
 
