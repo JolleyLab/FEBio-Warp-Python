@@ -19,12 +19,12 @@ Start with the [design overview](overview.md): one page on how the pieces fit, w
 
 ## Remaining areas: design only
 
-First templates for discussion. Each is a short note with a flow diagram, the FEBio source it follows, a proposed approach, what has been explored, the decision points for the team, and the FEBio test suite problems that would verify it. None has code yet. Start with [remaining_areas.md](remaining_areas.md), which orders them along the path to the first application runs and lists the decisions by reviewer. [work_plan.md](work_plan.md) says what must be agreed first and which work packages can then proceed in parallel.
+First templates for discussion. Each is a short note with a flow diagram, the FEBio source it follows, a proposed approach, what has been explored, the decision points for the team, and the FEBio test suite problems that would verify it. None has code yet, except the chordae note, which has a draft of both elements for static steps. Start with [remaining_areas.md](remaining_areas.md), which orders them along the path to the first application runs and lists the decisions by reviewer. [work_plan.md](work_plan.md) says what must be agreed first and which work packages can then proceed in parallel.
 
 | Area | Note | Decision points | Needed by |
 |---|---|---|---|
 | Dynamics, mass damping, steps | [dynamics.md](dynamics.md) | [D1 to D5](dynamics.md#7-decision-points) | Valve and device |
-| Chordae: trusses first, then springs | [chordae.md](chordae.md) | [C1 to C5](chordae.md#7-decision-points) | Valve |
+| Chordae: truss and spring elements (draft code for static steps) | [chordae.md](chordae.md) | [C1 to C10](chordae.md#7-decision-points) | Valve |
 | Contact in the run | [contact_in_run.md](contact_in_run.md) | [K1 to K5](contact_in_run.md#7-decision-points) | Valve and device |
 | Linear solve, nonlinear strategy, first GPU runs | [linear_solve.md](linear_solve.md) | [L1 to L6](linear_solve.md#7-decision-points) | Valve and device |
 | Output registry | [output.md](output.md) | [O1 to O4](output.md#5-decision-points) | Valve and device |

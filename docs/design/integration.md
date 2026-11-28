@@ -48,7 +48,7 @@ These belong to the next design, elements and assembly, and were not decided her
 2. **Contact in a run.** Contact points are not yet built from the model's surfaces, and the contact term is not assembled with the domains.
 3. **Per-element material axes.** The open device inputs give them as mesh data. The binding reads `mat_axis` given as two vectors on the material; element data is still carried as records.
 4. **Uncoupled materials.** Uncoupled HGO is in the material layer and agrees with FEBio at a material point. It needs a multi-field element to run; the binding accepts it and the coverage report says so.
-5. **Chordae.** The spring and truss laws are in the material layer. The `Discrete` section of an input is not bound to them, and there is no spring element.
+5. **Chordae.** The spring and truss laws are in the material layer. A draft of the truss and spring elements for static steps, bound to the `Discrete` section and to truss parts, is described in [chordae.md](chordae.md).
 6. **A mixture's own `mat_axis`.** FEBio applies it on top of the children's. The binding reports it as not supported.
 7. **FEBio's defaults.** A parameter missing from the input is still refused (question 2 in [model.md](model.md)).
 8. **Two readings of the material-point inputs.** The material-point test of pull request 4 parses its inputs itself. The binding tests repeat its coupled cases through the reader. The two can become one when pull request 4 is rebased on the reader.

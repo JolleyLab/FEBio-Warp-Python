@@ -89,7 +89,7 @@ How far the suite covers what the valve and device models use (problems in scope
 
 The general machinery is well covered. The features most specific to these models are thin.
 
-**Small inputs where the suite is thin,** in `references/small_problems/inputs/`. Twenty FEBio 4.0 input files, each mirroring or extending a suite problem, all generated geometry.
+**Small inputs where the suite is thin,** in `references/small_problems/inputs/`. Twenty-two FEBio 4.0 input files, each mirroring or extending a suite problem, all generated geometry.
 
 | Inputs | Feature | Mirrors or extends |
 |---|---|---|
@@ -98,6 +98,7 @@ The general machinery is well covered. The features most specific to these model
 | `mp_isotropic_elastic_general` | Isotropic elastic | Device frame constants of the open TPVR inputs |
 | `mp_neo_hookean_general` | Neo-Hookean, as a control | Parameters of `co62` |
 | `ch_chord_slack_tension` | Nonlinear spring through slack and tension | `di04`; chord of the open mitral model |
+| `ch_truss_chords`, `ch_spring_chords` | A block held by four chords from one fixed point, as trusses and as springs of FEBio's three spring types (added November 27 with the chordae draft) | `bt01`, `di01`; chord networks of the valve models |
 | `bk_contact_potential_patch` | Contact potential, non-matching meshes | `co62` |
 | `sh_self_contact_fold` | Contact potential self-contact of one shell surface | The open mitral model's leaflet contact |
 | `sh_lee_sacks_pressure` | Lee-Sacks shells under pressure, with mass damping | The open mitral model's settings |
@@ -119,7 +120,7 @@ Read from the files: the valve models are Lee-Sacks quad4 shells with contact po
 
 `references/small_problems/make_references.py` runs FEBio on an input and stores the logged data with the FEBio version, a description of the build, and the hash of the input file. A reference is valid only for the input whose hash it carries. The script records what FEBio produced and checks nothing.
 
-References for the 20 small inputs are in `references/small_problems/febio/`. They come from provisional FEBio 4.13.0 builds from source (commit `552138d`, no MKL) and are labelled as such. The three added on November 25 come from a second build of the same commit and options, which reproduced the 17 earlier references exactly.
+References for the 22 small inputs are in `references/small_problems/febio/`. They come from provisional FEBio 4.13.0 builds from source (commit `552138d`, no MKL) and are labelled as such. The three added on November 25 come from a second build of the same commit and options, which reproduced the 17 earlier references exactly. The two chord networks added on November 27 come from a build at commit `e4df3f8` with the same options.
 
 What a pinned build needs:
 
@@ -161,7 +162,7 @@ Pilot-phase examples are not used for testing. The [remaining areas note](remain
 | Explored | Result |
 | --- | --- |
 | A survey of the FEBio test suite by material, element, contact and load | 549 inputs classified; coverage table above |
-| Twenty small inputs with FEBio references | Stored, from a provisional build |
+| Twenty-two small inputs with FEBio references | Stored, from a provisional build |
 | Material-point comparison with FEBio | Twelve cases agree to 1e-10 |
 | How far FEBio agrees with itself across platforms | Of 563 suite values, 446 identical on all three platforms |
 | The open application models on current FEBio source | Both valve files stop at `laugon` in the contact potential block |
