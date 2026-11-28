@@ -105,7 +105,7 @@ One point on which guidance would help. The adjoint needs the transpose of the e
 | Setting | FEBio | Here | Proposal |
 | --- | --- | --- | --- |
 | `qn_method` BFGS, Broyden | Keeps the factored matrix and applies quasi-Newton updates for up to `max_ups` iterations, then reforms | Full Newton, tangent reformed every iteration | Implement after the linear solve is settled. With an iterative solver, reusing a matrix saves assembly but not the solve, so the benefit is smaller than in FEBio |
-| `lstol`, `lsmin`, `lsiter` | Line search on the increment | None | A line search is cheap here (one `update` and `residual` per trial) and helps contact. Implement with contact in the run |
+| `lstol`, `lsmin`, `lsiter`, `ls_check_jacobians` | Line search on the increment | FEBio's line search, as written in `FELineSearch::DoLineSearch` (`solvers/nonlinear/newton.py`, `line_search`), on by default with FEBio's defaults | Built November 28. One `update` and `residual` per trial. Suite `sh56` and `sh58` take FEBio's iteration counts exactly with it, and `di03` and `sh06` run only with it |
 
 Until then, results agree with FEBio's but step sequences under the automatic time stepper can differ, as the run path note recorded.
 
@@ -142,7 +142,7 @@ November 27, 2026, on a Quadro RTX 8000 (`cuda:0`), Warp 1.19.0, double precisio
 
 `direct` uses the dense solve up to 3,000 unknowns and the sparse LU beyond, where SciPy is installed. A solve that fails numerically is a failed step, which the time stepper cuts; a method that is not installed is reported as such and not retried.
 
-A first observation on decision L6: on suite `sh58` (shells, dynamic, full Newton in FEBio) this code follows FEBio's step sizes and iteration counts for 14 steps and departs when FEBio's line search first shortens a step ([dynamics.md](dynamics.md), section 6). With `sh58` and the mitral closure, that makes the line search the next piece of the nonlinear strategy to build.
+The line search is now built, as FEBio's. Before it, suite `sh58` (shells, dynamic, full Newton in FEBio) followed FEBio's step sizes and iteration counts for 14 steps and left its path where FEBio's line search first shortens a step, ending 2 percent away; with it, `sh58` takes FEBio's 105 steps and 435 iterations and ends within 3e-7 ([dynamics.md](dynamics.md), section 6). On a GPU the count is 432: over 105 steps the threshold decisions of the line search are sensitive to the order in which sums are rounded. With it, and with FEBio's default for neighbor exclusion in contact, the open mitral input runs to the end in a first experiment ([contact_in_run.md](contact_in_run.md)). BFGS (decision L6) remains: without it the iteration counts of inputs that ask for it differ from FEBio's, and with them the automatic step sizes.
 
 How `cudss` is wired, in `solvers/linear/cudss.py`: the BSR pattern is converted once on the device into scalar CSR index arrays and a gather map; each solve gathers the new values, factors and solves; the analysis is reused while the pattern stays. The Warp arrays are viewed by CuPy without a copy.
 

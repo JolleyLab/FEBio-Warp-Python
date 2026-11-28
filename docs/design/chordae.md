@@ -178,7 +178,7 @@ In double precision. The numbers below were produced on CPU. The tests also run 
 | `shell_patch_truss_chords` (new) | Nine quad4 shells, one edge clamped, the opposite edge held by four truss chords. Trusses sharing nodes with shells | Displacements, shell and truss stress; iteration counts | 4e-12; 3 iterations per step in both |
 | Suite `bt01` | 59 trusses, static, nodal load | Steps, iterations, solution norm stored in the suite | 10 and 20, as stored; norm to 7e-11 |
 | Suite `di01`, `di02` | A linear spring on hex8 blocks | The same three | 10 and 30, as stored; norm to 3e-8 and 4e-9 |
-| Suite `di03` | Springs between two cantilever boards, nodal force | Does not converge here | Fails the same way with the springs removed, and converges at 1 percent of the load. The cause is the missing line search, not the springs |
+| Suite `di03` | Springs between two cantilever boards, nodal force | Without a line search it stops on a negative Jacobian, with or without the springs. With FEBio's line search, built since, it runs: FEBio's 50 steps, solution norm to 3e-9 (FEBio used BFGS, so iteration counts differ) | `tests/test_febio_suite.py` |
 | Suite `di04` | Nonlinear springs | Not run | Its curves use `smooth` interpolation, which the point function here does not have. The coverage report says so |
 | Suite `dy16`, `dy17` | Trusses, dynamic | Not run | Need dynamics |
 
@@ -309,7 +309,7 @@ FEBio test suite first (commit `986005f`), then small inputs for what the suite 
 | --- | --- | --- | --- |
 | `bt01` | Suite | 59 trusses, static, nodal load | Passes against the suite's stored values. Runs in the tests when `FEBIO_TEST_SUITE` points to a checkout |
 | `di01`, `di02` | Suite | A linear spring on hex8 blocks | Pass, the same way |
-| `di03` | Suite | Springs, nodal force | Waits for a line search |
+| `di03` | Suite | Springs, nodal force | Passes on the solution norm, with the line search |
 | `di04` | Suite | Nonlinear springs with `smooth` curves | Waits for that interpolation |
 | `dy16`, `dy17` | Suite | Trusses, dynamic; `dy17` has body force and mass damping | `dy16` passes: FEBio's 100 steps and 276 iterations exactly, solution norm to 1.4e-5 ([dynamics.md](dynamics.md)). `dy17` waits for the constant body force |
 | `ch_chord_slack_tension` | `references/small_problems` | One nonlinear spring from slack into tension | Passes in a run |

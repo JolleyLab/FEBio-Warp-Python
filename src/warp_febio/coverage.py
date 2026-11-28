@@ -81,16 +81,22 @@ CONTROL_NO_EFFECT = {
     "output_stride": "no log file is written",
     "adaptor_re_solve": "no mesh adaptor",
 }
-SOLVER_IMPLEMENTED = {"dtol", "etol", "rtol", "min_residual", "max_refs"}
+SOLVER_IMPLEMENTED = {
+    "dtol",
+    "etol",
+    "rtol",
+    "min_residual",
+    "max_refs",
+    "lstol",
+    "lsmin",
+    "lsiter",
+    "ls_check_jacobians",
+}
 SOLVER_NO_EFFECT = {
     "symmetric_stiffness": "linear solver settings; this draft uses Warp iterative solvers or a dense host solve",
     "equation_scheme": "linear solver settings; this draft uses Warp iterative solvers or a dense host solve",
     "equation_order": "linear solver settings; this draft uses Warp iterative solvers or a dense host solve",
     "optimize_bw": "linear solver settings; this draft uses Warp iterative solvers or a dense host solve",
-    "lstol": "no line search yet; full Newton steps",
-    "lsmin": "no line search yet; full Newton steps",
-    "lsiter": "no line search yet; full Newton steps",
-    "ls_check_jacobians": "no line search yet",
     "check_zero_diagonal": "not checked",
     "zero_diagonal_tol": "not checked",
     "force_partition": "single partition",

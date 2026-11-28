@@ -90,7 +90,7 @@ In double precision, on CPU and on a GPU (Quadro RTX 8000, `cuda:0`), against FE
 | The three damping stiffnesses Newton can use, same two cases, total iterations | Shell case: FEBio's form 1400, the sign of the solid for all domains 744, the derivative 325. Solid case: 902, 902, 416. The solutions agree within the tolerance of the input | Same |
 | Gradient through one dynamic step: a displacement of the shell patch with respect to every parameter of the system, adjoint against central differences | Agree to 1e-4 relative, the test tolerance. The step starts from rest with no load at time zero, so the start does not depend on the parameters | Same |
 | Suite `dy16` (trusses with mass) and `dy07` (40 hex8), against the suite's stored values | FEBio's 100 steps and its 276 and 200 iterations exactly; solution norm to 1.4e-5 and 4e-7 (FEBio ran them with BFGS at `dtol` 1e-3) | Same, with `FEBIO_TEST_SUITE` set |
-| Suite `sh58` (40 quad4 shells, nodal force on at time zero, automatic time stepping), against FEBio run on WS02 | The first 14 steps have FEBio's step sizes and iteration counts, and displacements equal to the precision of the plot file (2e-8 to 5e-8). From step 15 FEBio's line search shortens steps (it reports step lengths near 0.5), so iteration counts, then step sizes, then the final norm (2 percent) differ. The cause is the missing line search, not the dynamics | Checked once, not a test |
+| Suite `sh58` (40 quad4 shells, nodal force on at time zero, automatic time stepping) | Without a line search: the first 14 steps have FEBio's step sizes and iteration counts, and displacements equal to the precision of the plot file; from step 15 FEBio's line search shortens steps, and the paths part (final norm 2 percent away). With FEBio's line search, built since: FEBio's 105 steps and 435 iterations, final norm to 3e-7 | `tests/test_febio_suite.py` |
 | Initial accelerations on shells (`sh58`: a load on at time zero, both faces of the shell in M a = F) | Step 1 agrees with FEBio to 1e-8 | Same check |
 | The kinematic update against FEBio's formulas; the parameter rules for `rhoi` -1, 0, 1 and the defaults | Agree | Same |
 | A model with `rhoi` 1 (alpha_f = 1/2) | Refused by the coverage report, with the reason | Same |
@@ -118,7 +118,7 @@ FEBio test suite first (commit `986005f`), then small inputs for what the suite 
 | `dy01` | Suite | One hex8, neo-Hookean, constant body force | Default |
 | `dy07` | Suite | 40 hex8, prescribed displacement. Passes (section 6) | Default |
 | `sh32` | Suite | One quad4 shell, constant body force | Default |
-| `sh34`, `sh58` | Suite | 40 quad4 shells, body force or nodal force. `sh58` runs and follows FEBio until FEBio's line search acts (section 6); `sh34` needs the constant body force | Default |
+| `sh34`, `sh58` | Suite | 40 quad4 shells, body force or nodal force. `sh58` passes with the line search (section 6); `sh34` needs the constant body force | Default |
 | `dy16`, `dy17` | Suite | Trusses; `dy17` has mass damping ([chordae.md](chordae.md)). `dy16` passes (section 6); `dy17` needs the constant body force | Default |
 | `ms01`, `ms02`, `ms03`, `ms05` | Suite | Two steps, one static and one dynamic | Default |
 | `dy10`, `dy11`, `dy13`, `dy14` | Suite | One hex8 or one quad4 shell | `rhoi` 1 (needs D3) |
