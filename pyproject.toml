@@ -16,7 +16,7 @@ dependencies = ["numpy>=1.24,<3"]
 warp = ["warp-lang==1.19.0"]
 hdf = ["h5py>=3.8"]
 # Test-only dependencies go here. Ruff is not listed: it runs through pre-commit.
-dev = ["warp-lang==1.19.0", "h5py>=3.8"]
+dev = ["warp-lang==1.19.0", "h5py>=3.8", "scipy>=1.11"]
 pilots = ["matplotlib>=3.9,<4"]
 
 [tool.setuptools.packages.find]

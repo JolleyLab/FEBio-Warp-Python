@@ -35,13 +35,11 @@ Degrees of freedom are ordered node by node: (node 0: x, y, z), (node 1: ...).
 import numpy as np
 import warp as wp
 
-# Status codes written per element. A kernel cannot throw; the host reads
-# these after the launch and treats a failure as FEBio treats its
-# NegativeJacobian exception.
-OK = 0
-NEGATIVE_JACOBIAN = 1
-NON_FINITE = 2
+from ..materials.status import NEGATIVE_JACOBIAN, NON_FINITE, OK
 
+# Status codes written per element, shared with the material layer
+# (materials/status.py). A kernel cannot throw; the host reads these after the
+# launch and treats a failure as FEBio treats its NegativeJacobian exception.
 # FEHex8G8 / FEShellQuad4G8 integration points, in FEBio's order.
 # https://github.com/febiosoftware/FEBio/blob/develop/FECore/FEElementTraits.cpp
 _A = 1.0 / np.sqrt(3.0)
@@ -111,15 +109,17 @@ _KERNELS = {}
 def make_brick_kernel(material):
     """Build the element kernel for one material.
 
-    Warp kernels cannot dispatch on a material type at run time, so the
-    material's function is captured here and one kernel is generated per
-    material kernel object.
+    `material` is a BoundMaterial (materials/febio.py). Warp kernels cannot
+    dispatch on a material type at run time, so the model's function is
+    captured here and one kernel is generated per material model. A solid
+    mixture is one model, so it is one kernel with no branching.
     """
-    if material in _KERNELS:
-        return _KERNELS[material]
-    stress_and_tangent = material.stress_and_tangent
-    pvec = material.param_vector
-    gvec = material.geometry_vector
+    key = material.model.name
+    if key in _KERNELS:
+        return _KERNELS[key]
+    stress_and_tangent = material.stress_and_tangent()
+    pvec = material.model.param_vector(wp.float64)
+    gvec = material.model.geometry_vector(wp.float64)
 
     def brick(
         X: wp.array2d(dtype=wp.vec3d),  # (E, 8) reference positions
@@ -168,7 +168,7 @@ def make_brick_kernel(material):
             F = Jt * wp.inverse(J0)
             JtiT = wp.transpose(wp.inverse(Jt))
             s, c = stress_and_tangent(F, g, p)
-            if not wp.isfinite(s):
+            if not (wp.isfinite(s) and wp.isfinite(c)):
                 status[e] = wp.static(NON_FINITE)
                 return
             sigma[e, q] = s
@@ -196,7 +196,7 @@ def make_brick_kernel(material):
                         ke[e, 3 * i + a, 3 * j + a] = ke[e, 3 * i + a, 3 * j + a] + kg
 
     kernel = wp.kernel(brick, module="unique")
-    _KERNELS[material] = kernel
+    _KERNELS[key] = kernel
     return kernel
 
 

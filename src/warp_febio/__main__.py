@@ -19,7 +19,6 @@ def main(argv=None):
     for name in ("inspect", "run"):
         p = sub.add_parser(name)
         p.add_argument("input")
-        p.add_argument("--materials", choices=("minimal", "interface"), default="minimal")
         if name == "run":
             p.add_argument(
                 "-o",
@@ -36,11 +35,11 @@ def main(argv=None):
 
     model = read_feb(args.input)
     if args.command == "inspect":
-        report = inspect(model, args.materials)
+        report = inspect(model)
         print(report.table())
         return 0 if report.runnable else 1
     try:
-        compiled = compile(model, device=args.device, material_backend=args.materials)
+        compiled = compile(model, device=args.device)
     except CoverageError as err:
         print(err.report.table())
         return 1

@@ -25,7 +25,7 @@ FEEdgeToSurfaceContactPotential:
 * ``body`` groups points for self-contact exclusion; pairs on different bodies
   always interact.
 
-Lengths follow the caller's unit convention (SI inside this package).
+Lengths follow the caller's unit convention (the units of the input file, as FEBio does).
 """
 
 from __future__ import annotations

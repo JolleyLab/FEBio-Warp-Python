@@ -151,10 +151,12 @@ class PotentialParams:
         return self.kcs[cls] * g
 
 
-def from_febio_block(block: dict, scale: float = 1.0):
+def from_febio_block(block, scale: float = 1.0):
     """Translate a FEBio ``contact type="contact potential"`` block into module options.
 
-    ``block`` holds FEBio's parameter names as keys (strings or numbers, as
+    ``block`` is the contact record of the central model as the reader
+    stores it (``model.contact[i]`` after ``warp_febio.io.read_feb``), or a
+    dict. Either way it holds FEBio's parameter names (strings or numbers, as
     parsed from a .feb file): ``kc`` (required; FEBio's default of 0 disables
     the interface), ``p``, ``R_in``, ``R_out``, ``R0_min``, ``w_tol``,
     ``integration_rule`` (``default`` or ``higher-order``),
@@ -169,6 +171,9 @@ def from_febio_block(block: dict, scale: float = 1.0):
     same surface (module notes on pair multiplicity). search.py lists where
     ``w_tol`` and ``R0_min`` are applied differently from FEBio.
     """
+    if hasattr(block, "children"):
+        # A model Record: parameters are child records under FEBio's tags.
+        block = {c.tag: c.value for c in block.children if c.value is not None}
     if "kc" not in block:
         raise ValueError("contact potential block has no kc (FEBio's default 0 disables contact)")
 

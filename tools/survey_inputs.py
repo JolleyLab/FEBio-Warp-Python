@@ -26,7 +26,7 @@ def spec_version(path):
     return m.group(1) if m else None
 
 
-def survey(paths, materials="minimal"):
+def survey(paths):
     from warp_febio.compiled import inspect
     from warp_febio.io import read_feb, write_feb
 
@@ -59,7 +59,7 @@ def survey(paths, materials="minimal"):
             row["round_trip"] = False
             row["error"] = f"{type(err).__name__}: {err}"[:300]
         try:
-            report = inspect(model, materials)
+            report = inspect(model)
             row["missing"] = sorted({f"{e.category}: {e.febio_name}" for e in report.missing()})
             row["status"] = "runnable" if report.runnable else "not yet runnable"
         except Exception as err:
@@ -117,12 +117,11 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("paths", nargs="+")
     p.add_argument("--json")
-    p.add_argument("--materials", default="minimal")
     a = p.parse_args()
     files = []
     for x in a.paths:
         files += sorted(glob.glob(os.path.join(x, "**", "*.feb"), recursive=True)) if os.path.isdir(x) else [x]
-    rows = survey(files, a.materials)
+    rows = survey(files)
     summarize(rows)
     if a.json:
         with open(a.json, "w") as f:

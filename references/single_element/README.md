@@ -10,7 +10,20 @@ start from a small end-to-end example.
 | `hex8_neo_hookean.feb` | one hex8, `neo-Hookean`, mildly distorted | lateral displacement of the moved face (8) |
 | `quad4_shell_neo_hookean.feb` | one quad4 `elastic-shell`, `neo-Hookean`, thickness 0.1 | in-plane y and back-face displacement of the moved edge (8) |
 
-Both use `max_ups` 0 (full Newton) and tolerances tighter than FEBio's defaults,
+A third input, `hex8_pressure.feb`, is the gradient check case of the run path
+template: one unit hex8, `neo-Hookean`, symmetry conditions on three faces and a
+follower pressure on the top face. Its solution is homogeneous and has a closed
+form (see `tests/test_run_path_pressure.py`). Its FEBio results in `febio/` are
+from FEBio 4.13.0 built from source at commit `e4df3f8` by
+`tools/build_febio.sh` (same options as below). That build reproduces the
+stored results of `hex8_neo_hookean.feb` exactly. FEBio's log reports 7, 9, 11
+and 13 reformations for the four load steps.
+
+`hex8_pressure_autostep.feb` is the same model with FEBio's automatic time
+stepper and must points. `febio/hex8_pressure_autostep_steps.txt` lists the time
+and iteration count of each converged step from the same build.
+
+All use `max_ups` 0 (full Newton) and tolerances tighter than FEBio's defaults,
 so each code converges well below the comparison tolerance.
 
 ## FEBio results in `febio/`
