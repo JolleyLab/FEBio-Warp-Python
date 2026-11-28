@@ -118,12 +118,18 @@ uv sync --extra dev
 uv run -m unittest discover -s tests -v
 ```
 
-`uv sync` creates `.venv` with the versions recorded in `uv.lock`. Python 3.11 or later; 3.12 is
-the tested version and the one uv selects from `.python-version`. Warp is pinned to 1.19.0; see the
+`uv sync` creates `.venv` with the versions recorded in `uv.lock`. The `dev` extra installs
+everything the tests use, including Warp. To use the package, the `warp` extra
+(`uv sync --extra warp`, or `pip install -e ".[warp]"`) installs Warp, which compiling and
+running a model needs. Without it, `pip install -e .` installs only the model and the FEBio
+file readers and writers (`warp_febio.model`, `warp_febio.io`), which depend on NumPy alone
+and can be used inside 3D Slicer.
+
+Python 3.11 or later; 3.12 is the tested version and the one uv selects from
+`.python-version`. Warp is pinned to 1.19.0; see the
 [Warp installation guide](https://nvidia.github.io/warp/v1.19/user_guide/installation.html).
 
-A plain `pip install -e .` in a virtual environment also works. See
-[CONTRIBUTING.md](CONTRIBUTING.md) for formatting and the pre-commit hooks.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for formatting and the pre-commit hooks.
 
 ## Acknowledgments
 
