@@ -5,7 +5,8 @@
 
 `inspect` prints the coverage report: every feature of the file and whether
 FEBio-Warp implements it. `run` refuses a file that is not yet runnable and
-prints the same report.
+prints the same report. Both go through the run path (analysis/steps.py), so
+the report covers the loads and element types the run path can build.
 """
 
 import argparse
@@ -29,23 +30,27 @@ def main(argv=None):
             p.add_argument("--device", default=None)
     args = parser.parse_args(argv)
 
-    from .compiled import compile, inspect
-    from .coverage import CoverageError
     from .io import read_feb, write_vtkhdf, write_xplt
 
     model = read_feb(args.input)
     if args.command == "inspect":
-        report = inspect(model)
+        # Importing the run path imports Warp. The model and the file layers
+        # above do not need it.
+        from .analysis.steps import domain_support, load_support
+        from .compiled import inspect
+
+        report = inspect(model, load_support=load_support, domain_support=domain_support)
         print(report.table())
         return 0 if report.runnable else 1
+    from .analysis.steps import build_system, run
+    from .coverage import CoverageError
+
     try:
-        compiled = compile(model, device=args.device)
+        system = build_system(model, device=args.device)
     except CoverageError as err:
         print(err.report.table())
         return 1
-    from .analysis.static import run
-
-    results = run(compiled, log=print)
+    results = run(system, log=print)
     out = args.output or str(Path(args.input).with_suffix(".xplt"))
     write_xplt(model, results, out)
     print(f"wrote {out}")
