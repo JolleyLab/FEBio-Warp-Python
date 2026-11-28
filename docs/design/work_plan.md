@@ -2,6 +2,8 @@
 
 First template for discussion, November 26, 2026. For Steve Maas, Jeff Weiss, Ryan Black, the Warp team and the Jolley Lab. A proposal for how to organize the work, not an assignment. Nothing here is settled.
 
+**Status, November 27, 2026.** The first implementations (model and I/O, materials, contact, the run path template) are on `main` and tested on CPU and on a GPU, so stage 0 is partly done: A is in place, B exists as a template whose four choices still need an answer, and C is not built. No work package has started. The packages, lanes and milestones below are unchanged.
+
 **What this is.** The design notes say what has been explored and what needs deciding. This page turns them into a plan in which several people can work on different parts at the same time. It names the few things that must be agreed first, splits the rest into work packages that do not touch each other's files, and says how each one is known to be done.
 
 **How to read it.** Section 1 is the shape of the plan. Section 2 is the short list that blocks everything else. Section 3 is the work packages. Section 5 is how a person picks one up.
@@ -11,9 +13,9 @@ First template for discussion, November 26, 2026. For Steve Maas, Jeff Weiss, Ry
 ```mermaid
 flowchart TB
     subgraph s0["Stage 0: agree the spine (serial)"]
-        a["A. Model and I/O<br/><i>pull request 5</i>"]
-        b["B. Contract v0<br/>unknowns, terms, State, sign"]
-        c["C. Comparison runner<br/>suite input in, FEBio result compared"]
+        a["A. Model and I/O<br/><i>on main</i>"]
+        b["B. Contract v0<br/>unknowns, terms, State, sign<br/><i>template on main, to be agreed</i>"]
+        c["C. Comparison runner<br/>suite input in, FEBio result compared<br/><i>not built</i>"]
     end
 
     subgraph s1["Stage 1: work packages (parallel)"]
@@ -67,15 +69,15 @@ flowchart TB
 
 Three things every work package depends on. They are the serial part of the plan, and the most useful review time is spent here.
 
-| | What | Where it is proposed | What is asked |
+| | What | Where it is | What is asked |
 | --- | --- | --- | --- |
-| A | The model and the reader | Pull request 5, [model.md](model.md) | On `main` since November 27; review continues on the note's decision points |
-| B | Contract v0: unknowns numbered by (node, variable) in 3x3 blocks; constrained components masked; one `Term` contract for domains, loads and contact; FEBio's residual sign; State apart from the model | Pull request 6, [run_path.md](run_path.md), points 1 to 3 for review | A yes, a no, or a change on each of the four. Once given, the contract is frozen as v0 and packages build against it |
-| C | A comparison runner: run a FEBio test suite input in FEBio-Warp and compare with the plot file of a pinned FEBio build | [output.md](output.md) decision O1, [verification.md](verification.md) | Agreement on plot file or added log data, and on the pinned build |
+| A | The model and the reader | On `main` (pull request 5), [model.md](model.md) | Done as a first implementation; review continues on the note's decision points |
+| B | Contract v0: unknowns numbered by (node, variable) in 3x3 blocks; constrained components masked; one `Term` contract for domains, loads and contact; FEBio's residual sign; State apart from the model | On `main` as a template (pull request 6), [run_path.md](run_path.md), [decisions R1 to R3](run_path.md#12-decision-points) | A yes, a no, or a change on each of the four. Once given, the contract is frozen as v0 and packages build against it |
+| C | A comparison runner: run a FEBio test suite input in FEBio-Warp and compare with the plot file of a pinned FEBio build | Not built. Proposed in [output.md](output.md) decision O1 and [verification.md](verification.md). The command line (`python -m warp_febio run`) already runs an input and writes a plot file, which is the first half | Agreement on plot file or added log data, and on the pinned build |
 
 B is the one that matters most. If numbering or the term contract changes after packages start, each of them is reworked. If they are frozen as v0, even provisionally, packages can proceed, and a later change is one migration.
 
-C can start now. It does not depend on B, and every package's definition of done uses it.
+C can start now. It does not depend on B, and every package's definition of done uses it. It is the most useful next piece of code.
 
 ## 3. Stage 1: work packages
 
@@ -94,7 +96,7 @@ Each package owns its files, attaches through contract v0, and is done when the 
 | W9 | Several steps and activation | [dynamics.md](dynamics.md) | `analysis/` | W3 | `ms01`, `ms02`, `ms03`, `ms05` | none |
 | W10 | Device elements: three-field solid, wedge, tri3 shell | [elements.md](elements.md) | `elements/` (new files) | B, W12 | `bk_hgo_three_field`; single penta6 and tri3 shell elements | E3, E4 |
 | W11 | `normal displacement` | [constraints.md](constraints.md) | `constraints/` | B | A small tube input, to add | none |
-| W12 | Material items: `tangent_scale`, per-element axes | [materials.md](materials.md) | `materials/` | Pull request 2 | Coverage report no longer lists them on the open inputs | Stays with pull request 2 |
+| W12 | Material items: `tangent_scale`, per-element axes | [materials.md](materials.md) | `materials/` | The material layer on `main` | Coverage report no longer lists them on the open inputs | none |
 | W13 | Line search and quasi-Newton | [linear_solve.md](linear_solve.md) | `solvers/nonlinear/` | W5, W6 | Iteration counts of suite problems with `max_ups` 10 | L6 |
 
 What can start as soon as contract v0 is frozen, with no dependence on each other: W1, W2, W4, W5, W6, W11, and C. W3 follows W1 by a small step. That is six or seven pieces of work in parallel.
@@ -131,18 +133,18 @@ A lane can be carried by a person working with coding agents. The packages are s
 | ID | Decision | Options | Proposed | For |
 | --- | --- | --- | --- | --- |
 | P1 | How a new term enters the system | (a) Each package edits `select_domain` or `build_system`. (b) A registry keyed by FEBio's type names, where a package registers its own builder | (b). It is what lets packages land in any order without conflicts, and it mirrors how FEBio registers classes | Steve, Warp team |
-| P2 | Whether contract v0 is frozen before pull request 5 is fully reviewed | (a) Wait. (b) Freeze provisionally on the four choices, with one planned migration if review changes them | (b) | Steve, MJ |
-| P3 | How a package is tracked | (a) A pull request per package from the start. (b) The lanes table on this page, with coordination where the team already talks; a draft pull request opened only when a package has code | (b), and since November 27 without long-lived drafts: notes hold the plan, and code comes as short-lived pull requests against `main`. The README table links each area to its note and its decisions, and this page says who has what | MJ |
+| P2 | Whether contract v0 is frozen before its review is complete | (a) Wait. (b) Freeze provisionally on the four choices, with one planned migration if review changes them | (b). The template is on `main`, so packages can already build against it | Steve, MJ |
+| P3 | How a package is tracked | (a) A pull request per package from the start. (b) The lanes table on this page, with coordination where the team already talks; a draft pull request opened only when a package has code | Decided November 27: (b), without long-lived drafts. Notes hold the plan, and code comes as short-lived pull requests against `main`. The README table links each area to its note and its decisions, and this page says who has what | MJ |
 | P4 | The reference tier and the faster tier | (a) Every package delivers the reference tier first (double precision, matches FEBio). (b) Some packages go straight to GPU performance | (a), except W6, whose purpose is performance | Team |
-| P5 | Who needs a GPU and a pinned FEBio build | W6 needs a GPU. C and every "done when" need the pinned FEBio build, with Pardiso for the non-symmetric inputs | Settle both before Stage 1 starts in earnest | MJ, Steve |
+| P5 | Who needs a GPU and a pinned FEBio build | W6 needs a GPU. C and every "done when" need the pinned FEBio build, with Pardiso for the non-symmetric inputs | GPU: settled for testing. Every package runs its tests on a GPU as well as on CPU ([CONTRIBUTING](../../CONTRIBUTING.md#writing-and-running-tests)); a workstation GPU is used for this, and the GPU runner in CI is started by hand only, because it is billed. The pinned FEBio build is still to settle | MJ, Steve |
 
 ## 5. Picking up a package
 
 1. Read the package's note: what FEBio does, what is proposed, what has been explored, its decision points.
 2. Check that the decisions listed for the package in section 3 have an answer. If not, that is the first conversation.
-3. Work on a branch named `username/short-description`, in the files the package owns.
-4. Done means: the named suite problems agree with FEBio through the comparison runner; the tangent agrees with finite differences of the residual; a gradient check passes for every parameter the term exposes; the coverage report and the note are updated.
-5. Open a pull request against `main` when there is code to look at, keep it small, and merge it once the full test tier passes on CPU and on a GPU. The note stays in `docs/design/` and is updated with it.
+3. Work on a branch named `username/short-description`, in the files the package owns. Branch from `main` and do not stack branches on each other.
+4. Done means: the named suite problems agree with FEBio through the comparison runner; the tangent agrees with finite differences of the residual; a gradient check passes for every parameter the term exposes; the tests take their device from `tests/support.py` and pass on CPU and on a GPU; the coverage report and the note are updated.
+5. Open a pull request against `main` when there is code to look at, keep it small, and merge it once the full test tier passes on CPU and on a GPU. A package can land in several such pull requests. The note stays in `docs/design/` and is updated with it.
 
 ## 6. Stage 2: milestones
 
