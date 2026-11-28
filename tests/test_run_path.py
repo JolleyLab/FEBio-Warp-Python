@@ -9,11 +9,11 @@ import os
 import unittest
 
 import numpy as np
+from support import DEVICE, full_tier, setUpModule, tearDownModule  # noqa: F401  (device for the module)
 
 from warp_febio.io import read_feb
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
-DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
 SINGLE = os.path.join(ROOT, "references", "single_element")
 SMALL = os.path.join(ROOT, "references", "small_meshes")
 CASES = (
@@ -30,22 +30,6 @@ try:
     HAVE_WARP = True
 except ImportError:
     HAVE_WARP = False
-
-# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
-# GPU). It becomes Warp's current device while this module's tests run, so
-# calls that do not name a device follow it.
-_device_scope = []
-
-
-def setUpModule():
-    if HAVE_WARP:
-        _device_scope.append(wp.ScopedDevice(DEVICE))
-        _device_scope[0].__enter__()
-
-
-def tearDownModule():
-    while _device_scope:
-        _device_scope.pop().__exit__(None, None, None)
 
 
 def febio_log(path, states, columns):
@@ -90,6 +74,19 @@ class RunPath(unittest.TestCase):
                 self.assertLess(abs(u - u_ref).max() / abs(u_ref).max(), 1e-10)
                 self.assertLess(abs(s - s_ref).max() / abs(s_ref).max(), 1e-10)
 
+    def test_agrees_with_febio_using_cg(self):
+        """Quick tier: Warp's CG on the device for one case. The full tier runs
+        every iterative solver on every case."""
+        from warp_febio.analysis.steps import run
+
+        folder, name = CASES[0]
+        results = run(build(folder, name), linear_solver="cg")
+        n = len(results.states)
+        u_ref = febio_log(os.path.join(folder, "febio", name + "_nodes.txt"), n, 3)
+        u = np.stack([s.displacement for s in results.states])
+        self.assertLess(abs(u - u_ref).max() / abs(u_ref).max(), 1e-9)
+
+    @full_tier("CG, BiCGSTAB and GMRES on every reference case, about 4 minutes on CPU")
     def test_agrees_with_febio_using_warp_linear_solvers(self):
         from warp_febio.analysis.steps import run
 

@@ -10,6 +10,7 @@ import tempfile
 import unittest
 
 import numpy as np
+from support import DEVICE, full_tier, setUpModule, tearDownModule  # noqa: F401  (device for the module)
 
 from warp_febio.io import read_feb, read_feb_string, read_xplt, write_feb, write_xplt
 
@@ -32,25 +33,6 @@ try:
     HAVE_WARP = True
 except ImportError:
     HAVE_WARP = False
-
-# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
-# GPU). It becomes Warp's current device while this module's tests run, so
-# calls that do not name a device follow it.
-DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
-_device_scope = []
-
-
-def setUpModule():
-    if HAVE_WARP:
-        import warp as wp
-
-        _device_scope.append(wp.ScopedDevice(DEVICE))
-        _device_scope[0].__enter__()
-
-
-def tearDownModule():
-    while _device_scope:
-        _device_scope.pop().__exit__(None, None, None)
 
 
 needs_warp = unittest.skipUnless(HAVE_WARP, "Warp is not installed (pip install 'warp_febio[warp]')")
@@ -373,6 +355,7 @@ class SingleElement(unittest.TestCase):
             with self.subTest(name):
                 self.compare(name)
 
+    @full_tier("the fixture with every iterative solver on every case, about 4 minutes on CPU")
     def test_agrees_with_febio_using_warp_linear_solvers(self):
         """The same comparison with Warp's iterative solvers on the device."""
         for method in ("cg", "bicgstab", "gmres"):

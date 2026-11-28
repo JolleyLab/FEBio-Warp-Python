@@ -14,12 +14,12 @@ import os
 import unittest
 
 import numpy as np
+from support import DEVICE, full_tier, setUpModule, tearDownModule  # noqa: F401  (device for the module)
 
 from warp_febio.io import read_feb
 from warp_febio.model.model import Record, Surface
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
-DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
 SINGLE = os.path.join(ROOT, "references", "single_element")
 CASE = os.path.join(SINGLE, "hex8_pressure.feb")
 E0, V0, P0 = 1.0, 0.3, 0.2  # the values in the input
@@ -31,22 +31,6 @@ try:
     HAVE_WARP = True
 except ImportError:
     HAVE_WARP = False
-
-# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
-# GPU). It becomes Warp's current device while this module's tests run, so
-# calls that do not name a device follow it.
-_device_scope = []
-
-
-def setUpModule():
-    if HAVE_WARP:
-        _device_scope.append(wp.ScopedDevice(DEVICE))
-        _device_scope[0].__enter__()
-
-
-def tearDownModule():
-    while _device_scope:
-        _device_scope.pop().__exit__(None, None, None)
 
 
 def closed_form(E, v, p, linear=False):
@@ -380,6 +364,7 @@ except ImportError:
 
 @unittest.skipUnless(HAVE_WARP and HAVE_SCIPY, "needs Warp, and SciPy for a sparse direct solve")
 class PressureAgainstFEBio(unittest.TestCase):
+    @full_tier("a 1,863-element shell patch against FEBio 4.9, about 15 s")
     def test_shell_patch_under_pressure(self):
         """A FEBio 4.9 run of a 1,863-element quad4 shell patch under a
         follower pressure (static, isotropic elastic), stored in the

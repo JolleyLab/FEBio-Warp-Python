@@ -25,12 +25,12 @@ types FEBio-Warp does not implement.
 
 import hashlib
 import json
-import os
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import numpy as np
+from support import DEVICE, setUpModule, tearDownModule  # noqa: F401  (device for the module)
 
 CASES = Path(__file__).parent.parent / "references" / "small_problems"
 
@@ -48,25 +48,6 @@ try:
     from warp_febio.materials.geometry import axes_from_vectors
 except ImportError:
     api = None
-
-# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
-# GPU). It becomes Warp's current device while this module's tests run, so
-# calls that do not name a device follow it.
-DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
-_device_scope = []
-
-
-def setUpModule():
-    if api is not None:
-        import warp as wp
-
-        _device_scope.append(wp.ScopedDevice(DEVICE))
-        _device_scope[0].__enter__()
-
-
-def tearDownModule():
-    while _device_scope:
-        _device_scope.pop().__exit__(None, None, None)
 
 
 # U'(J) and U''(J) of FEBio's pressure models (FEBioMech/FEUncoupledMaterial.cpp).

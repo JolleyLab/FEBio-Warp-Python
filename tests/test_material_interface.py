@@ -6,32 +6,17 @@ FEBio source; they do not establish agreement of a full FEBio solve.
 """
 
 import json
-import os
 import pathlib
 import unittest
 
 import febio_closed_forms
 import numpy as np
 import warp as wp
+from support import DEVICE, setUpModule, tearDownModule  # noqa: F401  (device for the module)
 
 from warp_febio.materials import model as model_api
 from warp_febio.materials import models  # noqa: F401  (registers the models)
 from warp_febio.materials.conformance import check_model, sample_states
-
-# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
-# GPU). It becomes Warp's current device while this module's tests run, so
-# calls that do not name a device follow it.
-DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
-_device_scope = wp.ScopedDevice(DEVICE)
-
-
-def setUpModule():
-    _device_scope.__enter__()
-
-
-def tearDownModule():
-    _device_scope.__exit__(None, None, None)
-
 
 # The pilot implementations are an independent comparison. The input and output
 # draft (pull request 5) moves them from warp_febio.materials to the

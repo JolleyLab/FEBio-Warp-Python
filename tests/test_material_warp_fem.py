@@ -16,30 +16,15 @@ every model carries alongside the Cauchy form:
     tangent:   integral of  dP[F][grad du] : grad v
 """
 
-import os
 import unittest
 
 import numpy as np
 import warp as wp
 import warp.fem as fem
+from support import DEVICE, setUpModule, tearDownModule  # noqa: F401  (device for the module)
 
 from warp_febio.materials import model as model_api
 from warp_febio.materials import models  # noqa: F401
-
-# WARP_FEBIO_TEST_DEVICE selects the device ("cpu" by default, "cuda:0" for a
-# GPU). It becomes Warp's current device while this module's tests run, so
-# calls that do not name a device follow it.
-DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
-_device_scope = wp.ScopedDevice(DEVICE)
-
-
-def setUpModule():
-    _device_scope.__enter__()
-
-
-def tearDownModule():
-    _device_scope.__exit__(None, None, None)
-
 
 AXES = np.array([[0.36, 0.48, -0.8], [-0.8, 0.6, 0.0], [0.48, 0.64, 0.6]])
 CASES = {

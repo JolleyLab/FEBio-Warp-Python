@@ -5,11 +5,11 @@ variable WARP_FEBIO_TEST_DEVICE (default "cpu"); set it to "cuda:0" to run
 the same checks on a GPU. Tolerances are stated at each assertion.
 """
 
-import os
 import unittest
 
 import numpy as np
 import warp as wp
+from support import DEVICE, setUpModule, tearDownModule  # noqa: F401  (device for the module)
 
 from warp_febio.contact import (
     ContactInterface,
@@ -25,7 +25,6 @@ from warp_febio.contact import (
 )
 
 wp.init()
-DEVICE = os.environ.get("WARP_FEBIO_TEST_DEVICE", "cpu")
 vec3d = wp.vec3d
 
 
