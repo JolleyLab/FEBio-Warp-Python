@@ -30,7 +30,12 @@ from warp_febio.elements.discrete_domain import DiscreteDomain
 from warp_febio.elements.line2 import sum_axial_force
 from warp_febio.elements.truss_domain import TrussDomain
 from warp_febio.io import read_feb
-from warp_febio.materials.models.linear_spring import LINEAR_SPRING, TENSION_ONLY_LINEAR_SPRING
+from warp_febio.materials.discrete import chord_curve_closed_form, resolve_discrete_material
+from warp_febio.materials.models.linear_spring import (
+    LINEAR_SPRING,
+    SMOOTH_TENSION_ONLY_LINEAR_SPRING,
+    TENSION_ONLY_LINEAR_SPRING,
+)
 from warp_febio.materials.models.linear_truss import TENSION_ONLY_LINEAR_TRUSS
 from warp_febio.materials.models.nonlinear_spring import nonlinear_spring
 from warp_febio.sensitivity.adjoint import solve_on_tape
@@ -214,6 +219,17 @@ class TrussTermTests(unittest.TestCase):
         self.assertNotEqual(term.update(collapsed), 0)
 
 
+def smooth_tension_only(dl, p):
+    """Force and slope of the smooth tension-only linear spring, on the host."""
+    E, slack, w = p
+    x = dl - slack
+    if x >= w:
+        return E * x, E
+    if x <= -w:
+        return 0.0, 0.0
+    return E * (x + w) ** 2 / (4.0 * w), E * (x + w) / (2.0 * w)
+
+
 class SpringTermTests(unittest.TestCase):
     """DiscreteDomain against FEBio's spring materials."""
 
@@ -224,6 +240,12 @@ class SpringTermTests(unittest.TestCase):
                 TENSION_ONLY_LINEAR_SPRING,
                 [[15.0, 0.4], [40.0, 0.1]],
                 lambda dl, p: (p[0] * (dl - p[1]), p[0]) if dl - p[1] >= 0 else (0.0, 0.0),
+            ),
+            # FEBio-Warp only; the reference is the law's own closed form.
+            "smooth tension-only linear spring": (
+                SMOOTH_TENSION_ONLY_LINEAR_SPRING,
+                [[15.0, 0.4, 0.3], [40.0, 0.1, 0.5]],
+                smooth_tension_only,
             ),
             "nonlinear spring": (
                 nonlinear_spring(3, "elongation", "extrapolate"),
@@ -288,6 +310,150 @@ class SpringTermTests(unittest.TestCase):
         np.testing.assert_allclose(R, 0.0, atol=0)
         # if (Lt == 0) { F = 0; Lt = 1; e = vec3d(1, 1, 1); } gives E e (x) e.
         np.testing.assert_allclose(K[:3, :3], 7.0 * np.ones((3, 3)), rtol=1e-14)
+
+
+class SmoothTensionOnlySpringTests(unittest.TestCase):
+    """The smooth tension-only linear spring (FEBio-Warp only): FEBio's
+    tension-only linear spring outside a band around the slack length, a
+    continuous stiffness inside it, and a two-sided gradient at the corner."""
+
+    # Values with exact binary forms, so that an elongation equal to the slack
+    # length, or at an edge of the band, is so to the last bit.
+    E, SLACK, W = 15.0, 0.5, 0.0625
+
+    def one_spring(self, law, row, elongation):
+        """One spring along x, stretched by `elongation`."""
+        X = np.array([[0.0, 0, 0], [1.0, 0, 0]])
+        term = DiscreteDomain("one", law, X[None], np.array([[0, 1]]), [row], 2, DEVICE)
+        state = State(0.0, wp.array([[0.0, 0, 0], [elongation, 0, 0]], dtype=wp.vec3d, device=DEVICE))
+        return term, state
+
+    def force(self, law, row, elongation):
+        term, state = self.one_spring(law, row, elongation)
+        self.assertEqual(term.update(state), 0)
+        return float(term.data["axial_force"].numpy()[0]), float(term.data["axial_tangent"].numpy()[0])
+
+    def test_is_febio_tension_only_spring_outside_the_band_and_at_zero_width(self):
+        w = self.W
+        for dl in (-0.25, 0.125, self.SLACK - w, self.SLACK + w, 0.75, 2.0):
+            febio = self.force(TENSION_ONLY_LINEAR_SPRING, [self.E, self.SLACK], dl)
+            self.assertEqual(self.force(SMOOTH_TENSION_ONLY_LINEAR_SPRING, [self.E, self.SLACK, w], dl), febio)
+        for dl in (-0.25, 0.484375, self.SLACK, 0.515625, 2.0):
+            febio = self.force(TENSION_ONLY_LINEAR_SPRING, [self.E, self.SLACK], dl)
+            self.assertEqual(self.force(SMOOTH_TENSION_ONLY_LINEAR_SPRING, [self.E, self.SLACK, 0.0], dl), febio)
+
+    def test_force_and_stiffness_are_continuous_and_bounded_in_the_band(self):
+        w = self.W
+        dl = np.linspace(self.SLACK - 1.5 * w, self.SLACK + 1.5 * w, 301)
+        X = np.zeros((len(dl), 2, 3))
+        X[:, 1, 0] = 1.0
+        pairs = np.arange(2 * len(dl), dtype=np.int32).reshape(-1, 2)
+        u = np.zeros((2 * len(dl), 3))
+        u[1::2, 0] = dl
+        state = State(0.0, wp.array(u, dtype=wp.vec3d, device=DEVICE))
+        values = {}
+        for law, row in (
+            (SMOOTH_TENSION_ONLY_LINEAR_SPRING, [self.E, self.SLACK, w]),
+            (TENSION_ONLY_LINEAR_SPRING, [self.E, self.SLACK]),
+        ):
+            term = DiscreteDomain("band", law, X, pairs, [row], 2 * len(dl), DEVICE)
+            self.assertEqual(term.update(state), 0)
+            values[law.name] = (term.data["axial_force"].numpy().copy(), term.data["axial_tangent"].numpy().copy())
+        F, k = values["smooth_tension_only_linear_spring"]
+        F_febio, k_febio = values["tension_only_linear_spring"]
+        # The stiffness rises from 0 to E without a jump; FEBio's jumps by E.
+        self.assertLess(abs(np.diff(k)).max(), 1.01 * self.E * (dl[1] - dl[0]) / (2 * w))
+        self.assertAlmostEqual(abs(np.diff(k_febio)).max(), self.E)
+        self.assertTrue((np.diff(F) >= 0).all())
+        # The difference from FEBio's force is at most E w / 4, at the slack length.
+        difference = abs(F - F_febio)
+        self.assertAlmostEqual(difference.max(), self.E * w / 4.0, delta=1e-12)
+        self.assertAlmostEqual(dl[difference.argmax()], self.SLACK, delta=1e-12)
+
+    def test_gradient_at_the_slack_length_is_two_sided(self):
+        """At the slack length the smooth law's gradient with respect to the
+        slack length equals the central difference. FEBio's law has a corner
+        there: reverse mode returns the slope of the active side (-E), and
+        the central difference is half of it."""
+        h = 1e-6
+
+        def gradient_and_difference(law, row):
+            term, state = self.one_spring(law, row, self.SLACK)
+            tape = wp.Tape()
+            with tape:
+                N = term.axial_force(state)
+            tape.backward(grads={N: wp.ones(1, dtype=wp.float64, device=DEVICE)})
+            adjoint = float(term.params.grad.numpy()[0][1])
+            values = []
+            for sign in (1.0, -1.0):
+                trial = list(row)
+                trial[1] += sign * h
+                values.append(self.force(law, trial, self.SLACK)[0])
+            return adjoint, (values[0] - values[1]) / (2 * h)
+
+        adjoint, fd = gradient_and_difference(SMOOTH_TENSION_ONLY_LINEAR_SPRING, [self.E, self.SLACK, self.W])
+        self.assertAlmostEqual(adjoint, -self.E / 2.0, delta=1e-12)
+        self.assertAlmostEqual(adjoint, fd, delta=1e-6 * self.E)
+        adjoint, fd = gradient_and_difference(TENSION_ONLY_LINEAR_SPRING, [self.E, self.SLACK])
+        self.assertAlmostEqual(adjoint, -self.E, delta=1e-12)
+        self.assertAlmostEqual(fd, -self.E / 2.0, delta=1e-6 * self.E)
+
+    def test_input_type_and_coverage_note(self):
+        model = read_feb(CASES / "inputs" / "ch_spring_chords.feb")
+        section = next(s for s in model.other_sections if s.tag == "Discrete")
+        record = next(r for r in section.all("discrete_material") if r.attrs["type"] == "tension-only linear spring")
+        record.attrs["type"] = "smooth tension-only linear spring"
+        record.set("smoothing_length", 0.01)
+        law, values, issues = resolve_discrete_material(record)
+        self.assertIs(law, SMOOTH_TENSION_ONLY_LINEAR_SPRING)
+        self.assertEqual(values, [15.0, 0.05, 0.01])
+        self.assertIn("FEBio-Warp only", issues[0].note)
+        from warp_febio.analysis.steps import inspect_model
+
+        self.assertTrue(inspect_model(model).runnable)
+        # In a run it stays within E w / 4 per spring of FEBio's law.
+        smooth = run(build_system(model, device=DEVICE))
+        febio = run(build_system(read_feb(CASES / "inputs" / "ch_spring_chords.feb"), device=DEVICE))
+        a = smooth.states[-1].discrete["tension_only"]["discrete element signed force"]
+        b = febio.states[-1].discrete["tension_only"]["discrete element signed force"]
+        self.assertLess(abs(a - b).max(), 15.0 * 0.01 / 4.0 + 1e-12)
+        record.set("smoothing_length", -1.0)
+        self.assertIsNone(resolve_discrete_material(record)[0])
+
+    def test_chord_curves_of_the_mitral_input_have_a_closed_form(self):
+        """Each of the eight chord sets of the mitral input is a three-point
+        curve that is FEBio's tension-only linear spring, so it can be given
+        to the smooth law. With zero smoothing the forces are the curve's."""
+        from warp_febio.discretization.fields import build_field_table
+        from warp_febio.elements.line_builders import build_discrete_domains
+
+        model = read_feb(MitralChordSetTests.MITRAL)
+        fields = build_field_table(model)
+        (curve,) = build_discrete_domains(model, fields, DEVICE)
+        rows = [chord_curve_closed_form(row) for row in curve.params.numpy()]
+        self.assertTrue(all(r is not None for r in rows))
+        self.assertEqual(sorted({r[0] for r in rows}), [30.0, 60.0])
+        self.assertEqual(sorted({r[1] for r in rows}), [2.0, 3.0, 4.0, 12.0])
+        self.assertIsNone(chord_curve_closed_form([15.0, 0.0, 0.0, 1.0, 1.0, 2.0, 3.0]))
+        closed = DiscreteDomain(
+            "closed",
+            SMOOTH_TENSION_ONLY_LINEAR_SPRING,
+            curve.X.numpy(),
+            curve.emap.numpy(),
+            [[E, slack, 0.0] for E, slack in rows],
+            fields.count,
+            DEVICE,
+            region=curve.region.numpy(),
+        )
+        rng = np.random.default_rng(0)
+        X, emap = curve.X.numpy(), curve.emap.numpy()
+        axis = (X[:, 1] - X[:, 0]) / np.linalg.norm(X[:, 1] - X[:, 0], axis=1)[:, None]
+        u = np.zeros((fields.count, 3))
+        u[emap[:, 0]] = -axis * rng.uniform(0.0, 8.0, (curve.count, 1))
+        state = State(0.0, wp.array(u, dtype=wp.vec3d, device=DEVICE))
+        N_curve = curve.axial_force(state).numpy()
+        self.assertGreater((N_curve > 0).sum(), 20)
+        np.testing.assert_allclose(closed.axial_force(state).numpy(), N_curve, rtol=0, atol=1e-12 * N_curve.max())
 
 
 class ReferenceStateTests(unittest.TestCase):
@@ -798,6 +964,112 @@ class ChordTensionGradientTests(unittest.TestCase):
         self.assertEqual(len(rows), 16)
         for row in rows:
             self.assertLess(row.relative_error, 2e-5, msg=f"{row.parameter}{row.index}")
+
+
+class ChordForceOnNodesTests(unittest.TestCase):
+    """The resultant chord force on a set of nodes (`force_on`): the force on
+    a papillary tip, as an output and as an objective."""
+
+    def build(self, prepare=None):
+        model = read_feb(CASES / "inputs" / "ch_spring_chords.feb")
+        system = build_system(model, device=DEVICE)
+        if prepare is not None:
+            prepare(system)
+        return model, system
+
+    def weights(self, model, system, node_set):
+        entries = system.fields.entries_of("displacement", model.mesh.node_set_indices(node_set))
+        return [t.entry_weights(entries) for t in chord_terms(system)]
+
+    def force(self, system, state, weights):
+        return sum(t.force_on(state, w).numpy()[0] for t, w in zip(chord_terms(system), weights))
+
+    def test_force_on_the_apex_against_febio(self):
+        """Four springs of three laws (three terms) meet at one fixed node.
+        The force they exert on it follows from FEBio's logged spring forces,
+        and along the pull it balances FEBio's reactions at the driven face of
+        the block, which is all that holds the block against the chords."""
+        ref = load_reference("ch_spring_chords")
+        if ref is None:
+            self.skipTest("no FEBio reference for ch_spring_chords")
+        model, system = self.build()
+        _, states = run(system, keep_states=True)
+        at_apex = self.weights(model, system, "apex")
+        mine = self.force(system, states[-1], at_apex)
+        # From FEBio's signed force of each spring and the spring axes.
+        logged = []
+        for rec in ref["records"]:
+            if "discrete element force" in rec["data"]:
+                logged += list(np.array(rec["values"])[-1, :, rec["data"].index("discrete element force")])
+        apex = set(system.fields.entries_of("displacement", model.mesh.node_set_indices("apex")).tolist())
+        x = system.fields.entries_of("displacement")
+        position = np.zeros((system.fields.count, 3))
+        position[x] = model.mesh.nodes
+        position += states[-1].u.numpy()
+        expected = np.zeros(3)
+        k = 0
+        for term in chord_terms(system):
+            for a, b in term.emap.numpy():
+                e = (position[b] - position[a]) / np.linalg.norm(position[b] - position[a])
+                expected += (float(a in apex) - float(b in apex)) * logged[k] * e
+                k += 1
+        self.assertEqual(k, 4)
+        np.testing.assert_allclose(mine, expected, rtol=0, atol=1e-10 * abs(expected).max())
+        items, reactions, _ = record(ref, "Rx")
+        # FEBio logs a reaction only at the prescribed component (z); at the
+        # fixed components its R is zero. Its sign is that of the force the
+        # block exerts on its support, so the sum is minus the force on the apex.
+        self.assertAlmostEqual(mine[2], -reactions[-1, :, 2].sum(), delta=1e-8 * abs(mine[2]))
+        self.assertGreater(abs(mine).max(), 1.0)
+        # Every chord has one end at the apex and one on the block, so the
+        # force on all other nodes together is the opposite.
+        everywhere = [wp.array(1.0 - w.numpy(), dtype=wp.float64, device=DEVICE) for w in at_apex]
+        np.testing.assert_allclose(self.force(system, states[-1], everywhere), -mine, rtol=1e-12)
+
+    def test_gradient_of_the_force_on_two_insertions(self):
+        """One component of the chord force on two of the four insertion
+        nodes, through the solve, with respect to every spring parameter."""
+        model, system = self.build()
+        ends = np.concatenate([t.emap.numpy()[:, 1] for t in chord_terms(system)])[:2]
+        weights = [t.entry_weights(ends) for t in chord_terms(system)]
+        direction = np.array([0.3, -0.2, 1.0])
+
+        def value():
+            _, states = run(system, keep_states=True)
+            return float(self.force(system, states[-1], weights) @ direction)
+
+        params = system.parameters()
+        for array in params.values():
+            array.grad.zero_()
+        tape = wp.Tape()
+        state = solve_on_tape(system, tape, "direct")
+        with tape:
+            forces = [t.force_on(state, w) for t, w in zip(chord_terms(system), weights)]
+        seed = wp.array([direction], dtype=wp.vec3d, device=DEVICE)
+        tape.backward(grads=dict.fromkeys(forces, seed))
+        gradients = {key: array.grad.numpy().copy() for key, array in params.items()}
+        tape.zero()
+        checked = 0
+        for key, array in params.items():
+            if ".material" not in key and ".rest_length" not in key:
+                continue
+            if not any(key.startswith(name) for name in ("linear.", "tension_only.", "curve.")):
+                continue
+            base = array.numpy().copy()
+            for index in np.ndindex(base.shape):
+                h = 1e-5 * max(abs(base[index]), 10.0)
+                values = []
+                for sign in (1.0, -1.0):
+                    trial = base.copy()
+                    trial[index] += sign * h
+                    array.assign(trial)
+                    values.append(value())
+                array.assign(base)
+                fd = (values[0] - values[1]) / (2 * h)
+                self.assertAlmostEqual(gradients[key][index], fd, delta=1e-5 * max(abs(fd), 1e-3), msg=f"{key}{index}")
+                checked += 1
+        self.assertEqual(checked, 14)
+        self.assertGreater(sum(int((abs(g) > 1e-6).sum()) for g in gradients.values()), 6)
 
 
 class ChordLengthRecoveryTests(unittest.TestCase):

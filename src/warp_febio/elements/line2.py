@@ -39,6 +39,8 @@ from typing import Any
 import numpy as np
 import warp as wp
 
+from ..assembly.system import State
+
 
 def require_no_history(model) -> None:
     """Both domains call laws without history so far (linear truss, springs).
@@ -150,3 +152,62 @@ def sum_axial_force(
     """
     i = wp.tid()
     wp.atomic_add(total, 0, weight[i] * axial_force[i])
+
+
+@wp.kernel
+def sum_force_on_entries(
+    emap: wp.array2d(dtype=wp.int32),  # (E, 2) entry of each node
+    axial_force: wp.array(dtype=wp.float64),  # (E,) N, tension positive
+    axis: wp.array(dtype=wp.vec3d),  # (E,) unit vector from node a to node b
+    weight: wp.array(dtype=wp.float64),  # one value per entry; 1 on the nodes of interest
+    total: wp.array(dtype=wp.vec3d),
+):
+    """total[0] += sum over nodes of weight times the force the elements
+    exert on the node: the resultant chord force on a set of nodes.
+
+    An element in tension pulls node a toward node b with N e and node b
+    toward node a with -N e. With weight 1 on the nodes of a papillary tip
+    and 0 elsewhere, the total is the force the chords exert on that tip (the
+    papillary muscle force of this chord set, as a vector). An element with
+    both nodes in the set cancels. For a tip held fixed and loaded by nothing
+    else, it is minus the reaction there.
+
+    Not a FEBio output as such: FEBio gives the force of each spring
+    ("discrete element force") and nodal reaction forces, from which the same
+    sum can be formed. It is a kernel here so that it can be an objective.
+    """
+    i = wp.tid()
+    f = axial_force[i] * axis[i]
+    wp.atomic_add(total, 0, (weight[emap[i, 0]] - weight[emap[i, 1]]) * f)
+
+
+class AxialOutputs:
+    """Outputs the two line domains share, beyond the Term calls. A domain
+    provides `_new_data`, `_launch_update`, `emap`, `count`, `n`, `device`."""
+
+    def force_on(self, state: State, weight: wp.array) -> wp.array:
+        """Resultant force the elements exert on a set of nodes at `state`,
+        as a (1,) array of 3-vectors: the chord force on a papillary tip.
+
+        `weight` has one value per entry of the field table (`entry_weights`
+        makes it from entries): 1 on the nodes of interest, 0 elsewhere. On a
+        `wp.Tape` the result depends on `state.u` and on the parameter
+        arrays, as `axial_force` does. See sum_force_on_entries.
+        """
+        data = self._new_data(requires_grad=True)
+        self._launch_update(state, data, wp.zeros(self.count, dtype=wp.int32, device=self.device))
+        total = wp.zeros(1, dtype=wp.vec3d, device=self.device, requires_grad=True)
+        wp.launch(
+            sum_force_on_entries,
+            dim=self.count,
+            inputs=[self.emap, data["axial_force"], data["axis"], weight],
+            outputs=[total],
+            device=self.device,
+        )
+        return total
+
+    def entry_weights(self, entries) -> wp.array:
+        """A weight array for `force_on`: 1 at `entries`, 0 elsewhere."""
+        w = np.zeros(self.n)
+        w[np.asarray(entries, dtype=np.int64).ravel()] = 1.0
+        return wp.array(w, dtype=wp.float64, device=self.device)

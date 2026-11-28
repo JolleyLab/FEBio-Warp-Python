@@ -53,7 +53,13 @@ from ..assembly.system import BlockTangent, State, Term
 from ..materials.models.linear_truss import LINEAR_TRUSS
 from ..materials.status import NEGATIVE_JACOBIAN, NON_FINITE, OK
 from ..materials.uniaxial import UniaxialModel
-from .line2 import axial_internal_force, axial_stiffness, geometric_length, require_no_history
+from .line2 import (
+    AxialOutputs,
+    axial_internal_force,
+    axial_stiffness,
+    geometric_length,
+    require_no_history,
+)
 
 vec3d = wp.vec3d
 mat33d = wp.mat33d
@@ -117,7 +123,7 @@ def _make_update(model: UniaxialModel):
     return kernel
 
 
-class TrussDomain(Term):
+class TrussDomain(AxialOutputs, Term):
     """One part of two-node trusses with one truss material: FEBio "linear-truss".
 
     Args:

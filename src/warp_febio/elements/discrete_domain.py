@@ -53,7 +53,13 @@ import warp as wp
 from ..assembly.system import BlockTangent, State, Term
 from ..materials.status import NON_FINITE, OK
 from ..materials.uniaxial import UniaxialModel
-from .line2 import axial_internal_force, axial_stiffness, geometric_length, require_no_history
+from .line2 import (
+    AxialOutputs,
+    axial_internal_force,
+    axial_stiffness,
+    geometric_length,
+    require_no_history,
+)
 
 vec3d = wp.vec3d
 mat33d = wp.mat33d
@@ -123,7 +129,7 @@ def _make_update(model: UniaxialModel):
     return kernel
 
 
-class DiscreteDomain(Term):
+class DiscreteDomain(AxialOutputs, Term):
     """All springs of a model that share one law: FEBio "discrete" domains, batched.
 
     Args:

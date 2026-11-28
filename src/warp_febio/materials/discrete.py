@@ -27,7 +27,7 @@ from __future__ import annotations
 import numpy as np
 
 from .febio import IMPLEMENTED, NOT_SUPPORTED, MaterialIssue
-from .models.linear_spring import LINEAR_SPRING, TENSION_ONLY_LINEAR_SPRING
+from .models.linear_spring import LINEAR_SPRING, SMOOTH_TENSION_ONLY_LINEAR_SPRING, TENSION_ONLY_LINEAR_SPRING
 from .models.linear_truss import LINEAR_TRUSS, TENSION_ONLY_LINEAR_TRUSS
 from .models.nonlinear_spring import EXTENSIONS, MEASURES, nonlinear_spring
 
@@ -87,6 +87,18 @@ def resolve_discrete_material(record):
         _unknown_children(record, ("E", "slack_length"), febio_type, issues)
         law = TENSION_ONLY_LINEAR_SPRING
         values = [float(record.get("E", 0.0)), float(record.get("slack_length", 0.0))]
+    elif febio_type == "smooth tension-only linear spring":
+        # Not a FEBio type (materials/models/linear_spring.py).
+        names = ("E", "slack_length", "smoothing_length")
+        _unknown_children(record, names, febio_type, issues)
+        law = SMOOTH_TENSION_ONLY_LINEAR_SPRING
+        values = [float(record.get(name, 0.0)) for name in names]
+        if values[2] < 0.0:
+            issues.append(
+                MaterialIssue(
+                    "material parameter", f"{febio_type}.smoothing_length", NOT_SUPPORTED, "must not be negative"
+                )
+            )
     elif febio_type == "nonlinear spring":
         _unknown_children(record, ("scale", "measure", "force"), febio_type, issues)
         measure = str(record.get("measure", "elongation"))
@@ -127,5 +139,26 @@ def resolve_discrete_material(record):
         issues.append(MaterialIssue("discrete material", str(febio_type), NOT_SUPPORTED))
     if _failed(issues):
         return None, None, issues
-    issues.insert(0, MaterialIssue("discrete material", febio_type, IMPLEMENTED))
+    note = FEBIO_WARP_ONLY if law is SMOOTH_TENSION_ONLY_LINEAR_SPRING else ""
+    issues.insert(0, MaterialIssue("discrete material", febio_type, IMPLEMENTED, note))
     return law, values, issues
+
+
+def chord_curve_closed_form(values):
+    """(E, slack_length) of a "nonlinear spring" row that is the chord curve
+    of the valve inputs, or None if it is not.
+
+    `values` is the parameter row of a nonlinear spring on the elongation:
+    scale, then the curve points as x, y pairs. The chord curve is zero up to
+    a knot and a straight line after it, so with the `extrapolate` extension
+    it is FEBio's "tension-only linear spring" with E = scale times the slope
+    and slack_length = the knot. That form has the stiffness and the slack
+    length as its parameters, and it is the one the smooth law rounds.
+    """
+    scale, points = float(values[0]), np.asarray(values[1:], dtype=np.float64).reshape(-1, 2)
+    if len(points) < 2 or np.any(np.diff(points[:, 0]) <= 0.0):
+        return None
+    if np.any(points[:-1, 1] != 0.0) or not points[-1, 1] > 0.0:
+        return None
+    knot = points[-2, 0]
+    return scale * points[-1, 1] / (points[-1, 0] - knot), float(knot)
