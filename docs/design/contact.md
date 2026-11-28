@@ -4,7 +4,7 @@ Point-based contact for valve leaflets and self-expanding devices: an initial
 exploration, built on Kamensky et al. (2018) and FEBio's `FEContactPotential`.
 This page is the code map and the list of what is and is not equivalent to FEBio.
 
-**Layout.** This note follows the layout of the design set: a flow diagram, what has been explored, and decision points with options and a proposal ("Initial explorations" and "Decision points" below). The [design overview](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/overview.md) shows where it sits, [remaining areas](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/remaining_areas.md) lists every decision by reviewer, and the [work plan](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/work_plan.md) says what depends on it.
+**Layout.** This note follows the layout of the design set: a flow diagram, what has been explored, and decision points with options and a proposal ("Initial explorations" and "Decision points" below). The [design overview](overview.md) shows where it sits, [remaining areas](remaining_areas.md) lists every decision by reviewer, and the [work plan](work_plan.md) says what depends on it.
 
 ## At a glance
 
@@ -140,7 +140,7 @@ A summary of "What is implemented", in the form used across the design notes.
 | Gradients on the tape, and the parameter term an equilibrium adjoint needs | Match finite differences, with pairs held fixed |
 | FEBio's contact diagnostic check applied to the potential | Passes |
 | A FEBio `contact potential` block through `from_febio_block` | Translated with FEBio's names |
-| Contact inside a run with domains, loads and a solver | Not explored; designed in the [contact in a run note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/contact_in_run.md) |
+| Contact inside a run with domains, loads and a solver | Not explored; designed in the [contact in a run note](contact_in_run.md) |
 | A comparison with a FEBio run | Not yet; the first is suite problem `co62` |
 | Any GPU run | One graph capture test is written for GPU; no GPU result is recorded in this note |
 
@@ -153,14 +153,14 @@ Each row points to where the detail is. IDs follow the scheme of the design set 
 | N1 | Pair multiplicity in self-contact | FEBio appears to add each self-contact pair twice. (a) The unordered sum, `scale` 1. (b) `scale` 2, as FEBio appears to | Match FEBio once the reading is confirmed | Steve | "FEBio equivalence" above |
 | N2 | How `kc` is specified with more than one pair class | (a) A wire radius absorbed into `R_in`, as FEBio's edge-to-surface potential. (b) A radius offset per point with common `R_in` and `R_out`. And `kc` as an input, or derived from a target force and gap | Not settled | Steve, the group | "Open question for review" below |
 | N3 | Integration weights | (a) Current weights, as FEBio, where the force is not the gradient of the energy. (b) Reference weights, where energy, force and tangent are exact derivatives of one another | (a) for comparison with FEBio; (b), the default here, where exact derivatives matter. Which one a FEBio block selects is to settle | Steve, Warp team | "What differentiates" below |
-| N4 | The `w_tol` and `R0_min` gates | Per element pair, as FEBio, or per point pair, as here | See decision K3 in the [contact in a run note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/contact_in_run.md#7-decision-points) | Steve | |
+| N4 | The `w_tol` and `R0_min` gates | Per element pair, as FEBio, or per point pair, as here | See decision K3 in the [contact in a run note](contact_in_run.md#7-decision-points) | Steve | |
 | N5 | Residual sign | FEBio's, or the one documented here | See decision K1 in the same note | Steve | |
 | N6 | The tangent Newton uses | (a) The full pair Hessian. (b) The projected one | (a) first, (b) as the fallback | Steve | "Rules the solver must apply" below |
-| N7 | Precision | Double throughout, or single for queries and later for kernels | Double for now; see decision T11 in the [materials note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/materials.md) | Warp team | "Not yet implemented" below |
+| N7 | Precision | Double throughout, or single for queries and later for kernels | Double for now; see decision T11 in the [materials note](materials.md) | Warp team | "Not yet implemented" below |
 
 For gradients: the pair list and the gates are selected in a separate step and never differentiated. `kc` per class receives gradients; `R_in`, `R_out`, `p` and the radius offsets are fixed model data.
 
-In the [work plan](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/work_plan.md) contact in a run is package W5, verified first on the FEBio test suite problem `co62`.
+In the [work plan](work_plan.md) contact in a run is package W5, verified first on the FEBio test suite problem `co62`.
 
 ## Open question for review (Steve Maas and all)
 

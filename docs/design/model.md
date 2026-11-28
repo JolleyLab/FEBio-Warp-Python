@@ -4,7 +4,7 @@ Draft v0.3 for discussion, November 25, 2026. For Steve Maas, Jeff Weiss, the Wa
 
 Scope: the model object and the files that go in and out of it. Elements, assembly, solvers, time stepping, contact and materials are separate designs that are still to be made. A minimal version of some of them exists in the draft only so the model could be exercised end to end, as Steve suggested; section 7 says what that was.
 
-**Layout.** This note follows the layout of the design set: a flow diagram, what has been explored, and decision points with options and a proposal (sections 8 and 9). The [design overview](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/overview.md) shows where it sits, [remaining areas](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/remaining_areas.md) lists every decision by reviewer, and the [work plan](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/work_plan.md) says what depends on it.
+**Layout.** This note follows the layout of the design set: a flow diagram, what has been explored, and decision points with options and a proposal (sections 8 and 9). The [design overview](overview.md) shows where it sits, [remaining areas](remaining_areas.md) lists every decision by reviewer, and the [work plan](work_plan.md) says what depends on it.
 
 ## 1. Summary
 
@@ -259,11 +259,11 @@ Each row summarizes a question of section 6, where the full text and what was ch
 | M5 | How SlicerHeart gets the code | (a) Installed by pip from the module. (b) A copy of the model and I/O files inside SlicerHeart | Open | Andras | Question 5 |
 | M6 | Units and coordinate system on the way into Slicer | (a) Through ImportExportSimulationModel, so conversion stays in one place. (b) In the adapter | (a) | Andras | Question 6 |
 | M7 | A FEBio model in the Slicer scene | Arrays on one model node, a node per part, or markups for sets and conditions | Open | Andras | Question 7 |
-| M8 | The test fixture in this draft | The run path draft found two places where the fixture differs from FEBio (the iteration count given to the time step controller, and the reformation limit). (a) Correct the fixture here. (b) Leave it, since the run path replaces it | (b), with the difference recorded in the [run path note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/run_path.md) | Steve, MJ | Run path note, section 8 |
-| M9 | How a suite problem is compared with FEBio | Plot file from a pinned build, or a copy of the input with log data added | See decision O1 in the [output note](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/output.md#5-decision-points) | Steve | |
+| M8 | The test fixture in this draft | The run path draft found two places where the fixture differs from FEBio (the iteration count given to the time step controller, and the reformation limit). (a) Correct the fixture here. (b) Leave it, since the run path replaces it | (b), with the difference recorded in the [run path note](run_path.md) | Steve, MJ | Run path note, section 8 |
+| M9 | How a suite problem is compared with FEBio | Plot file from a pinned build, or a copy of the input with log data added | See decision O1 in the [output note](output.md#5-decision-points) | Steve | |
 
 For gradients: the model is frozen once built and `State` is separate from it. That split is what the adjoint of the run path relies on, and it is the reason for the fourth row of the table in section 3.
 
 ## 10. Depends on, and what depends on it
 
-Nothing in the package comes before the model. Everything after it reads the model through binding functions: materials, contact, the run path and the comparison runner. In the [work plan](https://github.com/JolleyLab/FEBio-Warp-Python/blob/mattjolley/run-path-template/docs/design/work_plan.md) it is item A of the spine.
+Nothing in the package comes before the model. Everything after it reads the model through binding functions: materials, contact, the run path and the comparison runner. In the [work plan](work_plan.md) it is item A of the spine.
