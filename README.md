@@ -5,7 +5,8 @@ written in Python on [Warp](https://github.com/NVIDIA/warp) and built in concert
 [FEBio](https://febio.org) team to support the [P3 CHD](https://mussallemchdalliance.org/news/the-mussallem-chd-alliance-introduces-p3-chd-a-new-precision-procedural-planning-collaborative-with-leading-academic-centers-in-chd/) project. The formulations follow FEBio, but deviate where it makes sense for warp. The architecture is designed
 for the GPU and for differentiation, follows the development conventions of Warp, and is
 meant to work with [Newton](https://github.com/newton-physics/newton),
-[3D Slicer](https://www.slicer.org) and [SlicerHeart](https://github.com/SlicerHeart/SlicerHeart).
+[3D Slicer](https://www.slicer.org), [SlicerHeart](https://github.com/SlicerHeart/SlicerHeart) and
+[SlicerSimVascular](https://github.com/SimVascular/SlicerSimVascular).
 
 FEBio-Warp is intended to stand next to FEBio, not to replace it. FEBio remains the place for
 broad constitutive modeling and general biomechanics. FEBio-Warp targets a focused set of
