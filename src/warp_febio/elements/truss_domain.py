@@ -53,7 +53,7 @@ from ..assembly.system import BlockTangent, State, Term
 from ..materials.models.linear_truss import LINEAR_TRUSS
 from ..materials.status import NEGATIVE_JACOBIAN, NON_FINITE, OK
 from ..materials.uniaxial import UniaxialModel
-from .line2 import axial_internal_force, axial_stiffness, require_no_history
+from .line2 import axial_internal_force, axial_stiffness, geometric_length, require_no_history
 
 vec3d = wp.vec3d
 mat33d = wp.mat33d
@@ -168,11 +168,13 @@ class TrussDomain(Term):
         self.pvec = model.param_vector(wp.float64)
 
         X = np.asarray(X, dtype=np.float64)
-        geometric = np.linalg.norm(X[:, 1] - X[:, 0], axis=1)
         params = np.atleast_2d(np.asarray(params, dtype=np.float64))
         dev = dict(device=device)
         grad_on = dict(requires_grad=True, **dev)
         self.X = wp.array(X, dtype=vec3d, **dev)
+        geometric = geometric_length(self.X)
+        # FEBio's L0 (el.m_L0), which the mass uses whatever the rest length.
+        self.geometric_length = np.array(geometric)
         self.emap = wp.array(np.asarray(emap, dtype=np.int32), dtype=wp.int32, **dev)
         self.region = wp.array(
             np.zeros(E, np.int32) if region is None else np.asarray(region, np.int32), dtype=wp.int32, **dev
@@ -270,7 +272,11 @@ class TrussDomain(Term):
         and rho A L / 6 off it (FELinearTrussDomain::ElementMassMatrix). Each
         entry multiplies a 3x3 identity, at the positions of the stiffness
         blocks. Not used by the static run path."""
-        m = self.density * self.area.numpy() * self.rest_length.numpy()
+        # With the geometric length, as FEBio (m_a0 * m_L0), not the rest
+        # length parameter: changing a chord's rest length does not change its
+        # mass. Computed on the host when the system is built, so the mass does
+        # not follow later changes of the area and carries no gradient yet.
+        m = self.density * self.area.numpy() * self.geometric_length
         return m[:, None, None] * np.array([[1.0 / 3.0, 1.0 / 6.0], [1.0 / 6.0, 1.0 / 3.0]])
 
     def plot(self, variable: str) -> np.ndarray:

@@ -21,8 +21,8 @@ Scope
 This file holds the material law, and `make_truss_function`, which writes out
 how FELinearTrussDomain turns that law into the axial force and 3x3 stiffness
 block of one two-node element (static case). It is here so the law can be
-checked against its own derivative; the truss element itself (mass, dynamics,
-assembly) belongs to the element work and is not attempted.
+checked against its own derivative; the truss element itself (mass,
+assembly) is elements/truss_domain.py.
 
 FEBio also has an "elastic-truss" domain (FEElasticTrussDomain.cpp) that
 evaluates any solid material at F = diag(lambda, lambda^-v, lambda^-v). It is

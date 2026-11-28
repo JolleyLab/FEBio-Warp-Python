@@ -55,7 +55,16 @@ def truss_coverage(model, block, dom) -> list:
     for i in issues:
         rows.append((i.category, i.febio_name, i.status, f"material {material.name}", i.note))
     if material.params.child("density") is not None:
-        rows.append(("material parameter", "density", NO_EFFECT, f"material {material.name}", "static analysis"))
+        dynamic = any(str(s.control.get("analysis", "STATIC")).upper() == "DYNAMIC" for s in model.steps)
+        rows.append(
+            (
+                "material parameter",
+                "density",
+                IMPLEMENTED if dynamic else NO_EFFECT,
+                f"material {material.name}",
+                "" if dynamic else "static analysis",
+            )
+        )
     return rows
 
 
@@ -90,7 +99,11 @@ def _discrete_entries(model):
         name = link.attrs.get("discrete_set")
         # FEBio indexes discrete materials by their position in the file.
         index = int(link.attrs.get("dmat", 0))
-        if name not in sets or not 1 <= index <= len(materials):
+        # FEBioDiscreteSection: type "spring" (or none) is a discrete domain;
+        # type "wire" is a deformable spring domain, which is not built here.
+        # Settings inside <discrete> are not read either.
+        unsupported = link.attrs.get("type") not in (None, "spring") or bool(link.children)
+        if name not in sets or not 1 <= index <= len(materials) or unsupported:
             out.append((name, None, None))
             continue
         ids = np.array([np.atleast_1d(c.value) for c in sets[name].all("delem")], dtype=np.int64).reshape(-1, 2)
@@ -108,7 +121,15 @@ def discrete_coverage(model) -> list:
             rows.append(("Discrete", c.type or c.tag, NOT_SUPPORTED, c.name or "", ""))
     for name, pairs, material in _discrete_entries(model):
         if pairs is None:
-            rows.append(("Discrete", "discrete", NOT_SUPPORTED, name or "", "discrete set or material not found"))
+            rows.append(
+                (
+                    "Discrete",
+                    "discrete",
+                    NOT_SUPPORTED,
+                    name or "",
+                    'discrete set or material not found, type other than "spring", or settings inside <discrete>',
+                )
+            )
             continue
         rows.append(("domain", "discrete", IMPLEMENTED, f"discrete set {name}", f"{len(pairs)} spring(s)"))
         _, _, issues = resolve_discrete_material(material)

@@ -53,7 +53,7 @@ import warp as wp
 from ..assembly.system import BlockTangent, State, Term
 from ..materials.status import NON_FINITE, OK
 from ..materials.uniaxial import UniaxialModel
-from .line2 import axial_internal_force, axial_stiffness, require_no_history
+from .line2 import axial_internal_force, axial_stiffness, geometric_length, require_no_history
 
 vec3d = wp.vec3d
 mat33d = wp.mat33d
@@ -157,10 +157,10 @@ class DiscreteDomain(Term):
         self.pvec = model.param_vector(wp.float64)
 
         X = np.asarray(X, dtype=np.float64)
-        geometric = np.linalg.norm(X[:, 1] - X[:, 0], axis=1)
         dev = dict(device=device)
         grad_on = dict(requires_grad=True, **dev)
         self.X = wp.array(X, dtype=vec3d, **dev)
+        geometric = geometric_length(self.X)
         self.emap = wp.array(np.asarray(emap, dtype=np.int32), dtype=wp.int32, **dev)
         self.region = wp.array(
             np.zeros(E, np.int32) if region is None else np.asarray(region, np.int32), dtype=wp.int32, **dev

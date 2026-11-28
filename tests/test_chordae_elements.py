@@ -184,7 +184,10 @@ class TrussTermTests(unittest.TestCase):
 
     def test_mass_blocks_are_febio_consistent_mass(self):
         m = self.term.mass_blocks()
-        L = self.term.rest_length.numpy()
+        # FEBio's mass uses the geometric length (m_L0), whatever the rest length.
+        L = np.linalg.norm(self.X[self.pairs[:, 1]] - self.X[self.pairs[:, 0]], axis=1)
+        self.term.rest_length.assign(1.2 * self.term.rest_length.numpy())
+        np.testing.assert_array_equal(self.term.mass_blocks(), m)
         np.testing.assert_allclose(m[:, 0, 0], self.term.density * self.area * L / 3.0, rtol=1e-14)
         np.testing.assert_allclose(m[:, 0, 1], self.term.density * self.area * L / 6.0, rtol=1e-14)
 
@@ -285,6 +288,45 @@ class SpringTermTests(unittest.TestCase):
         np.testing.assert_allclose(R, 0.0, atol=0)
         # if (Lt == 0) { F = 0; Lt = 1; e = vec3d(1, 1, 1); } gives E e (x) e.
         np.testing.assert_allclose(K[:3, :3], 7.0 * np.ones((3, 3)), rtol=1e-14)
+
+
+class ReferenceStateTests(unittest.TestCase):
+    """An undeformed tension-only element is active, on every device.
+
+    FEBio computes the initial and the current length with the same code, so
+    the stretch of an undeformed element is exactly 1 and a tension-only law
+    is active there. Here the rest length is computed on the device for the
+    same reason (line2.geometric_length). With a rest length from NumPy on the
+    host, about one element in twenty starts slack on CUDA, with no stiffness
+    in the first iteration.
+    """
+
+    def elements(self):
+        rng = np.random.default_rng(1)
+        n = 20000
+        X = rng.uniform(-30.0, 30.0, (n + 3, 3))
+        a = rng.integers(0, n + 3, n)
+        b = (a + 1 + rng.integers(0, n + 2, n)) % (n + 3)
+        pairs = np.stack([a, b], axis=1).astype(np.int32)
+        return X, pairs, State(0.0, wp.zeros(n + 3, dtype=wp.vec3d, device=DEVICE))
+
+    def check(self, term, state):
+        self.assertEqual(term.update(state), 0)
+        np.testing.assert_array_equal(term.data["length"].numpy(), term.rest_length.numpy())
+        np.testing.assert_array_equal(term.data["axial_force"].numpy(), 0.0)
+        self.assertEqual(int((term.data["axial_tangent"].numpy() <= 0).sum()), 0)
+
+    def test_tension_only_truss_is_active_at_its_rest_length(self):
+        X, pairs, state = self.elements()
+        term = TrussDomain(
+            "chords", X[pairs], pairs, 1.0, [[150.0, 0.5]], len(X), DEVICE, model=TENSION_ONLY_LINEAR_TRUSS
+        )
+        self.check(term, state)
+
+    def test_tension_only_spring_is_active_at_its_rest_length(self):
+        X, pairs, state = self.elements()
+        term = DiscreteDomain("springs", TENSION_ONLY_LINEAR_SPRING, X[pairs], pairs, [[15.0, 0.0]], len(X), DEVICE)
+        self.check(term, state)
 
 
 class MitralChordSetTests(unittest.TestCase):

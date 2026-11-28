@@ -36,6 +36,7 @@ per-element output: the chord tension is N, whichever way the chord is modeled.
 
 from typing import Any
 
+import numpy as np
 import warp as wp
 
 
@@ -49,6 +50,31 @@ def require_no_history(model) -> None:
     """
     if tuple(model.initial_state) != (0.0,):
         raise NotImplementedError(f"{model.name}: uniaxial laws with history are not yet supported on line elements")
+
+
+@wp.kernel
+def _reference_length(
+    X: wp.array2d(dtype=wp.vec3d),  # (E, 2) reference positions
+    length: wp.array(dtype=wp.float64),  # (E,)
+):
+    i = wp.tid()
+    length[i] = wp.length(X[i, 1] - X[i, 0])
+
+
+def geometric_length(X: wp.array) -> np.ndarray:
+    """Distance between the two reference nodes of each element, computed on
+    the device of `X` with the arithmetic of the update kernels.
+
+    FEBio computes the initial and the current length with the same code, so
+    an undeformed element has a stretch of exactly 1, and a tension-only law
+    is active there (extension >= 0). The same has to hold here. A rest length
+    from NumPy on the host does not give it: on CUDA the kernel's length
+    differs from NumPy's in the last bit for about one element in nine, and
+    half of those would start slack, with no stiffness in the first iteration.
+    """
+    out = wp.zeros(X.shape[0], dtype=wp.float64, device=X.device)
+    wp.launch(_reference_length, dim=X.shape[0], inputs=[X], outputs=[out], device=X.device)
+    return out.numpy()
 
 
 @wp.func

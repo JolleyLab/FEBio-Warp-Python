@@ -109,12 +109,13 @@ class NodalLoad(Term):
         else:
             variable, component = COMPONENT[record.get("dof")]
             value = record.child("scale")
-            direction, magnitude = np.zeros(3), float(value.value)
+            # FENodalDOFLoad: m_scale = 0 unless the input gives it.
+            direction, magnitude = np.zeros(3), float(value.value) if value is not None else 0.0
             direction[component] = 1.0
         entries = fields.entries_of(variable, nodes)
         self.entries = wp.array(entries[entries >= 0].astype(np.int32), dtype=wp.int32, device=device)
         self.direction = vec3d(*direction)
-        lc = value.attrs.get("lc")
+        lc = value.attrs.get("lc") if value is not None else None
         self.load_controller = int(lc) if lc else None
         self.scale = wp.array(
             np.full(len(self.entries), magnitude), dtype=wp.float64, device=device, requires_grad=True
