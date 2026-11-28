@@ -2,7 +2,7 @@
 
 First template for discussion, November 26, 2026 (v0.2). Design only: there is no code for this note. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
 
-**Status, November 28, 2026.** Still design only for constraints. On the loads side, `nodal_load`, `nodal_force` and `mass damping` on a whole part now exist as templates ([chordae.md](chordae.md), [dynamics.md](dynamics.md)), and a load written inside the single step of a model is built as a load of the model. The constant `body force` is not built; suite problems `dy01`, `dy17`, `sh32` and `sh34` wait for it.
+**Status, November 28, 2026.** Still design only for constraints. On the loads side, `nodal_load`, `nodal_force` and `mass damping` on a whole part now exist as templates ([trusses_and_springs.md](trusses_and_springs.md), [dynamics.md](dynamics.md)), and a load written inside the single step of a model is built as a load of the model. The constant `body force` is not built; suite problems `dy01`, `dy17`, `sh32` and `sh34` wait for it.
 
 **Scope.** The one boundary condition the open TPVR input needs that the run path does not have, `normal displacement`, and a statement of how the masking approach would extend to the constraint types that are reserved.
 

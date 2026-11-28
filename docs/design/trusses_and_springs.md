@@ -1,4 +1,6 @@
-# Chordae: truss and spring elements
+# Trusses and springs: two-node line elements
+
+**On the name.** This note was first called "Chordae", after the application it was written for. The elements are general: FEBio's `linear-truss` domain and its `discrete` domain with spring materials, for any two-node member that carries an axial force. Chordae tendineae of the atrioventricular valves are the first application and the source of the examples, and sutures, neochordae and device struts in tension are others. The code has had the general names from the start (`TrussDomain`, `DiscreteDomain`, `elements/line2.py`). The decision points keep their IDs (C1 to C10).
 
 Draft for discussion, November 27, 2026 (v0.3). For Steve Maas, Jeff Weiss, Ryan Black and the Warp team. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
 
@@ -186,7 +188,7 @@ In double precision. The numbers below were produced on CPU. The tests also run 
 
 | Explored | Result | Where |
 | --- | --- | --- |
-| Truss force, stiffness, stress and stretch against FEBio's expressions, 40 random elements in tension and compression | Agree to 1e-11 | `tests/test_chordae_elements.py` |
+| Truss force, stiffness, stress and stretch against FEBio's expressions, 40 random elements in tension and compression | Agree to 1e-11 | `tests/test_truss_and_spring_elements.py` |
 | Spring force and stiffness for the three laws, both branches of the tension-only laws | Agree to 1e-11 | Same |
 | Stiffness against central differences of the residual, both domains, all laws | Agree to 1e-7 | Same |
 | `tension-only linear spring` against the three-point curve | Same force and stiffness to 1e-12 | Same |

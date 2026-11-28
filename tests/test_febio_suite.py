@@ -27,7 +27,7 @@ FEBio's convergence tolerance. Two of them, di03 and sh06, need the line
 search to run at all: without it they stop on a negative Jacobian.
 
 Not here, with the reason:
-    bt01, di01, di02   in test_chordae_elements.py (bt01 needs an iterative
+    bt01, di01, di02   in test_truss_and_spring_elements.py (bt01 needs an iterative
                        solve: its first tangent is singular)
     dy07, dy16         in test_dynamics.py
     sh52, mi16         the solution at the end is zero, so the stored norm is

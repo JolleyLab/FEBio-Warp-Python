@@ -24,7 +24,7 @@ First templates for discussion. Each is a short note with a flow diagram, the FE
 | Area | Note | Decision points | Needed by |
 |---|---|---|---|
 | Dynamics, mass damping, steps (template code for one dynamic step with mass damping; several steps design only) | [dynamics.md](dynamics.md) | [D1 to D5](dynamics.md#7-decision-points) | Valve and device |
-| Chordae: truss and spring elements (draft code; mass for dynamic steps) | [chordae.md](chordae.md) | [C1 to C10](chordae.md#7-decision-points) | Valve |
+| Trusses and springs, with chordae as the first application (draft code; mass for dynamic steps) | [trusses_and_springs.md](trusses_and_springs.md) | [C1 to C10](trusses_and_springs.md#7-decision-points) | Valve |
 | Contact in the run (first template code) | [contact_in_run.md](contact_in_run.md) | [K1 to K5](contact_in_run.md#7-decision-points) | Valve and device |
 | Linear solve, nonlinear strategy, first GPU runs (two direct solves added; first measurements) | [linear_solve.md](linear_solve.md) | [L1 to L6](linear_solve.md#7-decision-points) | Valve and device |
 | Output registry | [output.md](output.md) | [O1 to O4](output.md#5-decision-points) | Valve and device |
