@@ -15,6 +15,7 @@ The FEBio results of both were stored before this code existed.
 """
 
 import hashlib
+import itertools
 import json
 import pathlib
 import unittest
@@ -68,6 +69,15 @@ class FebioAgreementTests(unittest.TestCase):
         self.assertEqual(results.states[1].iterations, 1)
         (contact,) = contact_terms(system)
         self.assertGreater(contact.pairs, 0)
+        # Contact outputs are kept per state under the interface's name: no
+        # contact while the blocks are apart, then a contact area that
+        # counts the points in contact on both faces and does not shrink as
+        # the blocks are pressed together.
+        area = [s.contact[contact.name]["contact area"] for s in results.states]
+        self.assertEqual(area[1], 0.0)
+        self.assertGreater(area[-1], 0.0)
+        self.assertTrue(all(b >= a for a, b in itertools.pairwise(area)))
+        self.assertEqual(results.states[-1].contact[contact.name]["pairs"], contact.pairs)
         self.assertGreater(float(abs(logged[-1]).max()), 0.0)
 
     def test_shell_folded_onto_itself(self):
