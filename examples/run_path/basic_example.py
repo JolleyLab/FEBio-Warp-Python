@@ -1,12 +1,13 @@
 """The run path on the basic example: one hex8, one material, prescribed
 nodal displacements with free lateral unknowns.
 
-    python examples/run_path/basic_example.py
+    python examples/run_path/basic_example.py [device]     device: cpu (default) or cuda:0
 
 Each numbered block is one stage of the path. Template code, for discussion.
 """
 
 import os
+import sys
 
 import numpy as np
 import warp as wp
@@ -16,6 +17,7 @@ from warp_febio.io import read_feb, write_xplt
 from warp_febio.sensitivity.adjoint import parameter_gradient
 
 wp.config.quiet = True
+DEVICE = sys.argv[1] if len(sys.argv) > 1 else "cpu"  # for a GPU: cuda:0
 HERE = os.path.dirname(__file__)
 REF = os.path.join(HERE, "..", "..", "references", "single_element")
 NAME = "hex8_neo_hookean"
@@ -24,7 +26,7 @@ NAME = "hex8_neo_hookean"
 model = read_feb(os.path.join(REF, NAME + ".feb"))
 
 # 2. Build the system: a field table and a list of terms, on the device.
-system = build_system(model, device="cpu")
+system = build_system(model, device=DEVICE)
 print(f"entries (node, variable): {system.n}, 3x3 blocks; free components: {int(system.fields.free.sum())}")
 for term in system.terms:
     print(

@@ -34,7 +34,7 @@ flowchart TB
 | Units | The contact note and a leftover constants file said the package works in SI. | The package computes in the units of the input file, as FEBio does. The comparisons with FEBio depend on that. |
 | Notes and status tables | Notes in two places; the README still described input and output as building on pyfebio. | Notes are in `docs/design/`; the README table links each draft. |
 
-The element and the static step on this branch are still the test fixture of pull request 5. They were changed only to take the bound material.
+The element and the static step of this note are the test fixture of pull request 5; the run path template ([run_path.md](run_path.md)) has since replaced them as the path a run takes, and the fixture remains for comparison. They were changed only to take the bound material.
 
 ## Found on the way
 
@@ -55,11 +55,11 @@ These belong to the next design, elements and assembly, and were not decided her
 
 ## How it was checked
 
-CPU only, Warp 1.19.0, on Python 3.11 and 3.13. 118 tests run: 116 pass and 2 skip (both need a GPU). Without VTK installed, as in the test workflow, the two VTK adapter tests skip as well.
+First on CPU, Warp 1.19.0, on Python 3.11 and 3.13: 118 tests, 116 pass and 2 skip (both need a GPU). On November 27 the same 118 were run on a GPU (a workstation with two Quadro RTX 8000 (Warp 1.19.0, driver 580.82.07), Python 3.12) and all pass. Without VTK installed, as in the test workflow, the two VTK adapter tests skip as well.
 
 - The comparisons of pull request 5 with FEBio (single hex8, single quad4 shell, 8-element block, 9-element shell patch, displacement and stress to 1e-10) pass with materials taken from the material layer through the binding.
 - The nine coupled material-point cases of pull request 4 agree with their stored FEBio references to 1e-10, in stress and tangent, when the input is read with `read_feb`, bound with `bind_material`, and evaluated through the one-pass function an element calls. They include isotropic elastic, which has no one-pass function of its own, and HGO with material axes away from the global frame.
 - A modulus on a load curve: for the stored FEBio run of `bk_modulus_load_curve.feb`, the bound material evaluated at FEBio's logged deformation and time gives FEBio's logged stress to 2e-10 at every step, across the change in modulus. The run itself needs a pressure load, which is not implemented, so this is a material-point check and not a solve.
 - A two-component solid mixture built from a record equals the sum of its components to 1e-14.
 
-Not checked: any GPU run; any FEBio run made in this session (the references are the stored ones); a solve with a time-dependent parameter or with a mixture.
+Not checked: any FEBio run made in this session (the references are the stored ones); a solve with a time-dependent parameter or with a mixture.

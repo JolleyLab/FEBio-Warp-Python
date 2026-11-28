@@ -1,6 +1,6 @@
 # Verification against FEBio: design note
 
-**Draft for discussion, v2.2, November 24, 2026.** Revised after review by Steve Maas on pull request #4. **Tabled until FEBio-Warp can read and run a FEBio input file.** It is posted to agree the shape of the harness and to keep the inputs and references assembled so far in one place while input and output is worked on.
+**Draft for discussion, v2.2, November 24, 2026.** Revised after review by Steve Maas on pull request #4. **Tabled until FEBio-Warp can read and run a FEBio input file.** **Status, November 27, 2026:** merged to `main` (pull request 4), with the reader (pull request 5) and the run path template (pull request 6), so FEBio-Warp now reads FEBio inputs and runs small ones; the harness of step 3 is the next piece to build. It was posted to agree the shape of the harness and to keep the inputs and references assembled so far in one place while input and output is worked on.
 
 **Layout.** This note follows the layout of the design set: a flow diagram, what has been explored, and decision points with options and a proposal ("Initial explorations" and "Decision points" below). The [design overview](overview.md) shows where it sits, [remaining areas](remaining_areas.md) lists every decision by reviewer, and the [work plan](work_plan.md) says what depends on it.
 
@@ -43,7 +43,7 @@ flowchart LR
 
 ## What has to come first
 
-Step 3 needs FEBio-Warp to read and run a FEBio input file. On this branch it cannot: `src/warp_febio/io/` is a stub, and elements, loads and solvers are not started. A draft reader and central model are now in pull request #5, written in this repository and not on pyfebio, with a minimal path that runs single-element and small-mesh inputs. Input and output comes ahead of this harness, and the harness will be rebased on it.
+Step 3 needs FEBio-Warp to read and run a FEBio input file. When this note was written it could not. Since the merge to `main` the reader and central model (pull request 5, written in this repository and not on pyfebio) read every suite input, and the run path template (pull request 6) runs single-element and small-mesh inputs with pressure, two materials and the automatic time stepper. The harness builds on these.
 
 Comparisons become possible in this order, each needing more of FEBio-Warp than the one before:
 
@@ -142,7 +142,7 @@ One measured guide: the suite stores its values separately for Linux, macOS and 
 
 ## What is needed
 
-- The input reader, first (draft in pull request #5).
+- The input reader, first (on `main`, pull request 5).
 - An official FEBio release with Pardiso that the harness can use to generate references.
 - For the two open application models to start with (`P2Prolapse_Mitral.feb` and `RVOT1_TPV25.feb`): the FEBio version they were run with, and one completed run of each to check a reference against.
 
@@ -166,7 +166,7 @@ Pilot-phase examples are not used for testing. The [remaining areas note](remain
 | How far FEBio agrees with itself across platforms | Of 563 suite values, 446 identical on all three platforms |
 | The open application models on current FEBio source | Both valve files stop at `laugon` in the contact potential block |
 | What the suite inputs offer for comparison | One of the 374 solid-module inputs requests log data; the suite's stored results are counts and one value |
-| A suite problem run in FEBio-Warp and compared | Six, through the fixture of pull request 5; none yet through a runner |
+| A suite problem run in FEBio-Warp and compared | The single-element and small-mesh cases, through the run path and the command line; none yet through a suite runner |
 
 ## Decision points
 
@@ -191,6 +191,6 @@ In the [work plan](work_plan.md) the comparison runner is item C of the spine. I
 
 ## Next steps
 
-1. Input and output: read a FEBio input file into FEBio-Warp (draft in pull request #5).
+1. Input and output: read a FEBio input file into FEBio-Warp (on `main`, pull request 5).
 2. Then steps 3 and 4 of the harness, starting with the simplest suite inputs FEBio-Warp can run.
 3. Regenerate the stored references on an official FEBio release.

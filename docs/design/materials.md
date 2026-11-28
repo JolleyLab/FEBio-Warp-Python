@@ -1,6 +1,8 @@
 # FEBio-Warp material models: architecture proposal
 
-Draft v0.3, November 24, 2026. For Steve Maas, Jeff Weiss, Ryan Black, the Warp team and the FEBio-Warp team. Nothing here is merged. This version replaces v0.2 and follows Steve's review of this pull request and Jeff's earlier comments. The earlier pilot code is no longer the starting point; the question now is what the material layer of FEBio-Warp should be.
+Draft v0.3, November 24, 2026. For Steve Maas, Jeff Weiss, Ryan Black, the Warp team and the FEBio-Warp team. This version replaces v0.2 and follows Steve's review of pull request 2 and Jeff's earlier comments. The earlier pilot code is no longer the starting point; the question now is what the material layer of FEBio-Warp should be.
+
+**Status, November 27, 2026.** The code was merged to `main` (pull request 2) and has been run on CPU and on a GPU. Its evaluation functions now take `device=None`, Warp's current device, instead of `"cpu"`. The text below is the draft as reviewed, updated where the merge changed a fact.
 
 **Layout.** This note follows the layout of the design set: a flow diagram, what has been explored, and decision points with options and a proposal ("Initial explorations" and "Decision points" below). The [design overview](overview.md) shows where it sits, [remaining areas](remaining_areas.md) lists every decision by reviewer, and the [work plan](work_plan.md) says what depends on it.
 
@@ -164,7 +166,7 @@ The paper's text gives the law as isotropic elastic and its Table 1 as neo-Hooke
 
 ## What has been checked
 
-52 tests run on CPU: 51 pass, and one GPU test skips without a CUDA device (the count was 59 before the pilot tests moved to `pilots/`). No GPU run has been made yet; GPU access for this workflow is being set up, and CPU is adequate for the design and correctness questions here. The comparisons with FEBio in this pull request are against closed forms transcribed from its source. Comparisons with FEBio runs are in the verification draft (pull request 4): one hexahedron under FEBio's `prescribed deformation` condition, with FEBio's logged stress and tangent stored as the reference. Neo-Hookean, isotropic elastic, isotropic Lee-Sacks, HGO unconstrained and HGO uncoupled (both HGO forms with material axes in and away from the global frame) agree with those runs to about 1e-12 in both, on twelve cases.
+52 tests run on CPU and, since November 27, on a GPU (a workstation with two Quadro RTX 8000 (Warp 1.19.0, driver 580.82.07)): all pass on both, and the test that compares CUDA with CPU skips only where there is no CUDA device. The GPU run found that the gradient checks of `check_model` had been skipped on CUDA; they now run there and pass. The timings in this note are CPU timings and have not been repeated on a GPU. The comparisons with FEBio in pull request 2 are against closed forms transcribed from its source. Comparisons with FEBio runs are in the verification draft (pull request 4): one hexahedron under FEBio's `prescribed deformation` condition, with FEBio's logged stress and tangent stored as the reference. Neo-Hookean, isotropic elastic, isotropic Lee-Sacks, HGO unconstrained and HGO uncoupled (both HGO forms with material axes in and away from the global frame) agree with those runs to about 1e-12 in both, on twelve cases.
 
 **Models against the FEBio source, and their derivatives** (relative error over 66 deformation states, FP64):
 
@@ -233,7 +235,7 @@ Two findings bear on this proposal.
 | B. `warp.fem` form on stress and 6x6 stored once per point | 210 to 260 ms | 210 to 230 ms |
 | C. Dedicated hexahedron kernel, then sparse build | 55 to 70 ms | 50 to 60 ms |
 
-Route A evaluates the material again for every trial function, which is why the one-pass form helps. Evaluating the material is 6 to 10 ms of route B. Reusing the sparsity map (`construction="mapped"`) did not change A or B on CPU. None of this has been run on a GPU.
+Route A evaluates the material again for every trial function, which is why the one-pass form helps. Evaluating the material is 6 to 10 ms of route B. Reusing the sparsity map (`construction="mapped"`) did not change A or B on CPU. These timings have not been repeated on a GPU.
 
 A correction: an earlier version of this section compared assembly with the material evaluation alone and reported a gap of about one hundred. That compared unlike things. A first, plain version of the dedicated kernel took about 490 ms, no faster than `warp.fem`; the figure above is after one rewrite of its inner loop.
 
@@ -272,7 +274,7 @@ A summary of "What has been checked", in the form used across the design notes.
 | Chordae spring and linear truss laws | Match FEBio's source formulas; one kernel serves all chord groups of the open mitral input |
 | FEBio's `elastic-truss` on one element | Slow or failed convergence with full Newton (question 7) |
 | A material in a run with elements and a solver | In the run path draft, through the binding |
-| Any GPU run | Not explored |
+| A GPU run | The tests pass on a GPU (November 27); timings not repeated there |
 
 ## Decision points
 
@@ -334,5 +336,5 @@ Each question was checked before being asked: against the FEBio source (develop,
 2. Assembly: assembled against matrix-free, `warp.fem` against dedicated kernels (separate draft).
 3. A three-field element, so the uncoupled HGO can run (element work).
 4. A truss domain on the `linear truss` law, then a discrete spring domain ([chordae note](chordae.md)). A nonlinear chord material waits on question 7.
-5. A GPU run of the tests and of the timings, once GPU access is in place.
+5. The timings on a GPU. The tests have been run there (November 27).
 6. Later, as dedicated work: the superelastic law.

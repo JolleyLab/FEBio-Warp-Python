@@ -117,7 +117,8 @@ Until then, results agree with FEBio's but step sequences under the automatic ti
 | What Warp 1.19.0 offers beyond what was used | `FSAI`, three block-Jacobi variants (section 4) | The installed package |
 | Newton's Kamino factorizations | Located, not tried | Run path note |
 | cuDSS, with its transpose solve | Read from the documentation, not tried | Section 4 |
-| Any preconditioner other than `diag`; any GPU run; any dynamic solve | Not explored | |
+| Any preconditioner other than `diag`; any dynamic solve | Not explored | |
+| A GPU run | The reference cases run on a GPU with the same results (run path, section 8); CG was 5 to 8 times faster there on these very small models. The measurements of section 6 are not done | |
 
 ## 7. Decision points
 

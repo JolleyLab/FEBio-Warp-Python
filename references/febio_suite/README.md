@@ -16,4 +16,4 @@ python validation/febio_suite/survey.py TestSuite --out validation/febio_suite/c
 
 When a material model is added to FEBio-Warp, add its FEBio type string to
 `SUPPORTED_MATERIALS` in `survey.py` and re-run. See
-[docs/VERIFICATION.md](../../docs/VERIFICATION.md).
+[docs/design/verification.md](../../docs/design/verification.md).

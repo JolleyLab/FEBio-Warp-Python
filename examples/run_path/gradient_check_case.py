@@ -1,6 +1,6 @@
 """The gradient check case: one hex8 under a follower pressure.
 
-    python examples/run_path/gradient_check_case.py
+    python examples/run_path/gradient_check_case.py [device]     device: cpu (default) or cuda:0
 
 Runs references/single_element/hex8_pressure.feb, then compares the adjoint
 gradient of the top-face displacement with central differences of complete
@@ -8,6 +8,7 @@ runs, for every parameter the system's terms expose. Template code.
 """
 
 import os
+import sys
 
 import numpy as np
 import warp as wp
@@ -17,6 +18,7 @@ from warp_febio.io import read_feb
 from warp_febio.sensitivity.check import check_parameter_gradients
 
 wp.config.quiet = True
+DEVICE = sys.argv[1] if len(sys.argv) > 1 else "cpu"  # for a GPU: cuda:0
 CASE = os.path.join(
     os.path.dirname(__file__),
     "..",
@@ -26,7 +28,7 @@ CASE = os.path.join(
     "hex8_pressure.feb",
 )
 
-system = build_system(read_feb(CASE), device="cpu")
+system = build_system(read_feb(CASE), device=DEVICE)
 top = system.fields.entries_of("displacement", [4, 5, 6, 7])  # nodes 5..8
 
 

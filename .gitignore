@@ -35,3 +35,6 @@
 
 # FEBio runs of the verification cases
 references/small_problems/outputs/
+
+# Plot files written by the examples
+examples/**/*.xplt

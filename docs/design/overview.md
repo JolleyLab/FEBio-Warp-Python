@@ -1,6 +1,6 @@
 # FEBio-Warp design overview
 
-Initial draft, November 26, 2026. This page is the entry point to the design. It shows how the pieces fit, says what state each is in, and links to the note that holds the detail. It is a summary of drafts under review, not a specification. Sections 1 to 4 describe pieces that have a design note and code in a draft pull request. Each note opens with its own diagrams. Section 5 holds first templates for the areas after that; nothing in it is settled.
+Initial draft, November 26, 2026. This page is the entry point to the design. It shows how the pieces fit, says what state each is in, and links to the note that holds the detail. It is a summary of first drafts, not a specification. Sections 1 to 4 describe pieces that have a design note and code, merged to `main` on November 27, 2026; their open questions are the decision points of each note. Each note opens with its own diagrams. Section 5 holds first templates for the areas after that; nothing in it is settled.
 
 **The rule the design follows.** Follow FEBio where it matters to a user or a reviewer: the same input files, the same names, the same formulations, the same outputs, and FEBio results as the reference. Build the internals for Warp: flat arrays on the device, one kernel per batch, a matrix pattern that is analysed once, state kept apart from the model, and gradients as a design requirement.
 
@@ -95,7 +95,7 @@ These areas have a first shape in the run path template, or only a placeholder. 
 | Sensitivity | Parameter gradients through one equilibrium solve; the solve as one step on a tape | History, dynamics, contact pairing, shape gradients | [sensitivity.md](sensitivity.md) |
 | Output | Displacement, stress, reaction force | The registry of FEBio plot variables | [output.md](output.md) |
 | Newton (the physics library) | The step is functional and state is separate, as Newton's solvers expect | A wrapper with Newton's `step` signature; nodal forces in, positions out | [run_path.md](run_path.md), section 6 |
-| Performance | CPU, double precision, for correctness | GPU runs and timing; single precision where it is adequate | [linear_solve.md](linear_solve.md), section 6 |
+| Performance | Double precision, checked for correctness on CPU and on a GPU | Timing on a GPU; single precision where it is adequate | [linear_solve.md](linear_solve.md), section 6 |
 
 Design shells, kept in view so that nothing built now closes them off: beam elements for device frames, a superelastic nitinol law for those beams, rigid bodies and joints, sliding and sticky contact.
 

@@ -142,7 +142,7 @@ A summary of "What is implemented", in the form used across the design notes.
 | A FEBio `contact potential` block through `from_febio_block` | Translated with FEBio's names |
 | Contact inside a run with domains, loads and a solver | Not explored; designed in the [contact in a run note](contact_in_run.md) |
 | A comparison with a FEBio run | Not yet; the first is suite problem `co62` |
-| Any GPU run | One graph capture test is written for GPU; no GPU result is recorded in this note |
+| A GPU run | All contact tests, with the CUDA graph capture test, pass on a GPU (November 27, a workstation with two Quadro RTX 8000 (Warp 1.19.0, driver 580.82.07)). No timing |
 
 ## Decision points
 

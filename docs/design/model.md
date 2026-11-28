@@ -1,6 +1,8 @@
 # Central model and FEBio input and output
 
-Draft v0.3 for discussion, November 25, 2026. For Steve Maas, Jeff Weiss, the Warp team, Andras Lasso, and Ryan Black.  Happy Thanksgiving! The code is draft pull request 5 on branch `mattjolley/io-model-draft`; nothing is merged.
+Draft v0.3 for discussion, November 25, 2026. For Steve Maas, Jeff Weiss, the Warp team, Andras Lasso, and Ryan Black.  Happy Thanksgiving! 
+
+**Status, November 27, 2026.** The code was merged to `main` (pull request 5) and has been run on CPU and on a GPU. The text below is the draft as reviewed, updated where the merge changed a fact.
 
 Scope: the model object and the files that go in and out of it. Elements, assembly, solvers, time stepping, contact and materials are separate designs that are still to be made. A minimal version of some of them exists in the draft only so the model could be exercised end to end, as Steve suggested; section 7 says what that was.
 
@@ -189,7 +191,7 @@ One request: we could not open results in FEBio Studio from this environment. If
 
 ## 7. How it was tested
 
-CPU only. FEBio is 4.13.0 built from source at `552138d` with GCC and without MKL, a provisional build and not a release.
+First on CPU; on November 27 the tests were also run on a GPU (a workstation with two Quadro RTX 8000 (Warp 1.19.0, driver 580.82.07)) with the same results. FEBio is 4.13.0 built from source at `552138d` with GCC and without MKL, a provisional build and not a release.
 
 **Reading and writing inputs**
 
@@ -221,15 +223,15 @@ CPU only. FEBio is 4.13.0 built from source at `552138d` with GCC and without MK
 | 8-element hex block; 9-element curved shell patch | Log data | 4e-12 |
 | Six suite inputs (`sh52`, `mi06`, `mi24`, `oi06`, `mi25`, `oi10`) | Plot file, single precision | Equal in single precision for three; 1e-5 for three at FEBio's default tolerances, and equal once FEBio's tolerances are tightened |
 
-- The same results were obtained with materials taken from the material layer of draft PR #2 and with Warp's own linear solvers (`warp.optim.linear`).
+- The same results were obtained with materials taken from the material layer (pull request 2) and with Warp's own linear solvers (`warp.optim.linear`).
 - The coverage report refuses the other 532 suite inputs and all open application inputs and lists why. For the open mitral input: `isotropic Lee-Sacks`, `contact potential`, nonlinear springs, `pressure`, `mass damping`, dynamic analysis.
 
-**Automated tests.** 26 tests cover the above; 25 pass and one is skipped unless the material layer of draft pull request 2 is present. They do not need FEBio, since its outputs are stored under `references/`.
+**Automated tests.** The tests of `tests/test_io_model.py` cover the above. On `main`, with the material layer present, all run except two that need VTK. They do not need FEBio, since its outputs are stored under `references/`.
 
 **Not checked**
 
 - Nothing was opened in FEBio Studio or in 3D Slicer.
-- No GPU run.
+- The tests have been run on a GPU; no timing has been taken there.
 - The FEBio references are from a source build without MKL.
 
 ## 8. Initial explorations
@@ -244,7 +246,8 @@ A summary of section 7, in the form used across the design notes.
 | Plot files: FEBio 4.9 files read and written again | Identical byte for byte | Section 7 |
 | A minimal run behind the model (hex8, quad4 shell, static) against FEBio | 2e-12 to 4e-12 from log data; six suite inputs through the plot file | Section 7 |
 | Building Newton models and OpenUSD meshes from the model | Earlier trials, section 5 | I/O proposal |
-| Opening results in FEBio Studio or 3D Slicer; any GPU run | Not explored | |
+| Opening results in FEBio Studio or 3D Slicer | Not explored | |
+| A GPU run | The tests pass on a GPU (November 27); no timing | |
 
 ## 9. Decision points
 
@@ -259,7 +262,7 @@ Each row summarizes a question of section 6, where the full text and what was ch
 | M5 | How SlicerHeart gets the code | (a) Installed by pip from the module. (b) A copy of the model and I/O files inside SlicerHeart | Open | Andras | Question 5 |
 | M6 | Units and coordinate system on the way into Slicer | (a) Through ImportExportSimulationModel, so conversion stays in one place. (b) In the adapter | (a) | Andras | Question 6 |
 | M7 | A FEBio model in the Slicer scene | Arrays on one model node, a node per part, or markups for sets and conditions | Open | Andras | Question 7 |
-| M8 | The test fixture in this draft | The run path draft found two places where the fixture differs from FEBio (the iteration count given to the time step controller, and the reformation limit). (a) Correct the fixture here. (b) Leave it, since the run path replaces it | (b), with the difference recorded in the [run path note](run_path.md) | Steve, MJ | Run path note, section 8 |
+| M8 | The test fixture in this draft | The run path draft found two places where the fixture differs from FEBio (the iteration count given to the time step controller, and the reformation limit). (a) Correct the fixture here. (b) Leave it, since the run path replaces it | Decided November 27: (a). The fixture was corrected before the merge, so it steps as FEBio does while it remains | Steve, MJ | Run path note, section 8 |
 | M9 | How a suite problem is compared with FEBio | Plot file from a pinned build, or a copy of the input with log data added | See decision O1 in the [output note](output.md#5-decision-points) | Steve | |
 
 For gradients: the model is frozen once built and `State` is separate from it. That split is what the adjoint of the run path relies on, and it is the reason for the fourth row of the table in section 3.

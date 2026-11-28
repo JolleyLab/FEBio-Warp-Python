@@ -6,7 +6,7 @@ First template for discussion, November 26, 2026 (v0.2). For Steve Maas, Jeff We
 
 **What is asked of a reader.** Not a code review. The notes are meant to help plan the architecture: where a proposal is wrong, which option to take at each decision point, and what is missing. Section 5 lists the decisions by who is best placed to make them. [work_plan.md](work_plan.md) turns the notes into work packages that can proceed in parallel.
 
-**Assumptions.** The model and reader of pull request 5 are accepted in the main. The run path of pull request 6 (field table, terms, Newton step, step driver, adjoint) is the structure everything attaches to. If review changes either, the notes change with it; section 8 says which.
+**Assumptions.** The model and reader of pull request 5 are accepted in the main. Both they and the run path are on `main` since November 27, 2026; the run path's decision points are still open. The run path of pull request 6 (field table, terms, Newton step, step driver, adjoint) is the structure everything attaches to. If review changes either, the notes change with it; section 8 says which.
 
 **The rule followed.** FEBio decides inputs, formulations, defaults and outputs, and is the reference for every result. The internals are built for Warp: flat device arrays, one kernel per batch, a matrix pattern analysed once, state apart from the model, and gradients as a requirement. Gradients of a solution are the one place with no FEBio design to follow (section 6).
 
@@ -44,7 +44,7 @@ What follows from this:
 
 ## 2. The path
 
-Solid boxes exist as a template in pull request 6 or as a draft. Dashed boxes are the remaining areas.
+Solid boxes exist on `main`, as a template (pull request 6) or as a first draft. Dashed boxes are the remaining areas.
 
 ```mermaid
 flowchart TB
@@ -198,7 +198,7 @@ A selection. Every decision has an ID and sits in a table in its note with the o
 | L1 | Measure Warp's preconditioners and try cuDSS before choosing between an iterative and a direct solve | [linear_solve.md](linear_solve.md#7-decision-points) |
 | S4 | Which parameters are differentiable from the start | [sensitivity.md](sensitivity.md#6-decision-points) |
 | V3 | Where larger references live once fields are compared | [verification.md](verification.md#decision-points) |
-| M8, R8 | Whether the test fixture of pull request 5 is corrected or left, since the run path replaces it | [model.md](model.md#9-decision-points) |
+| M8, R8 | Decided November 27: the test fixture of pull request 5 was corrected before the merge | [model.md](model.md#9-decision-points) |
 
 ## 6. Adjoints and automatic differentiation
 
@@ -270,7 +270,7 @@ Each is stated in the note named, with its source.
 
 ## 10. How these notes are meant to be reviewed
 
-The notes are documents, and no area needs a pull request of its own until code for it starts. The suggestion is one docs-only draft pull request that holds this set, so that comments can be made line by line on a note or on a decision table. When code for an area begins, its note moves into that pull request with the code, as the design index describes.
+The notes are documents, and no area needs a pull request of its own until code for it starts. Since November 27 the notes are on `main`, and they are where planning happens: comment on a note or a decision table through an issue or a small pull request that edits the note. When code for an area begins, it comes as short-lived pull requests against `main`, each with the full test tier run on CPU and on a GPU ([CONTRIBUTING](../../CONTRIBUTING.md)).
 
 ## 11. What was checked, and what was not
 

@@ -92,11 +92,6 @@ can then be built in parallel. Testing uses the
 [FEBio model repository](https://repo.febio.org/modelRepo/UserProjects) user projects, with small
 generated inputs only where neither has a case that fits. The pilot examples are not test targets.
 
-Testing uses the [FEBio test suite](https://github.com/febiosoftware/TestSuite) first, then the
-open models in the [FEBio model repository](https://repo.febio.org/modelRepo/UserProjects) user
-projects, with small generated inputs only where neither has a case that fits. The pilot examples
-are not test targets.
-
 The drafts were developed on separate branches and merged to `main` together on November 27,
 2026. [`docs/design/integration.md`](docs/design/integration.md) records how they were made
 consistent where they meet and what was left open.
@@ -148,8 +143,17 @@ The project uses [uv](https://docs.astral.sh/uv/) for environments and
 
 ```bash
 uv sync --extra dev
-uv run -m unittest discover -s tests -v
+uv run -m unittest discover -s tests -v                                  # quick tier, CPU, about 15 s
+WARP_FEBIO_TEST_DEVICE=cuda:0 uv run -m unittest discover -s tests -v    # the same on a GPU
+WARP_FEBIO_TEST_LEVEL=full uv run -m unittest discover -s tests -v       # full tier, before merging
+
+uv run -m warp_febio inspect references/single_element/hex8_pressure.feb   # what the input needs
+uv run -m warp_febio run references/single_element/hex8_pressure.feb -o hex8_pressure.xplt
 ```
+
+The tests run on CPU or on a GPU and come in two tiers; see
+[CONTRIBUTING](CONTRIBUTING.md#writing-and-running-tests). The command line reads a FEBio input,
+says whether FEBio-Warp can run it yet, and runs it if so (`--device cuda:0` for a GPU).
 
 `uv sync` creates `.venv` with the versions recorded in `uv.lock`. The `dev` extra installs
 everything the tests use, including Warp. To use the package, the `warp` extra

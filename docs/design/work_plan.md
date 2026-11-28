@@ -69,7 +69,7 @@ Three things every work package depends on. They are the serial part of the plan
 
 | | What | Where it is proposed | What is asked |
 | --- | --- | --- | --- |
-| A | The model and the reader | Pull request 5, [model.md](model.md) | Review as planned |
+| A | The model and the reader | Pull request 5, [model.md](model.md) | On `main` since November 27; review continues on the note's decision points |
 | B | Contract v0: unknowns numbered by (node, variable) in 3x3 blocks; constrained components masked; one `Term` contract for domains, loads and contact; FEBio's residual sign; State apart from the model | Pull request 6, [run_path.md](run_path.md), points 1 to 3 for review | A yes, a no, or a change on each of the four. Once given, the contract is frozen as v0 and packages build against it |
 | C | A comparison runner: run a FEBio test suite input in FEBio-Warp and compare with the plot file of a pinned FEBio build | [output.md](output.md) decision O1, [verification.md](verification.md) | Agreement on plot file or added log data, and on the pinned build |
 
@@ -132,7 +132,7 @@ A lane can be carried by a person working with coding agents. The packages are s
 | --- | --- | --- | --- | --- |
 | P1 | How a new term enters the system | (a) Each package edits `select_domain` or `build_system`. (b) A registry keyed by FEBio's type names, where a package registers its own builder | (b). It is what lets packages land in any order without conflicts, and it mirrors how FEBio registers classes | Steve, Warp team |
 | P2 | Whether contract v0 is frozen before pull request 5 is fully reviewed | (a) Wait. (b) Freeze provisionally on the four choices, with one planned migration if review changes them | (b) | Steve, MJ |
-| P3 | How a package is tracked | (a) A pull request per package from the start. (b) The lanes table on this page, with coordination where the team already talks; a draft pull request opened only when a package has code | (b). The README table links each area to its note and its decisions, and this page says who has what | MJ |
+| P3 | How a package is tracked | (a) A pull request per package from the start. (b) The lanes table on this page, with coordination where the team already talks; a draft pull request opened only when a package has code | (b), and since November 27 without long-lived drafts: notes hold the plan, and code comes as short-lived pull requests against `main`. The README table links each area to its note and its decisions, and this page says who has what | MJ |
 | P4 | The reference tier and the faster tier | (a) Every package delivers the reference tier first (double precision, matches FEBio). (b) Some packages go straight to GPU performance | (a), except W6, whose purpose is performance | Team |
 | P5 | Who needs a GPU and a pinned FEBio build | W6 needs a GPU. C and every "done when" need the pinned FEBio build, with Pardiso for the non-symmetric inputs | Settle both before Stage 1 starts in earnest | MJ, Steve |
 
@@ -142,7 +142,7 @@ A lane can be carried by a person working with coding agents. The packages are s
 2. Check that the decisions listed for the package in section 3 have an answer. If not, that is the first conversation.
 3. Work on a branch named `username/short-description`, in the files the package owns.
 4. Done means: the named suite problems agree with FEBio through the comparison runner; the tangent agrees with finite differences of the residual; a gradient check passes for every parameter the term exposes; the coverage report and the note are updated.
-5. Open a draft pull request when there is code to look at. The note moves into it.
+5. Open a pull request against `main` when there is code to look at, keep it small, and merge it once the full test tier passes on CPU and on a GPU. The note stays in `docs/design/` and is updated with it.
 
 ## 6. Stage 2: milestones
 

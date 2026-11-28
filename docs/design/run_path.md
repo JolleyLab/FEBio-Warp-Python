@@ -1,6 +1,8 @@
 # Run path: from a compiled model to a result
 
-Draft v0.3 for discussion, November 26, 2026. For Steve Maas, Jeff Weiss, Ryan Black and the Warp team. The code is a template in draft pull request 6, on branch `mattjolley/run-path-template`, stacked on `mattjolley/integration-base`. Nothing is merged. The [design overview](overview.md) shows where this sits among the other drafts.
+Draft v0.3 for discussion, November 26, 2026. For Steve Maas, Jeff Weiss, Ryan Black and the Warp team. The [design overview](overview.md) shows where this sits among the other pieces.
+
+**Status, November 27, 2026.** The template was merged to `main` (pull request 6) with the pieces it builds on, and has been run on CPU and on a GPU. It is still a template: the decision points of section 12 are open. The text below is the draft as reviewed, updated where the merge changed a fact.
 
 **Scope.** The structure that takes a model and drives it through steps to a result: unknowns, terms, the Newton step, the step driver, and gradients. It is shown on the basic example Steve suggested (one element, one material, prescribed nodal displacements, with free unknowns and a Newton solve), and on one element under a pressure load, which is the standing case for checking gradients.
 
@@ -121,7 +123,7 @@ FEBio throws on a negative Jacobian. A kernel cannot, so `update` writes a statu
 | Per step | Target values of prescribed components, from the load curves |
 | Per output state | Displacement and stress for the writers |
 
-Not yet done: nothing has been run on a GPU or captured as a CUDA graph. `FemSolidDomain` evaluates the material in the force pass and again in the stiffness pass, and reads the Jacobians of all points on the host for its status check.
+Run on a GPU since November 27 (section 8). Not yet done: nothing has been captured as a CUDA graph. `FemSolidDomain` evaluates the material in the force pass and again in the stiffness pass, and reads the Jacobians of all points on the host for its status check.
 
 ## 5. What is taken from Warp and Newton
 
@@ -145,7 +147,7 @@ Checked against Warp 1.19.0 as installed and Newton at `12bf1e6`.
 - **tet4 came without writing an element.** The same class on `fem.Tetmesh` with a one-point rule matches FEBio on a six-element block to 2e-12.
 - **It is differentiable as is.** The adjoint's reverse pass goes through `fem.integrate`, and the gradient check passes.
 - **It does not cover shells.** `warp.fem` has no thick shell, so quad4 shells stay on the dedicated kernel. Question 13 of the materials draft asks the Warp team about this.
-- **Speed is open.** The assembly note measured a dedicated kernel at about four times the `warp.fem` route on CPU. Nothing has been measured on a GPU.
+- **Speed is open.** The assembly note measured a dedicated kernel at about four times the `warp.fem` route on CPU. On a GPU only the small reference cases have been timed (section 8), which says little about speed.
 
 So the earlier either-or between dedicated kernels and `warp.fem` becomes: `warp.fem` for solids to start, dedicated kernels where `warp.fem` has no element or measurements say it is needed, and each as a check on the other for hex8.
 
@@ -226,7 +228,7 @@ Measured on the single-element pressure case:
 
 ### Against FEBio
 
-CPU only, Warp 1.19.0, double precision. FEBio log data has 12 digits.
+Warp 1.19.0, double precision. FEBio log data has 12 digits. The figures below are CPU runs. On November 27 every case was also run on a GPU (a workstation with two Quadro RTX 8000 (Warp 1.19.0, driver 580.82.07)): agreement with FEBio is the same, CPU and GPU results differ by about 1e-15 (3e-12 for CG on the shell patch), and step counts, Newton iterations and cutbacks are identical.
 
 | Input | Elements | What it exercises | Largest relative difference |
 | --- | --- | --- | --- |
@@ -244,7 +246,7 @@ The first four are also run with Warp's CG, BiCGSTAB and GMRES (4e-11), and give
 
 ### Checks made as a reviewer would
 
-These were run to find what the first cases did not exercise. Four of them found errors, which are fixed on this branch.
+These were run to find what the first cases did not exercise. Four of them found errors, which are fixed.
 
 | Check | Finding |
 | --- | --- |
@@ -254,7 +256,7 @@ These were run to find what the first cases did not exercise. Four of them found
 | Reformation limit | With full Newton FEBio allows `max_refs` iterations. The run path allowed one more, as the fixture does. With `max_refs` 8 on the stepper case FEBio fails 13 attempts and stops at t = 0.955516; the run path now converges the same ten steps, fails the same 13 attempts and stops at the same point. |
 | FEBio's default BFGS (`max_ups` 10) against full Newton | Same solution to 2e-9 on the two-material case. Iteration counts differ, so step sequences under the automatic stepper can differ from a FEBio run that uses BFGS. |
 
-The time stepper and reformation limit findings apply to `analysis/static.py` in the model and I/O draft as well. On a displacement-driven single element with `opt_iter` 3, FEBio keeps the step at 0.1 for ten steps and the fixture grows it and finishes in six. This is noted for that draft and not changed here.
+The time stepper and reformation limit findings apply to `analysis/static.py` in the model and I/O draft as well. On a displacement-driven single element with `opt_iter` 3, FEBio keeps the step at 0.1 for ten steps and the fixture grows it and finishes in six. The fixture was corrected in both places before the merge to `main` (decision R8).
 
 ### The gradient check case
 
@@ -282,7 +284,7 @@ On the 1,863-element shell patch, Warp's CG with the `diag` preconditioner took 
 
 ### Tests and the FEBio build
 
-The whole test suite on this branch: 144 tests, 140 pass and 4 skip (two need a GPU, two need VTK and h5py).
+The whole test suite on `main` after the merge: 149 tests in two tiers ([CONTRIBUTING](../../CONTRIBUTING.md), "Writing and running tests"). The full tier passes on CPU and on a GPU; two tests need VTK and skip without it. The first GPU run found one error: `FemSolidDomain` did not pass its device to `fem.integrate` and `fem.interpolate`, so a model built for CPU on a machine with a GPU failed. It is fixed.
 
 FEBio for the new references is 4.13.0 built from source at `e4df3f8` without MKL, by `tools/build_febio.sh`. That build reproduces the stored results for `hex8_neo_hookean.feb`, made at `552138d`, exactly.
 
@@ -320,10 +322,10 @@ Each was checked against the FEBio source (`e4df3f8`), Warp 1.19.0, Newton (`12b
 - Static analysis, one step. hex8 and tet4 solids, quad4 shells, the materials the binding accepts, fixed and prescribed displacements, and pressure on quad4 facets given as one number with a load curve.
 - One small change outside the new files: `inspect` in `compiled.py` takes two optional functions through which a run path says which loads and element types it can build. The fixture's behavior is unchanged.
 - No history, so `commit` and `rollback` are called and do nothing.
-- CPU only. No timing was taken.
+- Checked on CPU and on a GPU. No timing beyond the small reference cases was taken.
 - The first-iteration handling of prescribed displacements and the convergence tests were carried over from the fixture, which was compared with FEBio. The reformation limit and the iteration count given to the step controller were checked against the FEBio source and corrected (section 8); the rest was not re-derived.
 - Solver settings that are read but have no effect: `lstol`, `lsmin`, `lsiter` (no line search), `qn_method` (always full Newton), and the solver's `symmetric_stiffness` (FEBio uses it to choose matrix storage; here the matrix is always general). The coverage report lists each of them.
-- The command line (`python -m warp_febio run`) still runs the fixture, which refuses pressure. The run path is reached from Python.
+- The command line (`python -m warp_febio inspect` and `run`) goes through the run path since November 27, so it runs the pressure cases.
 - There are two hex8 implementations (the dedicated brick domain and `warp.fem`). They agree to round-off on every case here. Keeping one is a decision for after the review.
 - The FEBio references are from a source build without MKL, not an official release.
 
@@ -340,6 +342,6 @@ Each row summarizes a point of section 9, where the full text is given. IDs foll
 | R5 | Running the forward solve without recording it | Call the solve outside the tape block, or a supported way to pause a tape | Open | Warp team | Point 5 |
 | R6 | A direct solver or stronger preconditioner for shells | Warp's `FSAI` and block Jacobi, a factorization on the device (cuDSS was suggested in review), or another route | Measure the preconditioners and try cuDSS ([linear_solve.md](linear_solve.md), decisions L1 and L2) | Warp team | Point 6 |
 | R7 | Two hex8 implementations | (a) `warp.fem` for solids, dedicated kernels where it has no element. (b) Dedicated kernels throughout | (a) to start; both agree to round-off | Steve, Warp team | Section 5 |
-| R8 | The fixture of pull request 5 | It differs from FEBio in two places found here. Correct it there, or leave it since this path replaces it | Leave it, recorded in section 8 | Steve, MJ | Section 8 |
+| R8 | The fixture of pull request 5 | It differs from FEBio in two places found here. Correct it there, or leave it since this path replaces it | Decided November 27: corrected in the fixture before the merge | Steve, MJ | Section 8 |
 
 For gradients: R1, R2 and R4 are the ones the adjoint depends on. State apart from the model, one implementation of each term for the forward and reverse passes, and an exact tangent on request are what make a gradient cost one transpose solve.
