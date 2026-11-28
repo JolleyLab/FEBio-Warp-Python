@@ -23,10 +23,13 @@ source without MKL, not an official release. The two chord networks added on
 November 27 (`ch_truss_chords`, `ch_spring_chords`) come from the build at
 commit `e4df3f8` made by `tools/build_febio.sh`; each reference names its build.
 
-FEBio-Warp is compared with these references in `tests/`. The material point
-inputs (`mp_`) and the three chord inputs (`ch_`) are compared today; the
-others wait on the features they need (dynamics, contact in a run, the
-three-field element).
+FEBio-Warp is compared with these references in `tests/`. Compared today: the
+material point inputs (`mp_`); the three chord inputs (`ch_`); the two dynamic
+inputs, `bk_mass_damping` and `sh_lee_sacks_pressure` (`tests/test_dynamics.py`);
+and two contact inputs, `bk_contact_potential_patch` and `sh_self_contact_fold`
+(`tests/test_contact_in_run.py`). The others wait on the features they need:
+`bk_hgo_three_field` on the three-field element, `bk_ring_in_tube` on a
+prescribed deformation, `bk_modulus_load_curve` on its comparison being written.
 
 Prefixes: `mp_` material point (one element, uniform deformation), `ch_`
 chord, `bk_` small solid problems, `sh_` shell problems.
