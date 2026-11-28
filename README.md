@@ -13,13 +13,25 @@ applications where speed and gradients matter.
 
 ## Project status
 
-This project is at an early stage. Interfaces will change, and most areas listed below are first
-templates or in design. Nothing here is released.
+Early stage, nothing released. As of November 27, 2026, first implementations of the model and
+FEBio input and output, materials, contact, and a run path from a model to a result are on `main`.
+They agree with FEBio on single elements and small meshes, on CPU and on a GPU. No application
+input runs end to end yet, and interfaces will change.
 
-Development has now moved to a design-led process. Each area is specified in a design note,
-reviewed by the developers involved, implemented, and verified against FEBio
-reference problems where one exists. The pilot work is preserved in [`pilots/`](pilots/README.md) and at the
-[`pilot-2026-11`](https://github.com/JolleyLab/FEBio-Warp-Python/tree/pilot-2026-11) tag.
+## Try it
+
+```bash
+uv sync --extra dev                                                        # environment with Warp
+uv run -m warp_febio inspect references/single_element/hex8_pressure.feb   # what the input needs, and whether it can run
+uv run -m warp_febio run references/single_element/hex8_pressure.feb -o hex8_pressure.xplt
+uv run examples/run_path/basic_example.py                                  # the run path step by step, with gradients
+```
+
+`inspect` lists every feature of a FEBio input by its FEBio name and says whether FEBio-Warp
+implements it. `run` solves the input and writes a FEBio plot file (`.xplt`). The example
+prints each stage, compares the result with FEBio, and ends with adjoint gradients. Add
+`--device cuda:0` to `run`, or `cuda:0` after the example, to use a GPU. [Install](#install) has
+the details.
 
 ## Driving applications
 
@@ -31,70 +43,65 @@ The first targets set the scope. Capabilities are added because one of these nee
 | Self-expanding nitinol devices (transcatheter pulmonary valve replacement, septal occluders) | Beam frames, nitinol material, device-to-vessel contact, hyperelastic vessel wall |
 | Patch and material verification problems | Small problems with known or FEBio reference solutions, used to verify each component |
 
-## Design at a glance
+## Design and status
 
 ```mermaid
 flowchart LR
-    feb([".feb"]) --> model["Model and I/O"]
-    model --> system["System on the device<br/>domains, materials, loads, contact"]
-    system --> run["Run path<br/>steps, Newton, linear solve"]
-    run --> results([".xplt, VTKHDF"])
-    run -.-> grad["Gradients"]
+    feb([".feb"]):::done --> model["Model and I/O"]:::done
+    model --> system
+    subgraph system["System on the device"]
+        direction TB
+        mat["Materials"]:::done
+        elem["Solids and shells<br/>hex8, tet4, quad4"]:::done
+        loads["Pressure, fixed and<br/>prescribed displacements"]:::done
+        pot["Contact potential<br/>on its own"]:::done
+        chord["Trusses and springs<br/>for chordae"]:::todo
+        inrun["Contact in a run"]:::todo
+        beams["Beams, three-field solid,<br/>constraints"]:::todo
+    end
+    system --> run
+    subgraph run["Run path"]
+        direction TB
+        static["One static step, Newton,<br/>iterative linear solve"]:::done
+        dyn["Dynamics, several steps,<br/>line search, preconditioning"]:::todo
+    end
+    run --> results([".xplt, VTKHDF"]):::done
+    run -.-> grad["Gradients through<br/>one equilibrium solve"]:::done
+    grad -.-> traj["Gradients over steps"]:::todo
     febio["FEBio, same input"] -.->|verification| results
+    classDef done fill:#d8f0e1,stroke:#1a7f47,color:#0b3d20
+    classDef todo fill:#f6f6f6,stroke:#8a8a8a,color:#444444,stroke-dasharray:5 4
 ```
 
-| Piece | In one line | State |
-|---|---|---|
-| Model and I/O | One model object for what a FEBio input defines; reads and writes FEBio files; says whether an input can run | On `main` ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)) |
-| Materials | FEBio's material structure, compiled into one Warp kernel per material tree | On `main` ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)) |
-| Contact | Point-based contact potential with pair search on the device | On `main` ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)) |
-| Run path | From a model to a result on small cases, with adjoint gradients | Template on `main` ([PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6)) |
-| Verification | The same inputs run in FEBio and compared | On `main` ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)) |
+Green boxes work today. Dashed boxes have a design note and no code yet.
 
-The [design overview](docs/design/overview.md) shows how these fit together, where the design
-follows FEBio and where it differs, and what is only a first template. It is the place to start.
+The table gives the same picture by area. "Works today" means code on `main`, tested on CPU and
+on a GPU, and compared with FEBio where a counterpart exists. It is a first implementation, not a
+settled design: the run path in particular is a template, and each design note ends with decision
+points that are still open.
 
-## Development areas
+| Area | Package | Works today | Still to do | Design notes and diagrams |
+|---|---|---|---|---|
+| Model, input and output | `model/`, `io/` | One model object for what a FEBio input defines. Reads and writes `.feb` (all 538 FEBio test suite inputs read and write back equal), reads and writes `.xplt`, writes VTKHDF, exchanges meshes with 3D Slicer. A coverage report and the command line say whether an input can run | Registry of plot and log variables; log file output | [Model and I/O](docs/design/model.md) ([diagram](docs/design/model.md#2-big-picture), [decisions](docs/design/model.md#9-decision-points)), [output](docs/design/output.md) ([diagram](docs/design/output.md#2-from-a-state-to-a-file)) |
+| Materials | `materials/` | FEBio's material structure, compiled into one Warp kernel per material tree, with gradients. Neo-Hookean, isotropic elastic, isotropic Lee-Sacks, HGO (unconstrained and uncoupled), solid mixtures; spring and linear truss laws for chordae. Effective-modulus nitinol: the device model of Zelonis et al. ([arXiv 2507.06337](https://arxiv.org/abs/2507.06337)) and Maheshwari et al. ([J Mech Behav Biomed Mater 2026](https://doi.org/10.1016/j.jmbbm.2026.107642), arXiv 2601.05410), an elastic frame whose Young's modulus steps between compression and release | Under redesign after review. Superelastic nitinol: only a shell of the interface exists (a simple uniaxial law, not for device results), and FEBio has no counterpart to verify against. Ogden, `tangent_scale`, per-element material axes | [Materials](docs/design/materials.md) ([diagram](docs/design/materials.md#at-a-glance), [decisions](docs/design/materials.md#decision-points)) |
+| Contact | `contact/` | Point-based contact potential: pair search on the device, force, tangent, gradients; reads FEBio's `contact potential` block. Tested on its own | Contact inside a run; sliding, sticky and tied contact | [Contact](docs/design/contact.md) ([diagram](docs/design/contact.md#at-a-glance), [decisions](docs/design/contact.md#decision-points)), [contact in a run](docs/design/contact_in_run.md) ([diagram](docs/design/contact_in_run.md#2-where-contact-sits-in-one-iteration)) |
+| Elements | `elements/` | hex8 and tet4 solids, quad4 shell | Trusses and springs for chordae; three-field solid, penta6, tri3 shell; beams | [Chordae](docs/design/chordae.md) ([diagram](docs/design/chordae.md#2-from-the-input-to-a-term)), [elements](docs/design/elements.md) ([diagram](docs/design/elements.md#3-selection)) |
+| Unknowns and assembly | `discretization/`, `assembly/` | Unknowns by (node, variable); full assembly of residual and tangent into a block sparse matrix with a fixed pattern | Timing on a GPU at application size | [Run path](docs/design/run_path.md) ([diagram](docs/design/run_path.md#2-the-path), [decisions](docs/design/run_path.md#12-decision-points)), [assembly](docs/design/assembly.md) |
+| Loads and constraints | `loads/`, `constraints/` | Follower pressure; fixed and prescribed displacements | Nodal loads, body force, mass damping; normal-displacement and multipoint constraints | [Dynamics](docs/design/dynamics.md), [constraints](docs/design/constraints.md) ([diagram](docs/design/constraints.md#2-how-a-constrained-component-is-handled)) |
+| Solvers | `solvers/` | Full Newton; Warp's CG, BiCGSTAB and GMRES on the device; a dense direct solve for checks | Line search, quasi-Newton, preconditioning for shells, a direct solver on the device | [Run path](docs/design/run_path.md) ([one Newton iteration](docs/design/run_path.md#3-one-newton-iteration)), [linear solve](docs/design/linear_solve.md) ([diagram](docs/design/linear_solve.md#2-choosing-a-method)) |
+| Analysis | `analysis/` | One static step with FEBio's automatic time stepper | Implicit dynamics; several steps | [Run path](docs/design/run_path.md), [dynamics](docs/design/dynamics.md) ([one dynamic step](docs/design/dynamics.md#2-one-dynamic-step)) |
+| Sensitivity | `sensitivity/` | Adjoint gradients through one equilibrium solve, checked against finite differences and a closed form | Gradients over steps and trajectories | [Sensitivity](docs/design/sensitivity.md) ([diagram](docs/design/sensitivity.md#2-forward-run-and-reverse-sweep)) |
+| Verification | `tests/`, `references/` | Stored FEBio references for material points, single elements, small meshes and 20 small problems; agreement to about 1e-12. Tests in a quick and a full tier, on CPU and on a GPU | A runner for FEBio test suite problems; the application inputs | [Verification](docs/design/verification.md) ([diagram](docs/design/verification.md#at-a-glance), [decisions](docs/design/verification.md#decision-points)) |
 
-Status as of November 27, 2026. The drafts of pull requests 1, 2, 4, 5 and 6 were merged to
-`main` on that day, with the full test suite run on CPU and on a GPU at each step. "On `main`"
-means the code is in the package and checked against FEBio on small cases; it is not settled, and
-its open questions are the decision points in its design note. "Template" means a first working
-shape of the run path ([PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6)), checked
-against FEBio on small cases and not settled. "Design" means a design note with a proposed approach exists and no code.
-No application input runs end to end yet.
+Where to read more:
 
-Start with the [design overview](docs/design/overview.md) for how the pieces fit,
-[remaining areas](docs/design/remaining_areas.md) for what is left and the decisions listed by reviewer, and
-the [work plan](docs/design/work_plan.md) for what has to be agreed first and which work packages can then
-be built in parallel.
+- [Design overview](docs/design/overview.md): how the pieces fit ([the whole path](docs/design/overview.md#1-the-whole-path), [one run](docs/design/overview.md#3-one-run)), and where the design follows FEBio and where it differs. Start here.
+- [Remaining areas](docs/design/remaining_areas.md) ([diagram](docs/design/remaining_areas.md#2-the-path)): what stands between today's code and the applications, in order, with the open decisions listed by who is best placed to make them.
+- [All design notes](docs/design/README.md), each with a flow diagram and its decision points.
 
-| Area | Package | Scope for the first targets | Status |
-|---|---|---|---|
-| Materials | `materials/` | Common material interface; neo-Hookean, HGO, Ogden, Lee-Sacks, nitinol | On `main` ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)), under redesign. Design: [material interface](docs/design/materials.md) ([decisions](docs/design/materials.md#decision-points)) |
-| Contact | `contact/` | Potential-based contact for leaflets and devices; sliding contact later | On `main` ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)). Design: [contact potential](docs/design/contact.md) ([decisions](docs/design/contact.md#decision-points)), [contact in a run](docs/design/contact_in_run.md) |
-| Assembly | `assembly/` | Full assembly of residual and tangent on the GPU | Decided ([note](docs/design/assembly.md)). Template: one block buffer and pattern map |
-| Elements | `elements/` | Shells, solids, trusses, springs, beams | Template: hex8, tet4, quad4 shell. Design: [trusses and springs for chordae](docs/design/chordae.md), then [three-field solid, penta6, tri3 shell](docs/design/elements.md). Beams: design shell |
-| Mesh and discretization | `mesh/`, `discretization/` | Mesh types, degree-of-freedom maps, quadrature | Template: unknowns by (node, variable). `mesh/` holds no code; the mesh is in the central model |
-| Loads and constraints | `loads/`, `constraints/` | Follower pressure, nodal loads, prescribed and multipoint constraints | Template: pressure, fixed and prescribed displacements. Design: [mass damping](docs/design/dynamics.md), [normal displacement](docs/design/constraints.md) |
-| Solvers | `solvers/` | Newton with line search; iterative linear solvers and preconditioners | Template: full Newton, Warp's iterative solvers. Design: [preconditioning for shells, line search, quasi-Newton](docs/design/linear_solve.md) |
-| Analysis | `analysis/` | Static and implicit dynamic steps, load stepping, staged procedures | Template: one static step with FEBio's time stepper ([run path](docs/design/run_path.md) ([decisions](docs/design/run_path.md#12-decision-points))). Design: [dynamics and several steps](docs/design/dynamics.md) |
-| Sensitivity | `sensitivity/` | Gradients through equilibrium and through trajectories | Template: adjoint through one equilibrium solve. Design: [over steps](docs/design/sensitivity.md) |
-| Central model, input and output | `model/`, `io/` | One model object holding what a FEBio input defines; FEBio input (`.feb`) and plot (`.xplt`) files read and written here; VTKHDF output and a VTK adapter for 3D Slicer | On `main` ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)). Design: [model, input and output](docs/design/model.md) ([decisions](docs/design/model.md#9-decision-points)), [output registry](docs/design/output.md) |
-| Verification | `tests/`, `references/` | FEBio-Warp run on FEBio input files and compared with pinned FEBio references; cases from the FEBio test suite and the driving applications | On `main` ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)); comparisons beyond material points wait on the run path. Design: [comparison with FEBio](docs/design/verification.md) ([decisions](docs/design/verification.md#decision-points)) |
-
-Design notes live in [`docs/design/`](docs/design/README.md). What is left before the application
-inputs run, in order, is in [remaining areas](docs/design/remaining_areas.md). Each design note ends with
-the decision points for the team, and that page lists them by reviewer. The
-[work plan](docs/design/work_plan.md) says what has to be agreed first and which work packages
-can then be built in parallel. Testing uses the
-[FEBio test suite](https://github.com/febiosoftware/TestSuite) first, then the open models in the
-[FEBio model repository](https://repo.febio.org/modelRepo/UserProjects) user projects, with small
-generated inputs only where neither has a case that fits. The pilot examples are not test targets.
-
-The drafts were developed on separate branches and merged to `main` together on November 27,
-2026. [`docs/design/integration.md`](docs/design/integration.md) records how they were made
-consistent where they meet and what was left open.
+Testing uses the [FEBio test suite](https://github.com/febiosoftware/TestSuite) first, then the
+open models in the [FEBio model repository](https://repo.febio.org/modelRepo/UserProjects) user
+projects, with small generated inputs only where neither has a case that fits.
 
 ### Relation to FEBio's structure
 
@@ -111,17 +118,12 @@ The package layout under `src/warp_febio/` follows FEBio's separation of concern
 | `io/` | FEBioXML, FEBioPlot |
 | `sensitivity/` | Added here |
 
-## How code enters the package
+## Contributing
 
-1. A design note in `docs/design/` states the formulation, the FEBio source it follows, and
-   how it will be verified.
-2. A pull request implements it. Pull requests are kept small and merged within days, once the
-   full test tier passes on CPU and on a GPU. Open questions stay in the note's decision points,
-   not in a long-lived pull request.
-3. It is verified against FEBio reference problems where one exists, in double precision.
-
-Exploratory work is welcome and belongs in `pilots/` until it has been through these steps.
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+Large new sections start as a design note in [`docs/design/`](docs/design/README.md): a template
+of the approach and its open decisions, for discussion before and alongside the code. Exploratory
+work is welcome and belongs in `pilots/` until it has been designed, reviewed and verified against
+FEBio. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Pilot work
 
@@ -129,7 +131,8 @@ The initial prototypes were contributed by [@aslanseda9](https://github.com/asla
 explicit membrane patch solver, Lee-Sacks and neo-Hookean material-point functions, and a solid
 elasticity check built on `warp.fem`. They were written to explore the approach, not as verified
 implementations, and each one lists what it does and does not establish. They remain available
-and runnable in [`pilots/`](pilots/README.md). They are not maintained and are not a dependency
+and runnable in [`pilots/`](pilots/README.md) and at the
+[`pilot-2026-11`](https://github.com/JolleyLab/FEBio-Warp-Python/tree/pilot-2026-11) tag. They are not maintained and are not a dependency
 of the package.
 
 The FEBio inputs and results assembled during the pilot phase are kept in `references/febio/`.
@@ -146,14 +149,10 @@ uv sync --extra dev
 uv run -m unittest discover -s tests -v                                  # quick tier, CPU, about 15 s
 WARP_FEBIO_TEST_DEVICE=cuda:0 uv run -m unittest discover -s tests -v    # the same on a GPU
 WARP_FEBIO_TEST_LEVEL=full uv run -m unittest discover -s tests -v       # full tier, before merging
-
-uv run -m warp_febio inspect references/single_element/hex8_pressure.feb   # what the input needs
-uv run -m warp_febio run references/single_element/hex8_pressure.feb -o hex8_pressure.xplt
 ```
 
 The tests run on CPU or on a GPU and come in two tiers; see
-[CONTRIBUTING](CONTRIBUTING.md#writing-and-running-tests). The command line reads a FEBio input,
-says whether FEBio-Warp can run it yet, and runs it if so (`--device cuda:0` for a GPU).
+[CONTRIBUTING](CONTRIBUTING.md#writing-and-running-tests).
 
 `uv sync` creates `.venv` with the versions recorded in `uv.lock`. The `dev` extra installs
 everything the tests use, including Warp. To use the package, the `warp` extra

@@ -34,7 +34,7 @@ When you open a new issue, include enough for someone else to reproduce it:
 
 - Search existing issues and pull requests before starting.
 - Report bugs and propose substantial changes in an issue before opening a pull request. Explain what the change addresses and which simulation workflow needs it.
-- Code enters `src/warp_febio/` through a design note in `docs/design/`, a pull request, and review. Plans and open questions live in the design notes, as decision points, not in pull requests. Exploratory prototypes are welcome under `pilots/`; see the [README](README.md#how-code-enters-the-package).
+- Code enters `src/warp_febio/` through a pull request and review. A large new section (a new area, an interface, a file format, the solver architecture) starts as a design note in `docs/design/`: a template of the approach with its open decisions, for discussion before and alongside the code. Fixes and small changes need no note; if they change what a note says, update the note in the same pull request. Exploratory prototypes are welcome under `pilots/`; see the [README](README.md#contributing).
 - Discuss new features with the maintainers first. A new material model, element, or contact formulation should come with a concrete use case and an FEBio reference to verify against.
 - An open issue is not an assignment. If you would like to take on an issue someone else filed, ask in the issue first.
 - A fix for a bug you found yourself can go straight to a pull request.
@@ -188,7 +188,7 @@ Review time is limited, and focused changes with thorough validation are easier 
 - **Keep changes focused.** A pull request should address a single bug fix, feature, or improvement. Keep it small, avoid unrelated edits, and split unrelated changes into separate pull requests.
 - **Include a test plan.** Explain how you verified the change and which devices it ran on, in enough detail that a reviewer can reproduce and confirm the result.
 - **Link the issue.** If the pull request resolves an issue, include `closes #ISSUE_NUMBER` in the description or commit message.
-- **Plan in design notes, merge often.** Propose structure (interfaces, file formats, solver architecture) in a design note in `docs/design/`, with its decision points, so reviewers can comment before the design settles. Keep pull requests short-lived: merge within days once the full tier passes, and do not stack pull requests on each other's branches. A draft pull request is fine for code you want looked at early, but it should not hold the plan.
+- **Design notes for large sections, merge often.** When templating a large section or changing structure (interfaces, file formats, solver architecture), propose it in a design note in `docs/design/`, with its decision points, so reviewers can comment before the design settles. Smaller changes go straight to a pull request. Keep pull requests short-lived: merge within days once the full tier passes, and do not stack pull requests on each other's branches. A draft pull request is fine for code you want looked at early, but it should not hold the plan.
 - **Minimize review cost.** Well-tested, clearly described contributions with a clean commit history are reviewed faster. Contributions that take substantial reviewer effort to verify may be deprioritized or declined.
 
 Open pull requests against `main`.

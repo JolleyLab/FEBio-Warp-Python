@@ -16,7 +16,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [README](README.md) before chang
 
 ## Where code goes
 
-- `src/warp_febio/` holds designed and reviewed code. Code enters it through a design note in `docs/design/`, a pull request and review. Plans and open questions live in the design notes, not in pull requests.
+- `src/warp_febio/` holds designed and reviewed code. Code enters it through a pull request and review. A large new section or a change of structure starts as a design note in `docs/design/`, for discussion; fixes and small changes need no note, but update a note they make out of date.
 - `pilots/` holds the initial prototypes. They are not maintained, are excluded from linting, and are not a starting point for new work. Do not import from `pilots/` in the package or its tests.
 - `references/` holds FEBio inputs and results. Do not reformat or edit these files.
 - The targets for new work are FEBio's own test suite and the open models in the FEBio model repository, not the pilot data.
@@ -64,5 +64,5 @@ Follow Google-style docstrings. Document `__init__` parameters in the class docs
 - Always use `git commit --signoff` (or `-s`) to add a `Signed-off-by` line (DCO).
 - Run `uvx pre-commit run -a` and the test suite before committing.
 - When opening a pull request, use the template in `.github/PULL_REQUEST_TEMPLATE.md`.
-- Plan in a design note under `docs/design/`, not in a long-lived draft pull request. Keep pull requests short-lived and do not stack them.
+- For a large section, plan in a design note under `docs/design/`, not in a long-lived draft pull request. Keep pull requests short-lived and do not stack them.
 - Never push, open a pull request, or set, change or clear reviewers or assignees unless explicitly asked.
