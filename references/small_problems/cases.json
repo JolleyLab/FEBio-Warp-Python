@@ -91,6 +91,24 @@
   ]
  },
  {
+  "case": "ch_truss_chords",
+  "tier": 2,
+  "tags": [
+   "linear truss",
+   "linear-truss",
+   "nodal_load"
+  ]
+ },
+ {
+  "case": "ch_spring_chords",
+  "tier": 2,
+  "tags": [
+   "linear spring",
+   "tension-only linear spring",
+   "nonlinear spring"
+  ]
+ },
+ {
   "case": "bk_hgo_three_field",
   "tier": 2,
   "tags": [

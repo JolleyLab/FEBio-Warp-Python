@@ -41,7 +41,14 @@ from ..discretization.fields import FIXED, build_field_table
 from ..elements.brick_domain import BrickDomain
 from ..elements.fem_domain import ELEMENTS as FEM_ELEMENTS
 from ..elements.fem_domain import FemSolidDomain
-from ..loads import pressure
+from ..elements.line_builders import (
+    build_discrete_domains,
+    build_truss_domain,
+    discrete_coverage,
+    is_truss,
+    truss_coverage,
+)
+from ..loads import nodal_load, pressure
 from ..materials.febio import bind_material
 from ..results import Results, StateResult
 from ..solvers.nonlinear.newton import NewtonSettings, solve_step
@@ -53,6 +60,27 @@ def domain_support(kind, element_type, domain_type) -> bool:
     return kind == "SolidDomain" and element_type in FEM_ELEMENTS and domain_type in (None, "elastic-solid")
 
 
+def line_support(model, block, dom):
+    """Coverage rows of a truss part, or None for any other part."""
+    return truss_coverage(model, block, dom) if is_truss(block, dom) else None
+
+
+def discrete_support(model):
+    """Coverage rows of the Discrete section (springs)."""
+    return discrete_coverage(model)
+
+
+def inspect_model(model):
+    """The coverage report of this run path: what `build_system` can build."""
+    return inspect(
+        model,
+        load_support=load_support,
+        domain_support=domain_support,
+        line_support=line_support,
+        discrete_support=discrete_support,
+    )
+
+
 def select_domain(model, block, fields, directors, device, solids="dedicated"):
     """The domain term for one element block.
 
@@ -62,11 +90,15 @@ def select_domain(model, block, fields, directors, device, solids="dedicated"):
         quad4 shell   BrickDomain (warp.fem has no thick shell)
         hex8 solid    BrickDomain, or FemSolidDomain with solids="warp.fem"
         tet4 solid    FemSolidDomain
+        line2 truss   TrussDomain
 
-    penta6, tri3, three-field and discrete domains are further branches that
-    return other Terms.
+    penta6, tri3 and three-field domains are further branches that return
+    other Terms. Springs are not parts: `build_system` adds them from the
+    Discrete section.
     """
     dom = model.domain_of(block.name)
+    if is_truss(block, dom):
+        return build_truss_domain(model, block, fields, device)
     bound, _ = bind_material(model.material(dom.material), model)
     conn = block.connectivity
     nodes = model.mesh.nodes
@@ -102,7 +134,7 @@ def select_domain(model, block, fields, directors, device, solids="dedicated"):
 
 
 # Loads this run path can build: FEBio type -> module with inspect_load and a Term.
-LOADS = {pressure.TYPE: pressure}
+LOADS = {pressure.TYPE: pressure, nodal_load.TYPE: nodal_load, nodal_load.FORCE_TYPE: nodal_load}
 
 
 def load_support(record, model):
@@ -113,6 +145,8 @@ def load_support(record, model):
 
 def select_load(record, model, fields, directors, device):
     """The term for one load record (FEBio: the FEModelLoad class by type)."""
+    if record.type in (nodal_load.TYPE, nodal_load.FORCE_TYPE):
+        return nodal_load.NodalLoad(record, model, fields, directors, device)
     return pressure.PressureLoad(record, model, fields, directors, device)
 
 
@@ -125,17 +159,19 @@ def build_system(model, device=None, solids: str = "dedicated") -> System:
     solids: "dedicated" (hex8 by the hand-written brick kernel) or
     "warp.fem" (hex8 through warp.fem). tet4 always goes through warp.fem.
     """
-    report = inspect(model, load_support=load_support, domain_support=domain_support)
+    report = inspect_model(model)
     if not report.runnable:
         raise CoverageError(report)
     device = wp.get_device(device)
     fields = build_field_table(model)
     directors = shell_directors(model)
     terms = [select_domain(model, b, fields, directors, device, solids) for b in model.mesh.blocks]
+    # Springs of the Discrete section: one term per spring law in use.
+    terms += build_discrete_domains(model, fields, device)
     for record in model.loads:
         terms.append(select_load(record, model, fields, directors, device))
-    # Discrete elements and contact interfaces are appended here as further
-    # terms; neither is implemented in this template.
+    # Contact interfaces are appended here as further terms; not implemented
+    # in this template.
     system = System(model, fields, terms, device)
     system.report = report
     return system
@@ -168,7 +204,19 @@ def collect(system: System, state: State, iterations: int = 0) -> StateResult:
     for term in system.terms:
         if not hasattr(term, "plot"):
             continue
-        s = term.plot("stress")  # (E, Q, 3, 3)
+        if term.element_type == "discrete":
+            # Springs have no stress. Their outputs are kept by discrete set
+            # name, under FEBio's plot variable names.
+            for variable in ("discrete element force", "discrete element signed force"):
+                for name, values in term.plot_by_set(variable).items():
+                    out.discrete.setdefault(name, {})[variable] = values
+            continue
+        if term.element_type == "line2":
+            out.truss_stretch[term.name] = term.plot("truss stretch")
+            out.axial_force[term.name] = term.plot("axial force")
+        # A copy: on the CPU `numpy()` is a view of the device array, which
+        # the next step overwrites.
+        s = np.array(term.plot("stress"))  # (E, Q, 3, 3)
         mean = s.mean(axis=1)
         out.stress_points[term.name] = s
         # FEBio's order xx, yy, zz, xy, yz, xz; plain mean over points, as

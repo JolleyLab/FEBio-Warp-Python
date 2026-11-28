@@ -18,3 +18,14 @@ The uploaded source matches recorded settings/topology/coordinates. The historic
 log names patch_2PM_4chords_mitral_pattern.feb; no historical inputhash exists,
 so outputs cannot establish byte-for-byte identity. SourceSHA256 is now recorded.
 Static comparison remains pending. The prior dynamic state is not proven settled.
+
+Update, November 27, 2026 (FEBio-Warp-Python). FEBio was run on this input,
+unchanged, on WS02: FEBio 4.13.0 built from source at e4df3f8 by
+tools/build_febio.sh (no MKL, skyline solver; not the 4.9.0 build named above).
+Normal termination at time 0.1 in 17 steps and 127 equilibrium iterations.
+febio_final_state.json holds the final displacement of every node and the
+signed force of the four springs, from the plot file (single precision), with
+the SHA-256 of the input. FEBio-Warp agrees with it to 5e-8 of the largest
+displacement and to seven digits in the spring forces
+(tests/test_chordae_elements.py, ShellPatchOnSpringChordsTests). The .xplt,
+.log and .csv of that run are not kept here.

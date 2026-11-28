@@ -17,8 +17,8 @@ First template for discussion, November 26, 2026 (v0.2). Design only: there is n
 | Order | Element | Path | State | Note |
 | --- | --- | --- | --- | --- |
 | 0 | quad4 shell (`elastic-shell`) | Valve | Template in the run path, matches FEBio on single elements and small patches | Section 4 |
-| 1 | Two-node truss (`linear-truss`) | Valve | Law and element block exist in the material layer; no domain | [chordae.md](chordae.md) |
-| 2 | Two-node spring (`discrete`) | Valve (open mitral input) | Law exists; no domain | [chordae.md](chordae.md) |
+| 1 | Two-node truss (`linear-truss`), with FEBio's `linear truss` or a tension-only law | Valve | Draft domain for static steps, matches FEBio on small inputs and on suite `bt01`; mass and dynamics not yet | [chordae.md](chordae.md) |
+| 2 | Two-node spring (`discrete`) | Valve (open mitral input) | Draft domain with FEBio's three spring laws, matches FEBio on small inputs and on suite `di01`, `di02` | [chordae.md](chordae.md) |
 | 3 | tet4, hex8 solids | Device | Template in the run path through `warp.fem` | Run path note |
 | 4 | Three-field solid on hex8 | Device (vessel) | Uncoupled HGO exists at a material point; no element | Section 5 |
 | 5 | penta6 solid and three-field penta6 | Device (vessel) | None | Section 5 |
@@ -32,8 +32,8 @@ flowchart TB
     block["Element block and its domain record"] --> kind{"Line, shell<br/>or solid ?"}
 
     kind -- line --> lk{"Section"}
-    lk -- "Mesh, truss material" --> tr["Truss domain"]:::todo
-    lk -- "Discrete" --> sp["Spring domain"]:::todo
+    lk -- "Mesh, truss material" --> tr["Truss domain<br/><i>draft, static</i>"]
+    lk -- "Discrete" --> sp["Spring domain<br/><i>draft</i>"]
 
     kind -- shell --> sshape{"Shape"}
     sshape -- quad4 --> q4["Brick kernel, 8 points<br/><i>exists; the valve shell</i>"]
@@ -62,7 +62,7 @@ The open mitral input declares `ShellDomain ... type="elastic-shell"` on quad4 e
 | Pressure on the front and back face | Template, with an exact tangent on request |
 | Nodal normals, thickness from element data | Read by the template |
 | Mass and inertia | Not yet; in [dynamics.md](dynamics.md) |
-| Trusses and springs sharing leaflet nodes | Not yet; in [chordae.md](chordae.md) |
+| Trusses and springs sharing leaflet nodes | Draft, static: a quad4 patch held by truss chords matches FEBio to 4e-12 ([chordae.md](chordae.md)) |
 | The linear solve at application size | Open; in [linear_solve.md](linear_solve.md) |
 
 FEBio also has two other quad shell domains, `elastic-shell-eas` and `elastic-shell-ans`, selected by the element types `q4eas` and `q4ans` or the control setting `shell_formulation`. The open mitral input does not use them. They are decision E1.

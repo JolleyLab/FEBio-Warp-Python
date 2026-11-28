@@ -18,7 +18,9 @@ Groups:
           ramp. The deformation is uniform, so FEBio's element log variables
           (averages over integration points) are point values.
           Logged: F (9), Cauchy stress (6), spatial tangent (21).
-``ch_*``  A chord: one nonlinear spring taken through slack, tension and back.
+``ch_*``  Chords: one nonlinear spring taken through slack, tension and back;
+          and a block held by four chords from one fixed point, with the
+          chords as trusses and as springs of FEBio's three spring types.
 ``bk_*``  Small solid problems: a three-field HGO block, a damped block, a
           block whose modulus follows a load curve, a contact potential
           patch, and a ring crimped in a tube.
@@ -52,6 +54,11 @@ MATERIALS = {
     ),
     # FEBio suite co62 (contact potential problem).
     "neo_hookean": ("neo-Hookean", {"density": 1, "E": 1, "v": 0.3}, ""),
+    # Chordae as trusses: the modulus of Mangine, Laurence et al.
+    # (arXiv 2411.09599), 150 MPa, in the units of the valve models (mm, N,
+    # MPa). The area, 1 mm^2 in that paper for the mitral valve, is a setting
+    # of the truss domain and not of the material.
+    "chord_truss": ("linear truss", {"density": 1.04e-6, "E": 150}, ""),
     # FEBio suite ma34 (uncoupled HGO).
     "hgo_uncoupled": (
         "Holzapfel-Gasser-Ogden",
@@ -466,6 +473,174 @@ def chord():
                 'delim="," elem_set="chord"/>',
             ),
         ],
+    )
+
+
+# One fixed point below a block, off its axis, so the four chords differ in
+# length and in tension. Lengths in mm, forces in N.
+_CHORD_APEX = (0.4, 0.7, 0.0)
+
+
+def _chord_network(doc, chord_sections, log_records, material_rows, drive="load"):
+    """A 2 x 2 x 1 mm block 10 mm above a fixed point, held by four chords
+    from that point to its lower corners. Its upper face is pulled away from
+    the point, by nodal loads (drive "load") or by a prescribed displacement
+    (drive "displacement"), and is held in x and y."""
+    block = Grid((1, 1, 1), (2, 2, 1), origin=(0, 0, 10))
+    apex = 9
+    lower, upper = block.face_nodes(2, 0), block.face_nodes(2, 1)
+    apex_xml = (
+        '\t\t<Nodes name="Apex">\n'
+        f'\t\t\t<node id="{apex}">{_CHORD_APEX[0]:.17g},{_CHORD_APEX[1]:.17g},{_CHORD_APEX[2]:.17g}</node>\n'
+        "\t\t</Nodes>"
+    )
+    mesh, domains, extra = chord_sections(apex, lower)
+    return deck(
+        doc,
+        [
+            control(steps=10, dt=0.1),
+            section("Material", *material_rows),
+            section(
+                "Mesh",
+                block.nodes_xml("Block"),
+                apex_xml,
+                block.elems_xml("Block"),
+                *mesh,
+                nodeset("apex", [apex]),
+                nodeset("upper", upper),
+            ),
+            section("MeshDomains", '\t\t<SolidDomain name="Block" mat="block"/>', *domains),
+            section(
+                "Boundary",
+                '\t\t<bc name="fix" node_set="apex" type="zero displacement">\n'
+                "\t\t\t<x_dof>1</x_dof><y_dof>1</y_dof><z_dof>1</z_dof>\n\t\t</bc>",
+                '\t\t<bc name="guide" node_set="upper" type="zero displacement">\n'
+                "\t\t\t<x_dof>1</x_dof><y_dof>1</y_dof><z_dof>0</z_dof>\n\t\t</bc>",
+                *(
+                    [
+                        '\t\t<bc name="pull" node_set="upper" type="prescribed displacement">\n'
+                        '\t\t\t<dof>z</dof>\n\t\t\t<value lc="1">0.3</value>\n'
+                        "\t\t\t<relative>0</relative>\n\t\t</bc>"
+                    ]
+                    if drive == "displacement"
+                    else []
+                ),
+            ),
+            *(
+                [
+                    section(
+                        "Loads",
+                        '\t\t<nodal_load name="pull" node_set="upper" type="nodal_load">\n'
+                        "\t\t\t<relative>0</relative>\n\t\t\t<dof>z</dof>\n"
+                        '\t\t\t<scale lc="1">2.5</scale>\n\t\t</nodal_load>',
+                    )
+                ]
+                if drive == "load"
+                else []
+            ),
+            *extra,
+            section("LoadData", load_curve(1, [(0, 0), (1, 1)])),
+            output(
+                f'<node_data data="ux;uy;uz" delim=",">{",".join(map(str, lower + upper))}</node_data>',
+                # FEBio's R is zero at fixed components, so the reaction is
+                # logged on the upper face and not at the fixed point.
+                f'<node_data data="Rx;Ry;Rz" delim=",">{",".join(map(str, upper))}</node_data>',
+                *log_records,
+            ),
+        ],
+    )
+
+
+def truss_chords():
+    """A block held by four truss chords from one fixed point.
+
+    Trusses that share nodes with solid elements, in a network where the load
+    is shared: the four chords run from a fixed point (a papillary tip) to the
+    lower corners of a block, and the block is pulled away from the point by
+    10 N in total. The point is off the axis of the block, so the chords have
+    four lengths and four tensions. Chord material as in Mangine, Laurence et
+    al. (arXiv 2411.09599): linear truss, E = 150 MPa, area 1 mm^2.
+    The chord tension is not a FEBio output for trusses. It follows from the
+    logged Cauchy stress as N = s A L / l, with s the stress along the chord
+    (v = 0.5, so J = 1), and the four tensions balance the applied load.
+    """
+
+    def sections(apex, lower):
+        rows = "\n".join(f'\t\t\t<elem id="{2 + k}">{apex},{n}</elem>' for k, n in enumerate(lower))
+        mesh = [f'\t\t<Elements type="line2" name="Chords">\n{rows}\n\t\t</Elements>']
+        domains = [
+            '\t\t<BeamDomain name="Chords" mat="chord" type="linear-truss">\n'
+            "\t\t\t<cross_sectional_area>1</cross_sectional_area>\n\t\t</BeamDomain>"
+        ]
+        return mesh, domains, []
+
+    return _chord_network(
+        truss_chords.__doc__,
+        sections,
+        ['<element_data data="sx;sy;sz;sxy;syz;sxz" delim="," elem_set="Chords"/>'],
+        [
+            material_xml(1, "block", "neo_hookean", {"E": 100}),
+            material_xml(2, "chord", "chord_truss"),
+        ],
+    )
+
+
+def spring_chords():
+    """A block held by four spring chords from one fixed point.
+
+    The geometry of ch_truss_chords, with the chords as springs of FEBio's
+    three spring types, one discrete set each:
+
+        linear        one chord, "linear spring", E = 15 N/mm
+        tension_only  two chords, "tension-only linear spring", E = 15 N/mm,
+                      slack_length = 0.05 mm
+        curve         one chord, "nonlinear spring" with the three-point
+                      curve of the valve models, written so that it is the
+                      same law as tension_only (slack 0.05 mm, then 15 N/mm)
+
+    15 N/mm is the stiffness E A / L of a 10 mm chord of the truss case. The
+    upper face of the block is moved 0.3 mm away from the point by a
+    prescribed displacement, and not by a load as in the truss case: with
+    three of the four chords slack at the start, a load-driven block would
+    have no stiffness against tilting in the first iteration. The chords pass
+    from slack into tension during the run.
+    """
+
+    def sections(apex, lower):
+        def dset(name, nodes):
+            rows = "\n".join(f"\t\t\t<delem>{apex},{n}</delem>" for n in nodes)
+            return f'\t\t<DiscreteSet name="{name}">\n{rows}\n\t\t</DiscreteSet>'
+
+        mesh = [dset("linear", lower[:1]), dset("tension_only", lower[1:3]), dset("curve", lower[3:])]
+        discrete = section(
+            "Discrete",
+            '\t\t<discrete_material id="1" name="linear" type="linear spring">\n\t\t\t<E>15</E>\n'
+            "\t\t</discrete_material>",
+            '\t\t<discrete_material id="2" name="tension_only" type="tension-only linear spring">\n'
+            "\t\t\t<E>15</E>\n\t\t\t<slack_length>0.05</slack_length>\n\t\t</discrete_material>",
+            '\t\t<discrete_material id="3" name="curve" type="nonlinear spring">\n'
+            "\t\t\t<scale>15</scale>\n\t\t\t<measure>elongation</measure>\n"
+            '\t\t\t<force type="point">\n'
+            "\t\t\t\t<interpolate>linear</interpolate>\n"
+            "\t\t\t\t<extend>extrapolate</extend>\n"
+            "\t\t\t\t<points>\n\t\t\t\t\t<pt>0,0</pt>\n\t\t\t\t\t<pt>0.05,0</pt>\n"
+            "\t\t\t\t\t<pt>1.05,1</pt>\n\t\t\t\t</points>\n\t\t\t</force>\n"
+            "\t\t</discrete_material>",
+            '\t\t<discrete dmat="1" discrete_set="linear"/>',
+            '\t\t<discrete dmat="2" discrete_set="tension_only"/>',
+            '\t\t<discrete dmat="3" discrete_set="curve"/>',
+        )
+        return mesh, [], [discrete]
+
+    return _chord_network(
+        spring_chords.__doc__,
+        sections,
+        [
+            f'<element_data data="discrete element elongation;discrete element force" delim="," elem_set="{name}"/>'
+            for name in ("linear", "tension_only", "curve")
+        ],
+        [material_xml(1, "block", "neo_hookean", {"E": 100})],
+        drive="displacement",
     )
 
 
@@ -992,6 +1167,10 @@ def main() -> None:
     for mat, path in MATERIAL_POINT_CASES:
         cases[f"mp_{mat}_{path}"] = (material_point(mat, path), 0, [MATERIALS[mat][0]])
     cases["ch_chord_slack_tension"] = (chord(), 1, ["nonlinear spring"])
+    cases["ch_truss_chords"] = (truss_chords(), 2, ["linear truss", "linear-truss", "nodal_load"])
+    cases["ch_spring_chords"] = (
+        spring_chords(), 2,
+        ["linear spring", "tension-only linear spring", "nonlinear spring"])  # fmt: skip
     cases["bk_hgo_three_field"] = (
         hgo_three_field_block(), 2, ["Holzapfel-Gasser-Ogden", "three-field-solid"])  # fmt: skip
     cases["bk_mass_damping"] = (damped_block(), 2, ["mass damping", "dynamic"])

@@ -90,7 +90,7 @@ In the order of the path. Each note's decision points are linked.
 | # | Area | Note | Decisions | Needed by | Closes (open item in [integration.md](integration.md)) |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Dynamics, mass damping, steps | [dynamics.md](dynamics.md) | [D1 to D5](dynamics.md#7-decision-points) | Both | |
-| 2 | Chordae: trusses, then springs | [chordae.md](chordae.md) | [C1 to C5](chordae.md#7-decision-points) | Valve | 5 |
+| 2 | Chordae: truss and spring elements | [chordae.md](chordae.md) | [C1 to C10](chordae.md#7-decision-points) | Valve | 5 |
 | 3 | Contact in the run | [contact_in_run.md](contact_in_run.md) | [K1 to K5](contact_in_run.md#7-decision-points) | Both | 1, 2 |
 | 4 | Linear solve, nonlinear strategy, GPU | [linear_solve.md](linear_solve.md) | [L1 to L6](linear_solve.md#7-decision-points) | Both | |
 | 5 | Output registry | [output.md](output.md) | [O1 to O4](output.md#5-decision-points) | Both | |
