@@ -261,6 +261,9 @@ def collect(system: System, state: State, iterations: int = 0) -> StateResult:
         out.shell_displacement = np.zeros((len(shell), 3))
         out.shell_displacement[shell >= 0] = u[shell[shell >= 0]]
     for term in system.terms:
+        if getattr(term, "element_type", "") == "contact":
+            out.contact[term.name] = term.results()
+            continue
         if not hasattr(term, "plot"):
             continue
         if term.element_type == "discrete":

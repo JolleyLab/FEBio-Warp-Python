@@ -27,6 +27,10 @@ class StateResult:
                         Not a FEBio plot variable; it is the chord tension
     discrete            discrete set name -> {FEBio plot variable name: array}
                         for the springs of that set
+    contact             contact interface name -> {"contact area": FEBio's
+                        surface data of that name, the area of the contact points
+                        with a nonzero force; "pairs": active point pairs;
+                        "energy": the contact potential energy}
     """
 
     time: float
@@ -42,6 +46,7 @@ class StateResult:
     truss_stretch: dict = field(default_factory=dict)
     axial_force: dict = field(default_factory=dict)
     discrete: dict = field(default_factory=dict)
+    contact: dict = field(default_factory=dict)
 
 
 @dataclass

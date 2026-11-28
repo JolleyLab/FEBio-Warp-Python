@@ -181,4 +181,13 @@ class ContactPotentialInRun(Term):
         return K
 
     def results(self) -> dict:
-        return {"pairs": self.pairs, "energy": self.potential.energy_value()}
+        """Outputs at the last residual. "contact area" is FEBio's surface
+        data of that name (FEContactPotential: the area of the integration
+        points with a nonzero traction; the rule of Wu et al. 2022). It is a
+        sum of step functions of the state, so it is an output and not an
+        objective: its gradient is zero almost everywhere."""
+        return {
+            "contact area": self.potential.contact_area() if self.pairs else 0.0,
+            "pairs": self.pairs,
+            "energy": self.potential.energy_value() if self.pairs else 0.0,
+        }
