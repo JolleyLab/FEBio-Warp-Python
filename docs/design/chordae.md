@@ -145,11 +145,14 @@ So both FEBio tangents are exact derivatives of their forces (with alpha_f = 1),
 | Names | Spring parameters and outputs are keyed by FEBio's discrete set names: `A1.material`, `A1.rest_length`, and results per set. Truss parameters are keyed by the part name: `Chords.material`, `Chords.area`, `Chords.rest_length` | FEBio's own names for sets and parts | Each set's entry is a view of the domain's array, so values and gradients are shared with the one array the kernel reads. A part and a discrete set with the same name are refused |
 | Blocks | Four 3x3 blocks per element at fixed positions | | The block pattern never changes, as for every term |
 | Axial force | `update` stores N per element. `axial_force(state)` evaluates it into arrays of its own, for outputs and objectives | Springs: `discrete element signed force` | For trusses this is an added output (decision C8) |
+| Chord force on a node set | `force_on(state, weight)` sums, over the nodes with weight 1, the force the elements exert on them: the chord force on a papillary tip, as a vector | Not a FEBio variable. It is the sum FEBio's `discrete element force` (the vector per spring) gives over the springs at those nodes, and for a fixed tip loaded by nothing else it is minus the reaction there | One kernel over the elements (`sum_force_on_entries`), so it can be an objective on a tape. On both domains |
+| Rest length on the device | The default rest length is computed by a kernel with the arithmetic of the update kernels (`geometric_length`) | FEBio computes the initial and the current length with one code path, so an undeformed element has a stretch of exactly 1 and a tension-only law is active there | With the rest length from NumPy on the host, the kernel's length on CUDA differed from it in the last bit for about one element in nine, and one undeformed tension-only truss or spring in twenty started slack. On CPU the two agreed |
+| Smooth tension-only spring | Material type `smooth tension-only linear spring`: `E`, `slack_length`, `smoothing_length` w. Zero below slack - w, E (x + w)^2 / (4 w) within w of the slack length, E x above | Not a FEBio material. Names, parameters, measure and the branch at the slack length are those of `tension-only linear spring`, and it is that law outside the band and for w = 0. FEBio's own smooth curve is a `nonlinear spring` with `smooth` interpolation, which is not implemented here and is not tension-only for a three-point chord curve | Force and stiffness are continuous, the tangent is exact, and the kernel has no data-dependent branch. For optimization (decision C9). The coverage report marks an input that uses it as not a FEBio input. `chord_curve_closed_form` gives E and the slack length of a chord curve |
 | Junction nodes | A node used only by trusses or springs has one entry (`displacement`). A node shared with a shell uses the shell node's `displacement` entry, the front face | FEBio's domains use the displacement variable. Its shell-solid tie (`FindSSI`) looks at solid domains only | The coverage rule that refused shells sharing nodes with other parts now applies to solids only |
 | Failure | A truss of zero length writes a status code and the step is rejected. A spring of zero length uses FEBio's guard | FEBio's truss has no guard for zero length; its springs do | A kernel cannot throw |
 | Reaction forces | Both terms are marked internal | Both are elastic domains | |
 | Loads added | `nodal_load` and `nodal_force` as one small term, because the suite's truss and spring problems use them | `FENodalDOFLoad`, `FENodalForce` | The scale is a device array with one value per node, so a force per node carries a gradient (section 9). It is also the port decision S9 of [sensitivity.md](sensitivity.md) describes |
-| Mass (not in a run yet) | `TrussDomain.mass_blocks()` returns FEBio's consistent mass per element | `ElementMassMatrix` | To be added to the tangent through the same four block positions ([dynamics.md](dynamics.md)) |
+| Mass | `TrussDomain.mass_blocks()` returns FEBio's consistent mass per element, with the geometric length as FEBio (`m_L0`), not the rest length parameter. Springs have none | `ElementMassMatrix`; `FEDiscreteElasticDomain` adds no mass | It enters a dynamic step through the same four block positions ([dynamics.md](dynamics.md)). Computed once when the system is built, so it carries no gradient yet |
 
 **What Warp and Newton have for this, as far as we can tell.**
 
@@ -163,7 +166,7 @@ So both FEBio tangents are exact derivatives of their forces (with alpha_f = 1),
 
 ## 6. Initial explorations
 
-In double precision. Everything below was produced on CPU. The version of November 27 before the tension-only truss and the naming by discrete set was then run on a GPU as well (Quadro RTX 8000, `cuda:0`, Warp 1.19.0): the full tier passed on both devices, 173 tests, with the suite problems included, and no source change was needed. The tension-only truss and the naming by set have run on CPU only so far. FEBio is 4.13.0 built from source at `e4df3f8` without MKL (skyline solver), by `tools/build_febio.sh`.
+In double precision. The numbers below were produced on CPU. The tests also run on a GPU (Quadro RTX 8000, `cuda:0`, Warp 1.19.0): the full tier passes there, 187 tests with the suite problems included, as does the quick tier on CPU. One source change was needed for the GPU, described under "Rest length on the device" below. FEBio is 4.13.0 built from source at `e4df3f8` without MKL (skyline solver), by `tools/build_febio.sh`.
 
 **Against FEBio**
 
@@ -234,7 +237,7 @@ On the shell patch, the tension of the first chord with respect to the four chor
 - The chord-length example of section 9 gives the same fitted lengths and tensions on both devices to the seven digits printed, in 11 evaluations on each.
 - Not measured: trusses, a full assembly, a solve, single precision.
 
-Not explored: any dynamic step with trusses, the two newest pieces on a GPU, the open mitral input, trusses or springs attached to rigid bodies.
+Not explored: any dynamic step with trusses, the open mitral input in a run, trusses or springs attached to rigid bodies.
 
 ## 7. Decision points
 
@@ -248,7 +251,7 @@ Not explored: any dynamic step with trusses, the two newest pieces on a GPU, the
 | C6 | How fine the parameters are | (a) One material row per part or discrete set, as the input gives it; area and rest length per element. (b) Everything per element | (a) as the default. A gradient with respect to a row is the gradient for that chord group, which is how FEBio names parameters. The domain also takes one row per element when a per-chord modulus is wanted | MJ, Warp team |
 | C7 | How springs are grouped | (a) One term per spring law, all sets with that law. (b) One term per `discrete` entry, as FEBio | (a). One launch for the chordae of a valve. Parameters and outputs are keyed by FEBio's discrete set names (decided November 27) | Steve, Warp team |
 | C8 | Chord tension of a truss as an output. FEBio writes `stress` and `truss stretch` for trusses and has no axial force variable | (a) An output here named `axial force`. (b) Derive it from the stress when needed (N = s A L / l for v = 0.5). (c) A plot variable in FEBio, then follow | (a) for now, since objectives need it as a kernel output. (c) if the FEBio team sees use for it | Steve, MJ |
-| C9 | Gradients at the slack corner. A tension-only law has a jump in stiffness at the slack length, so the gradient with respect to the slack length is one-sided there | (a) FEBio's law as it is. (b) A smoothed law for optimization, which FEBio does not have | (a). The gradients checked here were away from the corner. Revisit if an optimization stalls on chords that sit at their slack length | MJ, Jeff, Warp team |
+| C9 | Gradients at the slack corner. A tension-only law has a jump in stiffness at the slack length, so the gradient with respect to the slack length is one-sided there | (a) FEBio's law as it is. (b) A smoothed law for optimization, which FEBio does not have | (a) for results that are compared with FEBio. (b) now exists for springs as an option (`smooth tension-only linear spring`, section 5): at the slack length its gradient with respect to the slack length equals the central difference (-E/2), where FEBio's law gives -E from reverse mode and -E/2 from the difference. It differs from FEBio's force by at most E w / 4. Whether optimization on a valve needs it is not yet known; no truss counterpart yet | MJ, Jeff, Warp team |
 | C10 | How shape matching is posed, with FINESSE in view (section 9) | (a) FINESSE as it is: a `sliding-elastic` interface with the tension flag pulls the leaflets onto a rigid target surface. (b) The misfit to the target as an objective, minimized over chord and other parameters with adjoint gradients. (c) Both | (c) is where this seems to lead: (a) to reproduce FINESSE and compare with FEBio, (b) for what FEBio cannot do. Neither is built. (a) needs a contact formulation the contact plan lists as reserved | MJ, Jeff, Steve; Warp team for (b) |
 
 Points of care that are not decisions:
@@ -266,7 +269,8 @@ FEBio has no adjoint, so these points have no FEBio counterpart to follow.
 | Tangent | Both stiffness blocks are the derivative of the force. `linearize(exact=True)` returns the same blocks as the Newton tangent |
 | Parameters | Trusses: material rows (E, v), area and rest length per element, under the part name. Springs: one material row and the rest lengths per set, under the set name. All are device arrays listed by `parameters()`, so the existing adjoint and its check cover them with no change |
 | Chord tension as an objective | `axial_force(state)` on a tape after `solve_on_tape`. The tension depends on the parameters directly and through the solution; the tape adds the two |
-| Smoothness | E ln(lambda) is smooth for lambda above zero. Tension-only springs and the tension-only truss have a corner at the slack point (decision C9) |
+| Smoothness | E ln(lambda) is smooth for lambda above zero. Tension-only springs and the tension-only truss have a corner at the slack point; the smooth tension-only spring does not (decision C9) |
+| Chord force on a papillary tip as an objective | `force_on(state, weight)` on a tape after `solve_on_tape`, seeded with a direction. Checked against central differences for the spring chords on a block, with respect to the 14 spring parameters, within 1e-5 relative |
 | Which parameter set for springs | The closed form (`tension-only linear spring`: E, `slack_length`) and the three-point curve are the same law. For design variables the closed form is the direct one |
 | Not differentiable | The topology of the network (number of branches, insertion points). Those stay parameters of the geometry tool |
 | Not yet | Gradients over dynamic steps ([sensitivity.md](sensitivity.md)); gradients with respect to node positions, such as a papillary tip; a misfit to a target surface as an objective (section 9) |
@@ -307,7 +311,7 @@ FEBio test suite first (commit `986005f`), then small inputs for what the suite 
 | `di01`, `di02` | Suite | A linear spring on hex8 blocks | Pass, the same way |
 | `di03` | Suite | Springs, nodal force | Waits for a line search |
 | `di04` | Suite | Nonlinear springs with `smooth` curves | Waits for that interpolation |
-| `dy16`, `dy17` | Suite | Trusses, dynamic; `dy17` has body force and mass damping | Wait for dynamics |
+| `dy16`, `dy17` | Suite | Trusses, dynamic; `dy17` has body force and mass damping | `dy16` passes: FEBio's 100 steps and 276 iterations exactly, solution norm to 1.4e-5 ([dynamics.md](dynamics.md)). `dy17` waits for the constant body force |
 | `ch_chord_slack_tension` | `references/small_problems` | One nonlinear spring from slack into tension | Passes in a run |
 | `ch_truss_chords`, `ch_spring_chords` | `references/small_problems`, new | Chord networks on a block: load sharing, three spring types, slack at the start | Pass |
 | Tension-only truss | No FEBio counterpart | Checked against the linear truss where both apply, against finite differences, and by its own gradients | Passes. A FEBio comparison needs the material in FEBio (decision C1) |
