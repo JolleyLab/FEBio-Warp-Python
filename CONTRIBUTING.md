@@ -34,7 +34,7 @@ When you open a new issue, include enough for someone else to reproduce it:
 
 - Search existing issues and pull requests before starting.
 - Report bugs and propose substantial changes in an issue before opening a pull request. Explain what the change addresses and which simulation workflow needs it.
-- Code enters `src/warp_febio/` through a design note in `docs/design/`, a draft pull request, and review. Exploratory prototypes are welcome under `pilots/`; see the [README](README.md#how-code-enters-the-package).
+- Code enters `src/warp_febio/` through a design note in `docs/design/`, a pull request, and review. Plans and open questions live in the design notes, as decision points, not in pull requests. Exploratory prototypes are welcome under `pilots/`; see the [README](README.md#how-code-enters-the-package).
 - Discuss new features with the maintainers first. A new material model, element, or contact formulation should come with a concrete use case and an FEBio reference to verify against.
 - An open issue is not an assignment. If you would like to take on an issue someone else filed, ask in the issue first.
 - A fix for a bug you found yourself can go straight to a pull request.
@@ -132,11 +132,15 @@ Every contribution that changes numerical behavior needs evidence that it is cor
 Tests use `unittest` and live in `tests/`.
 
 ```bash
-# full suite, on CPU (the default)
+# quick tier on CPU (the default): one representative case per area, about 15 s
 uv run -m unittest discover -s tests -v
 
-# the same suite on a GPU
+# the same on a GPU
 WARP_FEBIO_TEST_DEVICE=cuda:0 uv run -m unittest discover -s tests -v
+
+# full tier, before merging to main: about 8 minutes on CPU, 1 minute on a GPU
+WARP_FEBIO_TEST_LEVEL=full uv run -m unittest discover -s tests -v
+WARP_FEBIO_TEST_LEVEL=full WARP_FEBIO_TEST_DEVICE=cuda:0 uv run -m unittest discover -s tests -v
 
 # CPU with CUDA hidden, which shows that nothing reaches the GPU
 CUDA_VISIBLE_DEVICES= uv run -m unittest discover -s tests -v
@@ -146,7 +150,10 @@ uv run -m unittest discover -s tests -p 'test_material*.py' -v
 ```
 
 - Run kernel tests on CPU and, where available, on CUDA. Pass the device explicitly, through `wp.ScopedDevice(device)` or `device=device`, instead of relying on the default device. On a machine with a GPU, Warp's default device is `cuda:0`, so a test that relies on it runs on the GPU even in a CPU run.
-- `WARP_FEBIO_TEST_DEVICE` names the device the tests run on (`cpu` by default). Each test module that uses Warp reads it into `DEVICE`, makes it Warp's current device for the module (`wp.ScopedDevice(DEVICE)` entered in `setUpModule` and left in `tearDownModule`), and passes `device=DEVICE` where a call names a device. A test that compares CUDA with CPU on purpose names both devices.
+- Two environment variables, read in [`tests/support.py`](tests/support.py): `WARP_FEBIO_TEST_DEVICE` names the device (`cpu` by default, `cuda:0` for a GPU), and `WARP_FEBIO_TEST_LEVEL` the tier (`quick` by default, or `full`).
+- A test module that uses Warp starts with `from support import DEVICE, setUpModule, tearDownModule`. While its tests run, `DEVICE` is Warp's current device, and calls that name a device pass `device=DEVICE`. A test that compares CUDA with CPU on purpose names both devices.
+- The quick tier is one representative case per area and is what to run while working. The full tier adds every FEBio suite parameter set, every linear solver on every case and the larger problems. Mark a test that takes more than a few seconds on CPU with `@full_tier("what it adds, and about how long")` from `support`, and keep a fast case of the same check in the quick tier. In a quick run, full-tier tests show in the skip count with that reason.
+- Before a change is merged to `main`, the full tier passes on CPU and, for code that runs on the device, on a GPU. CI runs the full tier on CPU only, so state in the pull request which GPU the full tier ran on.
 - Library functions take `device=None`, meaning Warp's current device, rather than `device="cpu"`, so that a `wp.ScopedDevice` takes effect.
 - To confirm that a run stayed on one device, look for `load on device` in the output: each Warp module load names its device.
 - When a test cannot run in an environment (no CUDA device, missing optional dependency), skip it with a `unittest` skip decorator so it shows up in the skip count. Do not leave it out silently.
@@ -180,7 +187,7 @@ Review time is limited, and focused changes with thorough validation are easier 
 - **Keep changes focused.** A pull request should address a single bug fix, feature, or improvement. Keep it small, avoid unrelated edits, and split unrelated changes into separate pull requests.
 - **Include a test plan.** Explain how you verified the change and which devices it ran on, in enough detail that a reviewer can reproduce and confirm the result.
 - **Link the issue.** If the pull request resolves an issue, include `closes #ISSUE_NUMBER` in the description or commit message.
-- **Use drafts for early work.** Open exploratory or design-level work as a draft pull request. Early drafts are encouraged for anything that affects structure (interfaces, file formats, solver architecture), so reviewers can comment before the design settles.
+- **Plan in design notes, merge often.** Propose structure (interfaces, file formats, solver architecture) in a design note in `docs/design/`, with its decision points, so reviewers can comment before the design settles. Keep pull requests short-lived: merge within days once the full tier passes, and do not stack pull requests on each other's branches. A draft pull request is fine for code you want looked at early, but it should not hold the plan.
 - **Minimize review cost.** Well-tested, clearly described contributions with a clean commit history are reviewed faster. Contributions that take substantial reviewer effort to verify may be deprioritized or declined.
 
 Open pull requests against `main`.

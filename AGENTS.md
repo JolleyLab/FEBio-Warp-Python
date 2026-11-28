@@ -16,7 +16,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [README](README.md) before chang
 
 ## Where code goes
 
-- `src/warp_febio/` holds designed and reviewed code. Code enters it through a design note in `docs/design/`, a draft pull request and review.
+- `src/warp_febio/` holds designed and reviewed code. Code enters it through a design note in `docs/design/`, a pull request and review. Plans and open questions live in the design notes, not in pull requests.
 - `pilots/` holds the initial prototypes. They are not maintained, are excluded from linting, and are not a starting point for new work. Do not import from `pilots/` in the package or its tests.
 - `references/` holds FEBio inputs and results. Do not reformat or edit these files.
 - The targets for new work are FEBio's own test suite and the open models in the FEBio model repository, not the pilot data.
@@ -35,9 +35,14 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [README](README.md) before chang
 Always use `unittest`, not pytest.
 
 ```bash
-uv run -m unittest discover -s tests -v                              # full suite
+uv run -m unittest discover -s tests -v                              # quick tier, CPU
+WARP_FEBIO_TEST_LEVEL=full uv run -m unittest discover -s tests -v   # full tier
+WARP_FEBIO_TEST_DEVICE=cuda:0 uv run -m unittest discover -s tests -v   # on a GPU
 uv run -m unittest discover -s tests -p 'test_material*.py' -v       # a subset
 ```
+
+- Test modules that use Warp import `DEVICE`, `setUpModule` and `tearDownModule` from `tests/support.py`; slow tests carry `@full_tier(...)` with a fast case kept in the quick tier. See CONTRIBUTING, "Writing and running tests".
+- Run the full tier on CPU and, for device code, on a GPU before a change is merged; CI runs it on CPU only.
 
 - Verify that a regression test fails without the fix before committing.
 - Code that implements mechanics also found in FEBio is tested against an FEBio reference from the same input. Record the quantity compared, the tolerance and the FEBio version.
@@ -59,5 +64,5 @@ Follow Google-style docstrings. Document `__init__` parameters in the class docs
 - Always use `git commit --signoff` (or `-s`) to add a `Signed-off-by` line (DCO).
 - Run `uvx pre-commit run -a` and the test suite before committing.
 - When opening a pull request, use the template in `.github/PULL_REQUEST_TEMPLATE.md`.
-- Open exploratory and design-level work as a draft pull request.
+- Plan in a design note under `docs/design/`, not in a long-lived draft pull request. Keep pull requests short-lived and do not stack them.
 - Never push, open a pull request, or set, change or clear reviewers or assignees unless explicitly asked.

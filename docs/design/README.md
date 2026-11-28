@@ -8,14 +8,14 @@ Start with the [design overview](overview.md): one page on how the pieces fit, w
 
 | Area | Note | Status |
 |---|---|---|
-| Materials | [materials.md](materials.md) ([decisions](materials.md#decision-points)), with [PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2) | Draft, under redesign |
-| Contact | [contact.md](contact.md) ([decisions](contact.md#decision-points)), with [PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1) | Draft |
+| Materials | [materials.md](materials.md) ([decisions](materials.md#decision-points)), with [PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2) | On `main`, under redesign |
+| Contact | [contact.md](contact.md) ([decisions](contact.md#decision-points)), with [PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1) | On `main` |
 | Assembly | [assembly.md](assembly.md) | Decided (full assembly); carried out in the run path template |
-| Run path (unknowns, terms, Newton step, steps, pressure, warp.fem solids, gradients) | [run_path.md](run_path.md) ([decisions](run_path.md#12-decision-points)), with [PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6) | Template, draft |
-| Verification | [verification.md](verification.md) ([decisions](verification.md#decision-points)) | Draft, tabled until input and output |
-| Central model, input and output | [model.md](model.md) ([decisions](model.md#9-decision-points)), with [PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5) | Draft |
+| Run path (unknowns, terms, Newton step, steps, pressure, warp.fem solids, gradients) | [run_path.md](run_path.md) ([decisions](run_path.md#12-decision-points)), with [PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6) | Template on `main` |
+| Verification | [verification.md](verification.md) ([decisions](verification.md#decision-points)) | On `main`; the comparisons beyond material points wait on the run path |
+| Central model, input and output | [model.md](model.md) ([decisions](model.md#9-decision-points)), with [PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5) | On `main` |
 
-[integration.md](integration.md) says how these drafts fit together on the combined branch and what is left open.
+[integration.md](integration.md) says how these drafts were made to fit together before they were merged to `main` on November 27, 2026, and what is left open.
 
 ## Remaining areas: design only
 

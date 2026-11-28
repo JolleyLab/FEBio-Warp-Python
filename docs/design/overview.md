@@ -38,12 +38,12 @@ flowchart TB
 
 | Piece | What it is | State | Note | Code |
 | --- | --- | --- | --- | --- |
-| Model and I/O | One `Model` object holding what a FEBio input defines. Reads and writes `.feb`, writes `.xplt` and VTKHDF, exchanges meshes with 3D Slicer. A coverage report says whether an input can run and lists what is missing. | Draft, first in review order | [model.md](model.md) | [PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5) |
-| Materials | FEBio's material structure (typed parameters with ranges, axes and fibers, mixtures, the uncoupled split, history), composed in Python so that Warp compiles each material tree into one kernel. | Draft, parked until model and I/O | [materials.md](materials.md) | [PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2) |
-| Contact | Point-based contact potential after Kamensky et al. and FEBio's `FEContactPotential`: contact points, pair search on the device, force and tangent, gradients. | Draft, parked until model and I/O | [contact.md](contact.md) | [PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1) |
-| Verification | FEBio-Warp run on FEBio inputs and compared with pinned FEBio results, at four levels: material point, element, small problem, application. | Draft, tabled until model and I/O | [verification.md](verification.md) | [PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4) |
-| Integration | The four drafts merged and made consistent where they meet. | Branch | [integration.md](integration.md) | [`mattjolley/integration-base`](https://github.com/JolleyLab/FEBio-Warp-Python/tree/mattjolley/integration-base) |
-| Run path | From a model to a result: unknowns, terms, the Newton step, the step driver, pressure, solids on `warp.fem`, adjoint gradients. | Template, draft | [run_path.md](run_path.md) | [PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6), stacked on the integration branch |
+| Model and I/O | One `Model` object holding what a FEBio input defines. Reads and writes `.feb`, writes `.xplt` and VTKHDF, exchanges meshes with 3D Slicer. A coverage report says whether an input can run and lists what is missing. | On `main` | [model.md](model.md) | [PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5) |
+| Materials | FEBio's material structure (typed parameters with ranges, axes and fibers, mixtures, the uncoupled split, history), composed in Python so that Warp compiles each material tree into one kernel. | On `main` | [materials.md](materials.md) | [PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2) |
+| Contact | Point-based contact potential after Kamensky et al. and FEBio's `FEContactPotential`: contact points, pair search on the device, force and tangent, gradients. | On `main` | [contact.md](contact.md) | [PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1) |
+| Verification | FEBio-Warp run on FEBio inputs and compared with pinned FEBio results, at four levels: material point, element, small problem, application. | On `main` | [verification.md](verification.md) | [PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4) |
+| Integration | The four drafts made consistent where they meet, before the merge to `main`. | Merged | [integration.md](integration.md) | `main` |
+| Run path | From a model to a result: unknowns, terms, the Newton step, the step driver, pressure, solids on `warp.fem`, adjoint gradients. | Template on `main` | [run_path.md](run_path.md) | [PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6) |
 
 ## 3. One run
 
@@ -109,7 +109,7 @@ Design shells, kept in view so that nothing built now closes them off: beam elem
 
 The shared core both applications need: dynamic analysis, mass damping and the contact potential. Pressure is a valve load; TPVR file 3599 has none ([remaining_areas.md](remaining_areas.md), section 1).
 
-Checks so far compare with FEBio on the same input, in double precision on CPU: material points, single elements, small meshes, pressure, two materials in two domains, reaction forces, and the automatic time stepper. Figures are in the notes linked above. No application input runs end to end yet.
+Checks so far compare with FEBio on the same input, in double precision, on CPU and on a GPU: material points, single elements, small meshes, pressure, two materials in two domains, reaction forces, and the automatic time stepper. Figures are in the notes linked above. No application input runs end to end yet.
 
 ## 7. Reading order
 

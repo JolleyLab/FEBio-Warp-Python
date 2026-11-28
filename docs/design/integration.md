@@ -2,7 +2,7 @@
 
 Draft for discussion, November 25, 2026. For Steve Maas, Jeff Weiss, Ryan Black and the Warp team.
 
-The central model and input and output ([model.md](model.md), pull request 5), the material layer ([materials.md](materials.md), pull request 2), contact ([contact.md](contact.md), pull request 1) and the verification inputs ([verification.md](verification.md), pull request 4) were drafted separately. Branch `mattjolley/integration-base` merges the four and makes them agree where they meet. Each pull request is still reviewed on its own. This note covers only what the combined branch adds, which is small, and what it leaves open.
+The central model and input and output ([model.md](model.md), pull request 5), the material layer ([materials.md](materials.md), pull request 2), contact ([contact.md](contact.md), pull request 1) and the verification inputs ([verification.md](verification.md), pull request 4) were drafted separately. Branch `mattjolley/integration-base` merged the four and made them agree where they meet; all of them, with the run path template, were merged to `main` on November 27, 2026. This note covers only what the combined branch added, which is small, and what it leaves open.
 
 ## The path through the code
 

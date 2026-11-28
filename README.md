@@ -13,8 +13,8 @@ applications where speed and gradients matter.
 
 ## Project status
 
-This project is at an early stage. Interfaces will change, and most areas listed below are in
-design or draft. Nothing here is released.
+This project is at an early stage. Interfaces will change, and most areas listed below are first
+templates or in design. Nothing here is released.
 
 Development has now moved to a design-led process. Each area is specified in a design note,
 reviewed by the developers involved, implemented, and verified against FEBio
@@ -45,21 +45,23 @@ flowchart LR
 
 | Piece | In one line | State |
 |---|---|---|
-| Model and I/O | One model object for what a FEBio input defines; reads and writes FEBio files; says whether an input can run | Draft ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)) |
-| Materials | FEBio's material structure, compiled into one Warp kernel per material tree | Draft ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)) |
-| Contact | Point-based contact potential with pair search on the device | Draft ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)) |
-| Run path | From a model to a result on small cases, with adjoint gradients | Template, draft ([PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6)) |
-| Verification | The same inputs run in FEBio and compared | Draft ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)) |
+| Model and I/O | One model object for what a FEBio input defines; reads and writes FEBio files; says whether an input can run | On `main` ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)) |
+| Materials | FEBio's material structure, compiled into one Warp kernel per material tree | On `main` ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)) |
+| Contact | Point-based contact potential with pair search on the device | On `main` ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)) |
+| Run path | From a model to a result on small cases, with adjoint gradients | Template on `main` ([PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6)) |
+| Verification | The same inputs run in FEBio and compared | On `main` ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)) |
 
 The [design overview](docs/design/overview.md) shows how these fit together, where the design
 follows FEBio and where it differs, and what is only a first template. It is the place to start.
 
 ## Development areas
 
-Status as of November 26, 2026. "Draft" means code exists in a draft pull request and is under
-review. "Template" means a first working shape exists in the run path draft
-([PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6)), checked against FEBio on small
-cases and not settled. "Design" means a design note with a proposed approach exists and no code.
+Status as of November 27, 2026. The drafts of pull requests 1, 2, 4, 5 and 6 were merged to
+`main` on that day, with the full test suite run on CPU and on a GPU at each step. "On `main`"
+means the code is in the package and checked against FEBio on small cases; it is not settled, and
+its open questions are the decision points in its design note. "Template" means a first working
+shape of the run path ([PR #6](https://github.com/JolleyLab/FEBio-Warp-Python/pull/6)), checked
+against FEBio on small cases and not settled. "Design" means a design note with a proposed approach exists and no code.
 No application input runs end to end yet.
 
 Start with the [design overview](docs/design/overview.md) for how the pieces fit,
@@ -69,8 +71,8 @@ be built in parallel.
 
 | Area | Package | Scope for the first targets | Status |
 |---|---|---|---|
-| Materials | `materials/` | Common material interface; neo-Hookean, HGO, Ogden, Lee-Sacks, nitinol | Draft ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)), under redesign. Design: [material interface](docs/design/materials.md) ([decisions](docs/design/materials.md#decision-points)) |
-| Contact | `contact/` | Potential-based contact for leaflets and devices; sliding contact later | Draft ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)). Design: [contact potential](docs/design/contact.md) ([decisions](docs/design/contact.md#decision-points)), [contact in a run](docs/design/contact_in_run.md) |
+| Materials | `materials/` | Common material interface; neo-Hookean, HGO, Ogden, Lee-Sacks, nitinol | On `main` ([PR #2](https://github.com/JolleyLab/FEBio-Warp-Python/pull/2)), under redesign. Design: [material interface](docs/design/materials.md) ([decisions](docs/design/materials.md#decision-points)) |
+| Contact | `contact/` | Potential-based contact for leaflets and devices; sliding contact later | On `main` ([PR #1](https://github.com/JolleyLab/FEBio-Warp-Python/pull/1)). Design: [contact potential](docs/design/contact.md) ([decisions](docs/design/contact.md#decision-points)), [contact in a run](docs/design/contact_in_run.md) |
 | Assembly | `assembly/` | Full assembly of residual and tangent on the GPU | Decided ([note](docs/design/assembly.md)). Template: one block buffer and pattern map |
 | Elements | `elements/` | Shells, solids, trusses, springs, beams | Template: hex8, tet4, quad4 shell. Design: [trusses and springs for chordae](docs/design/chordae.md), then [three-field solid, penta6, tri3 shell](docs/design/elements.md). Beams: design shell |
 | Mesh and discretization | `mesh/`, `discretization/` | Mesh types, degree-of-freedom maps, quadrature | Template: unknowns by (node, variable). `mesh/` holds no code; the mesh is in the central model |
@@ -78,8 +80,8 @@ be built in parallel.
 | Solvers | `solvers/` | Newton with line search; iterative linear solvers and preconditioners | Template: full Newton, Warp's iterative solvers. Design: [preconditioning for shells, line search, quasi-Newton](docs/design/linear_solve.md) |
 | Analysis | `analysis/` | Static and implicit dynamic steps, load stepping, staged procedures | Template: one static step with FEBio's time stepper ([run path](docs/design/run_path.md) ([decisions](docs/design/run_path.md#12-decision-points))). Design: [dynamics and several steps](docs/design/dynamics.md) |
 | Sensitivity | `sensitivity/` | Gradients through equilibrium and through trajectories | Template: adjoint through one equilibrium solve. Design: [over steps](docs/design/sensitivity.md) |
-| Central model, input and output | `model/`, `io/` | One model object holding what a FEBio input defines; FEBio input (`.feb`) and plot (`.xplt`) files read and written here; VTKHDF output and a VTK adapter for 3D Slicer | Draft ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)). Design: [model, input and output](docs/design/model.md) ([decisions](docs/design/model.md#9-decision-points)), [output registry](docs/design/output.md) |
-| Verification | `tests/`, `references/` | FEBio-Warp run on FEBio input files and compared with pinned FEBio references; cases from the FEBio test suite and the driving applications | Draft ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)), tabled until input and output. Design: [comparison with FEBio](docs/design/verification.md) ([decisions](docs/design/verification.md#decision-points)) |
+| Central model, input and output | `model/`, `io/` | One model object holding what a FEBio input defines; FEBio input (`.feb`) and plot (`.xplt`) files read and written here; VTKHDF output and a VTK adapter for 3D Slicer | On `main` ([PR #5](https://github.com/JolleyLab/FEBio-Warp-Python/pull/5)). Design: [model, input and output](docs/design/model.md) ([decisions](docs/design/model.md#9-decision-points)), [output registry](docs/design/output.md) |
+| Verification | `tests/`, `references/` | FEBio-Warp run on FEBio input files and compared with pinned FEBio references; cases from the FEBio test suite and the driving applications | On `main` ([PR #4](https://github.com/JolleyLab/FEBio-Warp-Python/pull/4)); comparisons beyond material points wait on the run path. Design: [comparison with FEBio](docs/design/verification.md) ([decisions](docs/design/verification.md#decision-points)) |
 
 Design notes live in [`docs/design/`](docs/design/README.md). What is left before the application
 inputs run, in order, is in [remaining areas](docs/design/remaining_areas.md). Each design note ends with
@@ -95,10 +97,9 @@ open models in the [FEBio model repository](https://repo.febio.org/modelRepo/Use
 projects, with small generated inputs only where neither has a case that fits. The pilot examples
 are not test targets.
 
-The four drafts are reviewed separately. They are also merged, and made consistent where they
-meet, on the branch
-[`mattjolley/integration-base`](https://github.com/JolleyLab/FEBio-Warp-Python/tree/mattjolley/integration-base);
-its note `docs/design/integration.md` says what that involved and what is left open.
+The drafts were developed on separate branches and merged to `main` together on November 27,
+2026. [`docs/design/integration.md`](docs/design/integration.md) records how they were made
+consistent where they meet and what was left open.
 
 ### Relation to FEBio's structure
 
@@ -119,7 +120,9 @@ The package layout under `src/warp_febio/` follows FEBio's separation of concern
 
 1. A design note in `docs/design/` states the formulation, the FEBio source it follows, and
    how it will be verified.
-2. A draft pull request implements it and is reviewed.
+2. A pull request implements it. Pull requests are kept small and merged within days, once the
+   full test tier passes on CPU and on a GPU. Open questions stay in the note's decision points,
+   not in a long-lived pull request.
 3. It is verified against FEBio reference problems where one exists, in double precision.
 
 Exploratory work is welcome and belongs in `pilots/` until it has been through these steps.
