@@ -21,7 +21,7 @@ import unittest
 
 import numpy as np
 import warp as wp
-from support import DEVICE, setUpModule, tearDownModule  # noqa: F401  (device for the module)
+from support import DEVICE, full_tier, setUpModule, tearDownModule  # noqa: F401  (device for the module)
 
 from warp_febio.analysis.steps import build_system, run
 from warp_febio.assembly.system import State
@@ -750,6 +750,37 @@ class ShellPatchOnTrussChordsTests(unittest.TestCase):
         # FEBio's iteration counts for this input (full Newton, max_ups 0).
         self.assertEqual([s.iterations for s in results.states[1:]], [3] * 10)
         self.assertTrue((results.states[-1].axial_force["Chords"] > 0).all())
+
+
+class ShellPatchOnSpringChordsTests(unittest.TestCase):
+    """references/febio/originals/patchwarp/four_chords_static_prepared: a
+    patch of 1863 quad4 shells under pressure, held by four chord springs
+    ("nonlinear spring"). The nearest input to a valve with spring chords
+    that runs in a static step."""
+
+    PATCH = ROOT / "references/febio/originals/patchwarp/four_chords_static_prepared"
+
+    @full_tier("a 1863-shell patch on spring chords against FEBio; about 20 s on a GPU")
+    @unittest.skipUnless(
+        wp.get_device(DEVICE).is_cuda,
+        "on a GPU only: with the solvers there are today this patch takes over 25 minutes on CPU",
+    )
+    def test_final_state_matches_febio(self):
+        ref = json.loads((self.PATCH / "febio_final_state.json").read_text())
+        deck = self.PATCH / ref["input"]
+        self.assertEqual(hashlib.sha256(deck.read_bytes()).hexdigest(), ref["input_sha256"])
+        model = read_feb(deck)
+        # Conjugate gradients on the device; the dense check solve is far
+        # slower at this size.
+        results = run(build_system(model, device=DEVICE), linear_solver="cg")
+        final = results.states[-1]
+        self.assertAlmostEqual(final.time, ref["time"], delta=1e-7)
+        # FEBio's values are from its plot file, which holds single precision.
+        u_ref = np.array(ref["displacement"])
+        self.assertLess(abs(final.displacement - u_ref).max() / abs(u_ref).max(), 5e-7)
+        force = final.discrete["SyntheticChord"]["discrete element signed force"]
+        np.testing.assert_allclose(force, ref["discrete_element_signed_force"], rtol=5e-7)
+        self.assertTrue((force > 0).all())
 
 
 def make_tension_only(model):
