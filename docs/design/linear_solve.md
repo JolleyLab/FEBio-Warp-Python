@@ -1,6 +1,8 @@
 # Linear solve, nonlinear strategy and the first GPU runs
 
-First template for discussion, November 26, 2026 (v0.2). Design only: nothing in this note has been run. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
+Template for discussion, November 27, 2026 (v0.3). Nothing here is settled.
+
+**What changed from v0.2.** That version was design only. A first set of measurements on a GPU is now in section 6 ("First measurements"), with two direct solves added behind the existing call: a sparse LU on the host (`sparse`) and cuDSS on the device (`cudss`, optional). The rest of the note is as it was and has not yet been revised against these numbers. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
 
 **Scope.** What the linear solve must become for shell models of application size, how the quasi-Newton and line search settings of the inputs attach, and what the first GPU measurements should answer. This is the area where a diagram is least sufficient: the choices depend on measurements that have not been made.
 
@@ -119,6 +121,30 @@ Until then, results agree with FEBio's but step sequences under the automatic ti
 | cuDSS, with its transpose solve | Read from the documentation, not tried | Section 4 |
 | Any preconditioner other than `diag`; any dynamic solve | Not explored | |
 | A GPU run | The reference cases run on a GPU with the same results (run path, section 8); CG was 5 to 8 times faster there on these very small models. The measurements of section 6 are not done | |
+
+### First measurements
+
+November 27, 2026, on a Quadro RTX 8000 (`cuda:0`), Warp 1.19.0, double precision. Single runs; whole-run wall times, which include assembly and the Newton loop. cuDSS 0.8.0 through nvmath-python 1.0.1, installed in a separate environment (it is not a dependency of this package).
+
+| Model | Unknowns | Dense host solve (`direct`) | Warp CG, diagonal preconditioner (`cg`) | Sparse LU on the host (`sparse`) | cuDSS (`cudss`) |
+| --- | --- | --- | --- | --- | --- |
+| Static patch, 1863 quad4 shells on four chord springs, 53 solves | 11,604 | 4.5 min | 20 s, 565 iterations per solve on average | 21 s | 1.9 s |
+| The same patch, dynamic, 50 solves | 11,604 | not run | 18 s, 567 iterations per solve | not run | 1.7 s |
+| The open mitral input with its contact removed, dynamic, 200 steps, 800 solves | 44,646 | not run | 380 s | not run | 24 s |
+
+- The four methods give the same result: displacements of the static patch agree to 3e-13 between `cg`, `sparse` and `cudss`.
+- The mass term of a dynamic step did not lower the CG iteration count on the patch at these step sizes.
+- For reference, FEBio 4.13.0 (the provisional build without MKL, skyline solver) took 89 s on the static patch on this machine's CPU. That is not a comparison of codes: a release build with Pardiso would be much faster.
+- On a thin plate of hex8 elements standing in for a shell, cuDSS needed 0.9 s once for the analysis and 0.1 to 0.2 s per factorization at 150,000 unknowns, where CG with the diagonal preconditioner took 20,000 iterations and Warp's `FSAI` 6,500. On a compact solid of a million unknowns the factorization took 42 to 82 s and 26 to 37 GiB, where CG took 2.2 s. So, as far as these runs show, a direct solve suits shell-like models and Krylov methods suit large solids.
+- cuDSS with the `GENERAL` type solved an indefinite matrix and a singular one (six rigid modes, reported as six pivots) without an error; with the `SPD` type it returned NaN on an indefinite matrix without raising. The template therefore uses `GENERAL` and checks the result.
+- The transpose solve from the same factors exists in cuDSS 1.0.0 and is not exposed by nvmath-python 1.0.1; through a small wrapper it took 6 ms at 108,000 unknowns. Not in the template. Max Rietmann (NVIDIA) pointed us to this solve mode ([`cudssSolveMode_t`](https://docs.nvidia.com/cuda/cudss/latest/types.html#c.cudssSolveMode_t)) as the one commonly used for automatic differentiation, and passed on from the cuDSS developers that finer-grained support for it could be considered for their API if this work needs it. So the adjoint solve of decision L5 has a route on released software, and what we would ask for, if anything, should come out of the measurements.
+- Warp 1.19, its 1.20 release branch and its main branch have no sparse direct solver or algebraic multigrid, as far as we could tell.
+
+`direct` uses the dense solve up to 3,000 unknowns and the sparse LU beyond, where SciPy is installed. A solve that fails numerically is a failed step, which the time stepper cuts; a method that is not installed is reported as such and not retried.
+
+A first observation on decision L6: on suite `sh58` (shells, dynamic, full Newton in FEBio) this code follows FEBio's step sizes and iteration counts for 14 steps and departs when FEBio's line search first shortens a step ([dynamics.md](dynamics.md), section 6). With `sh58` and the mitral closure, that makes the line search the next piece of the nonlinear strategy to build.
+
+How `cudss` is wired, in `solvers/linear/cudss.py`: the BSR pattern is converted once on the device into scalar CSR index arrays and a gather map; each solve gathers the new values, factors and solves; the analysis is reused while the pattern stays. The Warp arrays are viewed by CuPy without a copy.
 
 ## 7. Decision points
 

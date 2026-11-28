@@ -4,6 +4,8 @@ Draft v0.3 for discussion, November 26, 2026. For Steve Maas, Jeff Weiss, Ryan B
 
 **Status, November 27, 2026.** The template was merged to `main` (pull request 6) with the pieces it builds on, and has been run on CPU and on a GPU. It is still a template: the decision points of section 12 are open. The text below is the draft as reviewed, updated where the merge changed a fact.
 
+**Status, November 28, 2026.** Three things were added to the contract of this note by the templates that followed, without changing what is described below. `State` carries velocity, acceleration and the step size in a dynamic step ([dynamics.md](dynamics.md)). A `Term` may give its consistent mass as one number per stiffness block (`mass_coefficients`), which the system applies through the block buffer. A term whose pattern follows the solution (contact) keeps its blocks in a matrix of its own (`contact_matrix`), which the system adds to the structural matrix before the solve ([contact_in_run.md](contact_in_run.md)). `run` and `solve_step` take a dynamic step by the same loop. With one step, loads written inside the step are built as loads of the model.
+
 **Scope.** The structure that takes a model and drives it through steps to a result: unknowns, terms, the Newton step, the step driver, and gradients. It is shown on the basic example Steve suggested (one element, one material, prescribed nodal displacements, with free unknowns and a Newton solve), and on one element under a pressure load, which is the standing case for checking gradients.
 
 **Not in scope.** Dynamics, contact in a run, springs, shells beyond quad4, performance tuning. Each has a marked place to attach and no implementation.

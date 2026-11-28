@@ -2,6 +2,8 @@
 
 First template for discussion, November 26, 2026 (v0.2). Design only: there is no code for this note. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
 
+**Status, November 28, 2026.** Still design only. The templates written since keep further values in the results that the registry would name: nodal velocity in a dynamic step; for springs, FEBio's `discrete element force` and `discrete element signed force` by discrete set; for trusses, `truss stretch` and the axial force (not a FEBio variable); and, as a kernel output, the chord force on a node set ([chordae.md](chordae.md)).
+
 **Scope.** How the variables a FEBio input asks for, in its plot file and its log file, are produced from a State. The writers themselves (`.xplt`, VTKHDF) are in pull request 5 and are not changed.
 
 ## 1. Summary

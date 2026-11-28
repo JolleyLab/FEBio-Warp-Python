@@ -4,6 +4,8 @@ Draft v0.3, November 24, 2026. For Steve Maas, Jeff Weiss, Ryan Black, the Warp 
 
 **Status, November 27, 2026.** The code was merged to `main` (pull request 2) and has been run on CPU and on a GPU. Its evaluation functions now take `device=None`, Warp's current device, instead of `"cpu"`. The text below is the draft as reviewed, updated where the merge changed a fact.
 
+**Status, November 28, 2026.** Two small additions touch this layer from the chordae work: the spring law `smooth tension-only linear spring`, which is not a FEBio material and is marked so ([chordae.md](chordae.md), decision C9), and the reporting of `tangent_scale`: the coverage report now lists it as having no effect on the solution, since FEBio applies it to the tangent only, and the exact tangent is used. Decision T14 (how a scaled Newton tangent sits beside the true one) is unchanged and still open; the mitral run not yet reaching leaflet closure may bear on it ([deviations.md](deviations.md), row 3).
+
 **Layout.** This note follows the layout of the design set: a flow diagram, what has been explored, and decision points with options and a proposal ("Initial explorations" and "Decision points" below). The [design overview](overview.md) shows where it sits, [remaining areas](remaining_areas.md) lists every decision by reviewer, and the [work plan](work_plan.md) says what depends on it.
 
 ## For reviewers

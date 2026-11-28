@@ -61,7 +61,7 @@ The open mitral input declares `ShellDomain ... type="elastic-shell"` on quad4 e
 | Curved patch of 9 shells against FEBio | 4e-12 |
 | Pressure on the front and back face | Template, with an exact tangent on request |
 | Nodal normals, thickness from element data | Read by the template |
-| Mass and inertia | Not yet; in [dynamics.md](dynamics.md) |
+| Mass and inertia | Consistent mass for hex8, quad4 shell and truss, as one number per stiffness block ([dynamics.md](dynamics.md)). Not for tet4, which runs through warp.fem |
 | Trusses and springs sharing leaflet nodes | Draft, static: a quad4 patch held by truss chords matches FEBio to 4e-12 ([chordae.md](chordae.md)) |
 | The linear solve at application size | Open; in [linear_solve.md](linear_solve.md) |
 
