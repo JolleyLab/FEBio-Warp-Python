@@ -326,7 +326,7 @@ Each was checked against the FEBio source (`e4df3f8`), Warp 1.19.0, Newton (`12b
 - No history, so `commit` and `rollback` are called and do nothing.
 - Checked on CPU and on a GPU. No timing beyond the small reference cases was taken.
 - The first-iteration handling of prescribed displacements and the convergence tests were carried over from the fixture, which was compared with FEBio. The reformation limit and the iteration count given to the step controller were checked against the FEBio source and corrected (section 8); the rest was not re-derived.
-- Solver settings that are read but have no effect: `lstol`, `lsmin`, `lsiter` (no line search), `qn_method` (always full Newton), and the solver's `symmetric_stiffness` (FEBio uses it to choose matrix storage; here the matrix is always general). The coverage report lists each of them.
+- The line search settings `lstol`, `lsmin`, `lsiter` and `ls_check_jacobians` are applied since November 28 (FEBio's line search). Solver settings that are read but have no effect: `qn_method` (always full Newton), and the solver's `symmetric_stiffness` (FEBio uses it to choose matrix storage; here the matrix is always general). The coverage report lists each of them.
 - The command line (`python -m warp_febio inspect` and `run`) goes through the run path since November 27, so it runs the pressure cases.
 - There are two hex8 implementations (the dedicated brick domain and `warp.fem`). They agree to round-off on every case here. Keeping one is a decision for after the review.
 - The FEBio references are from a source build without MKL, not an official release.

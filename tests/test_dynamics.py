@@ -151,12 +151,8 @@ class SuiteTests(unittest.TestCase):
     Both take FEBio's steps and iterations exactly. FEBio ran them with BFGS
     (max_ups 10) at dtol 1e-3, so the norm agrees to that tolerance.
 
-    Not here: sh58 (40 quad4 shells, nodal force, automatic time stepping).
-    Its first 14 steps have FEBio's step sizes and iteration counts, and
-    displacements equal to the precision of FEBio's plot file. From step 15
-    FEBio's line search shortens steps, which this code does not have, so the
-    iteration counts, then the step sizes and the final norm (2 percent)
-    differ. Checked once with FEBio 4.13.0; docs/design/dynamics.md.
+    sh58 (40 quad4 shells, automatic time stepping), which needs FEBio's line
+    search to follow FEBio's path, is in test_febio_suite.py.
     """
 
     GOLD = {"dy16": (100, 276, 0.0638959555364, 1e-4), "dy07": (100, 200, 3.60040926788, 1e-5)}

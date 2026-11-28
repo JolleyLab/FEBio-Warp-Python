@@ -14,30 +14,31 @@ of the suite is copied here; the tests are skipped without it.
 Of the 549 inputs of the suite at commit 986005f, the coverage report accepts
 23. They fall into three groups.
 
-EXACT: FEBio ran these with full Newton and its line search did not act, or
-its quasi-Newton path happened to take the same iterations. This code takes
-FEBio's steps and iterations exactly and reproduces the norm.
+EXACT: FEBio ran these with full Newton (max_ups 0), or its quasi-Newton path
+happened to take the same iterations. This code takes FEBio's steps and
+iterations exactly and reproduces the norm. Two of them, sh56 and sh58, do so
+only with FEBio's line search (solvers/nonlinear/newton.py): without it sh58
+left FEBio's path at step 15, where FEBio's line search first shortens a step,
+and ended 2 percent away.
 
-NORM: FEBio ran these with BFGS (max_ups 10) or its line search shortened
-steps, so iteration counts and automatic step sizes differ. The solution norm
-at the end still agrees, to FEBio's convergence tolerance.
+NORM: FEBio ran these with BFGS (max_ups 10), so iteration counts and
+automatic step sizes differ. The solution norm at the end still agrees, to
+FEBio's convergence tolerance. Two of them, di03 and sh06, need the line
+search to run at all: without it they stop on a negative Jacobian.
 
 Not here, with the reason:
     bt01, di01, di02   in test_chordae_elements.py (bt01 needs an iterative
                        solve: its first tangent is singular)
     dy07, dy16         in test_dynamics.py
-    di03, sh06         a negative Jacobian without a line search
-    sh58               follows FEBio for 14 steps, until FEBio's line search
-                       acts (docs/design/dynamics.md)
     sh52, mi16         the solution at the end is zero, so the stored norm is
                        what the iteration leaves at its tolerance and not a
                        value to compare. In mi16 a pressure follows a load
                        curve that returns to zero: FEBio's stored norm is
                        4.9e-4 (its final displacement is 7e-5 of the peak
                        during the run, inside its dtol of 1e-3) and this code
-                       ends at 2e-8. At the first step, with the load on, the
-                       two agree to 5e-7 of the peak (checked once against
-                       FEBio 4.13.0).
+                       ends near zero. At the first step, with the load on,
+                       the two agree to 5e-7 of the peak (checked once
+                       against FEBio 4.13.0).
 """
 
 import ast
@@ -62,7 +63,13 @@ EXACT = {
     "mi06": (1e-9, "hex8, static"),
     "mi24": (1e-9, "hex8, static"),
     "sh54": (1e-9, "quad4 shells, static"),
+    "sh56": (1e-9, "quad4 shells, static; FEBio's line search acts"),
+    "sh58": (1e-5, "quad4 shells, dynamic, automatic time stepping; FEBio's line search acts from step 15"),
 }
+# sh58: 105 dynamic steps with FEBio's line search deciding at a threshold in
+# most of them. On CPU the count is FEBio's 435 exactly; on CUDA, where sums
+# are rounded in another order, it was 432 when this was written.
+ITERATION_SLACK = {"sh58": 5}
 NORM = {
     "mi02": (1e-5, "FEBio: BFGS"),
     "mi25": (1e-5, "FEBio: BFGS"),
@@ -72,7 +79,8 @@ NORM = {
     "sh04": (1e-5, "quad4 shells; FEBio: BFGS"),
     "sh05": (1e-5, "quad4 shells; FEBio: BFGS"),
     "sh11": (1e-5, "quad4 shells; FEBio: BFGS"),
-    "sh56": (1e-8, "quad4 shells; FEBio: full Newton, 59 iterations there and 64 here"),
+    "di03": (1e-6, "springs between two cantilever boards; FEBio: BFGS. Needs the line search"),
+    "sh06": (1e-5, "quad4 shells; FEBio: BFGS. Needs the line search"),
 }
 
 
@@ -105,10 +113,13 @@ class SuiteProblems(unittest.TestCase):
             with self.subTest(problem=name):
                 steps, iterations, norm = stored[name]
                 mine = self.solve(name)
-                self.assertEqual(mine[:2], (steps, iterations))
+                self.assertEqual(mine[0], steps)
+                # Exact, except where a long run with the line search active
+                # is sensitive to round-off (ITERATION_SLACK).
+                self.assertLessEqual(abs(mine[1] - iterations), ITERATION_SLACK.get(name, 0))
                 self.assertLess(abs(mine[2] - norm) / norm, tolerance)
 
-    @full_tier("nine more suite problems compared on the solution norm; about 20 s on CPU")
+    @full_tier("ten more suite problems compared on the solution norm; about 25 s on CPU")
     def test_norm_where_febio_takes_another_path(self):
         stored = stored_values()
         for name, (tolerance, _) in NORM.items():
