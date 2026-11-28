@@ -58,6 +58,22 @@ def _modules():
     return cp, csp, nsa
 
 
+def _threading_layer():
+    """Path of cuDSS's OpenMP threading layer, which its wheel ships, or None.
+    cuDSS uses it for the host part of the analysis (reordering); without it
+    that part runs on one thread and nvmath warns at every analysis."""
+    import glob
+    import os
+    import sys
+
+    found = glob.glob(
+        os.path.join(
+            sys.prefix, "lib", "python3*", "site-packages", "nvidia", "cu1*", "lib", "libcudss_mtlayer_gomp.so*"
+        )
+    )
+    return found[0] if found else None
+
+
 def _csr_pattern(cp, A):
     """Scalar CSR index arrays of a BSR matrix with 3x3 blocks, and the map
     that gathers its value buffer into CSR order. All on the device."""
@@ -107,7 +123,11 @@ class CudssSolver:
             data = cp.asarray(A.values).reshape(-1)[self.gather]
             self.matrix = csp.csr_matrix((data, indices, indptr), shape=(3 * self.n, 3 * self.n))
             self.rhs = cp.zeros(3 * self.n, dtype=cp.float64)
-            options = nsa.DirectSolverOptions(sparse_system_type=nsa.DirectSolverMatrixType.GENERAL, blocking=True)
+            options = nsa.DirectSolverOptions(
+                sparse_system_type=nsa.DirectSolverMatrixType.GENERAL,
+                blocking=True,
+                multithreading_lib=_threading_layer(),
+            )
             self.solver = nsa.DirectSolver(self.matrix, self.rhs, options=options, execution=nsa.ExecutionCUDA())
             self.solver.plan()
 
