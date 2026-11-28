@@ -288,7 +288,7 @@ class TrussDomain(AxialOutputs, Term):
 
     def mass_coefficients(self) -> np.ndarray:
         """`mass_blocks` in the order of the four stiffness blocks of an
-        element (aa, ab, ba, bb), for a dynamic step."""
+        element (node pairs a-a, a-b, b-a, b-b), for a dynamic step."""
         return self.mass_blocks().reshape(-1)
 
     def plot(self, variable: str) -> np.ndarray:
