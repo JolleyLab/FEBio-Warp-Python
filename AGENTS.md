@@ -42,7 +42,7 @@ uv run -m unittest discover -s tests -p 'test_material*.py' -v       # a subset
 ```
 
 - Test modules that use Warp import `DEVICE`, `setUpModule` and `tearDownModule` from `tests/support.py`; slow tests carry `@full_tier(...)` with a fast case kept in the quick tier. See CONTRIBUTING, "Writing and running tests".
-- Run the full tier on CPU and, for device code, on a GPU before a change is merged; CI runs it on CPU only.
+- Run the full tier on CPU and, for device code, on a GPU before a change is merged; CI runs it on CPU only. The `gpu (manual)` workflow uses a billed runner: never start it unless explicitly asked.
 
 - Verify that a regression test fails without the fix before committing.
 - Code that implements mechanics also found in FEBio is tested against an FEBio reference from the same input. Record the quantity compared, the tolerance and the FEBio version.

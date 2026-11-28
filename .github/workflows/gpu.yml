@@ -1,0 +1,39 @@
+name: gpu (manual)
+
+# The quick test tier on a GPU, on the paid runner group. It runs only when
+# someone starts it by hand (Actions, "gpu (manual)", "Run workflow"), never on
+# a push or a pull request, because each run is billed. Routine GPU testing,
+# and the full tier on a GPU, are done on a workstation with a GPU; see
+# CONTRIBUTING, "Writing and running tests".
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gpu-manual
+  cancel-in-progress: true
+
+jobs:
+  cuda:
+    runs-on:
+      group: FEBIO-Warp-large-runners
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Runner hardware
+        run: |
+          echo "runner: $RUNNER_NAME ($RUNNER_OS $RUNNER_ARCH)"
+          nvidia-smi
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e  # v10.3.2
+        with:
+          version: "0.13.6"
+      - name: Install (same locked environment as the CPU job)
+        run: uv sync --locked --extra dev
+      - name: Unit tests, quick tier, on the GPU
+        env:
+          WARP_FEBIO_TEST_DEVICE: cuda:0
+          WARP_FEBIO_TEST_LEVEL: quick
+        run: uv run --no-sync -m unittest discover -s tests -v
