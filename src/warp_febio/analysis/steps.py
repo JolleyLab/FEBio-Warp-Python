@@ -36,8 +36,8 @@ import warp as wp
 
 from ..assembly.system import SolveError, State, System
 from ..compiled import inspect, shell_directors
-from ..coverage import CoverageError
-from ..discretization.fields import FIXED, build_field_table
+from ..coverage import IMPLEMENTED, NO_EFFECT, NOT_SUPPORTED, CoverageError
+from ..discretization.fields import FIXED, PRESCRIBED, build_field_table
 from ..elements.brick_domain import BrickDomain
 from ..elements.fem_domain import ELEMENTS as FEM_ELEMENTS
 from ..elements.fem_domain import FemSolidDomain
@@ -48,10 +48,11 @@ from ..elements.line_builders import (
     is_truss,
     truss_coverage,
 )
-from ..loads import nodal_load, pressure
+from ..loads import mass_damping, nodal_load, pressure
 from ..materials.febio import bind_material
 from ..results import Results, StateResult
 from ..solvers.nonlinear.newton import NewtonSettings, solve_step
+from .dynamics import TimeIntegration, initial_state, is_dynamic
 from .static import TimeStepController
 
 
@@ -70,15 +71,34 @@ def discrete_support(model):
     return discrete_coverage(model)
 
 
+def dynamic_support(control):
+    """Coverage of a DYNAMIC step: (status, note). FEBio's scheme with
+    alpha_f = 1, which the defaults and rhoi = 0 or -1 give. Below 1 the
+    stress is evaluated at an interpolated deformation (decision D3 of
+    docs/design/dynamics.md), which is reserved."""
+    ti = TimeIntegration.from_control(control)
+    note = f"alpha_f {ti.alpha_f:g}, alpha_m {ti.alpha_m:g}, beta {ti.beta:g}, gamma {ti.gamma:g}"
+    if ti.alpha_f != 1.0:
+        return NOT_SUPPORTED, note + ": alpha_f below 1 is not yet supported"
+    return IMPLEMENTED, note
+
+
 def inspect_model(model):
     """The coverage report of this run path: what `build_system` can build."""
-    return inspect(
+    report = inspect(
         model,
         load_support=load_support,
         domain_support=domain_support,
         line_support=line_support,
         discrete_support=discrete_support,
+        dynamic_support=dynamic_support,
     )
+    if is_dynamic(model):
+        for block in model.mesh.blocks:
+            if block.febio_type == "tet4":
+                # tet4 runs through warp.fem here; its mass is not built yet.
+                report.add("analysis", "DYNAMIC with tet4", NOT_SUPPORTED, f"part {block.name}", "mass of tet4")
+    return report
 
 
 def select_domain(model, block, fields, directors, device, solids="dedicated"):
@@ -134,12 +154,19 @@ def select_domain(model, block, fields, directors, device, solids="dedicated"):
 
 
 # Loads this run path can build: FEBio type -> module with inspect_load and a Term.
-LOADS = {pressure.TYPE: pressure, nodal_load.TYPE: nodal_load, nodal_load.FORCE_TYPE: nodal_load}
+LOADS = {
+    pressure.TYPE: pressure,
+    nodal_load.TYPE: nodal_load,
+    nodal_load.FORCE_TYPE: nodal_load,
+    mass_damping.TYPE: mass_damping,
+}
 
 
 def load_support(record, model):
     """Coverage of one load record, for the coverage report."""
     module = LOADS.get(record.type)
+    if module is mass_damping and not is_dynamic(model):
+        return NO_EFFECT, "static analysis"
     return module.inspect_load(record, model) if module is not None else None
 
 
@@ -169,11 +196,26 @@ def build_system(model, device=None, solids: str = "dedicated") -> System:
     # Springs of the Discrete section: one term per spring law in use.
     terms += build_discrete_domains(model, fields, device)
     for record in model.loads:
+        if record.type == mass_damping.TYPE:
+            continue  # not a term: applied through the mass blocks, below
         terms.append(select_load(record, model, fields, directors, device))
     # Contact interfaces are appended here as further terms; not implemented
     # in this template.
     system = System(model, fields, terms, device)
     system.report = report
+    if is_dynamic(model):
+        # Reference density of each part, then the mass of every term and
+        # the mass damping coefficients, once (analysis/dynamics.py).
+        for term, block in zip(terms, model.mesh.blocks):
+            material = model.material(model.domain_of(block.name).material)
+            term.density = float(material.params.get("density", 1.0))
+        for term, block in zip(terms, model.mesh.blocks):
+            if term.mass_coefficients() is None:
+                # hex8 through warp.fem (solids="warp.fem") and tet4: no mass yet.
+                raise NotImplementedError(
+                    f"part {block.name!r}: the mass of this domain is not built, so it cannot run in a dynamic step"
+                )
+        system.set_dynamics(TimeIntegration.from_control(model.steps[0].control), mass_damping.damping_by_part(model))
     return system
 
 
@@ -187,16 +229,29 @@ def collect(system: System, state: State, iterations: int = 0) -> StateResult:
         iterations=iterations,
     )
     # FEBio's nodal data "R" (log data Rx, Ry, Rz; plot variable "reaction
-    # forces"): minus the internal force, at every component that is free or
-    # prescribed, and zero at fixed components, which have no equation in
-    # FEBio (FESolidSolver2::Residual and UpdateKinematics). The domains'
-    # data is current, since a converged step ends with an update.
+    # forces"): minus the internal force at every component that is free or
+    # prescribed (FESolidSolver2::Residual takes it after InternalForces),
+    # and zero at fixed components, which have no equation in FEBio. The
+    # terms' data is current, since a converged step ends with an update.
     internal = wp.zeros(system.n, dtype=wp.vec3d, device=system.device)
     for term in system.terms:
         if term.internal:
             term.residual(state, None, internal)  # adds minus the internal force
     reaction = internal.numpy() * (fields.bc != FIXED)
+    prescribed = fields.bc == PRESCRIBED
+    if system.time_integration is not None and state.a_mass is not None and prescribed.any():
+        # At a prescribed component FEBio also counts what its domains
+        # assemble element by element after the internal forces: the inertial
+        # force and body forces such as mass damping (FEResidualVector::
+        # Assemble, m_Fr[-I - 2] -= fe[i]). Contact forces are not counted
+        # there (sh_self_contact_fold agrees with FEBio without them).
+        # Whether surface loads are is not yet checked against a FEBio run.
+        dynamic = wp.zeros(system.n, dtype=wp.vec3d, device=system.device)
+        system._dynamic_residual(state, dynamic)
+        reaction[prescribed] += dynamic.numpy()[prescribed]
     out.reaction_force = reaction[fields.entries_of("displacement")]
+    if state.v is not None:
+        out.velocity = state.v.numpy()[fields.entries_of("displacement")]
     shell = fields.entries_of("shell displacement")
     if (shell >= 0).any():
         out.shell_displacement = np.zeros((len(shell), 3))
@@ -245,7 +300,11 @@ def run(system: System, log=None, linear_solver: str = "direct", keep_states: bo
     stepper = control.child("time_stepper")
     controller = TimeStepController(stepper, model, dt0, tend) if stepper is not None else None
 
-    state = system.state()
+    if system.time_integration is not None:
+        # At rest, with FEBio's initial accelerations if a load acts at time 0.
+        state = initial_state(system, linear_solver)
+    else:
+        state = system.state()
     results = Results()
     states = [state]
     system.update(state)  # stresses of the reference state (zero)

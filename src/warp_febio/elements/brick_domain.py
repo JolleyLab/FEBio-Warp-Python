@@ -36,7 +36,7 @@ import warp as wp
 
 from ..assembly.system import BlockTangent, State, Term
 from ..materials.status import NEGATIVE_JACOBIAN, NON_FINITE, OK
-from .brick8 import GAUSS_WEIGHTS, shape_derivatives, voigt
+from .brick8 import GAUSS_WEIGHTS, consistent_mass, shape_derivatives, voigt
 
 vec3d = wp.vec3d
 mat33d = wp.mat33d
@@ -195,6 +195,27 @@ class BrickDomain(Term):
         # Stiffness blocks: fixed count and fixed (row, column) for the mesh.
         # The system hands the term its slice of the block buffer.
         self.block_count = E * 64
+        # Reference density, for the mass in a dynamic step. FEBio's default
+        # for an elastic material is 1; analysis/steps.py sets the input's.
+        self.density = 1.0
+        self._X_host = np.asarray(X, dtype=np.float64)
+        # FEBio adds the stiffness of a body force (mass damping) to K with
+        # opposite signs in its two domains. With K_b = bf.stiffness(mp),
+        # which is -C/dt for mass damping:
+        #   FEElasticSolidDomain::BodyForceStiffness   Kab = K_b * (-H_a H_b rho J0)
+        #   FEElasticShellDomain::ElementBodyForceStiffness
+        #                                              ke += K_b * rho J0 * (M_a M_b)
+        # so a solid gets +C/dt M and a shell -C/dt M. FELinearTrussDomain
+        # subtracts, as the solid. The Newton tangent here follows FEBio per
+        # domain, which reproduces its iteration counts (902 of 902 on
+        # bk_mass_damping; 1400 against 1397 on sh_lee_sacks_pressure, where
+        # +C/dt would take 744). Decision D4 of docs/design/dynamics.md.
+        self.body_force_stiffness_sign = -1.0 if febio_type == "elastic-shell" else 1.0
+
+    def mass_coefficients(self) -> np.ndarray:
+        """Consistent mass, one number per stiffness block, in the order of
+        the blocks, (e * 8 + i) * 8 + j. Computed once on the host."""
+        return consistent_mass(self._X_host, self.density).reshape(-1)
 
     # -- Term ----------------------------------------------------------------
 

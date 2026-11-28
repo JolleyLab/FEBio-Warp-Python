@@ -51,6 +51,12 @@ vec3d = wp.vec3d
 mat33d = wp.mat33d
 
 
+#: Default of System.damping_tangent. See there, and decision D4 of
+#: docs/design/dynamics.md for what was measured.
+DAMPING_TANGENT = "exact"
+DAMPING_TANGENTS = ("febio", "consistent", "exact")
+
+
 class SolveError(RuntimeError):
     """A step failed where FEBio would throw (negative Jacobian, no convergence)."""
 
@@ -67,6 +73,11 @@ class State:
 
     time: float
     u: wp.array  # (n_entries,) vec3d
+    # Dynamic steps only (analysis/dynamics.py); None in a static step.
+    v: wp.array | None = None  # velocity
+    a: wp.array | None = None  # acceleration
+    a_mass: wp.array | None = None  # alpha_m a + (1 - alpha_m) a_n, what the inertial force acts on
+    dt: float = 0.0  # the step that led to this state
 
 
 class BlockTangent:
@@ -111,6 +122,10 @@ class Term:
     #: True for domains: the term's residual is (minus) an internal force.
     #: FEBio reports nodal reaction forces from the internal forces alone.
     internal: bool = False
+    #: Sign with which FEBio's domain of this kind adds the stiffness of a
+    #: body force to K (BodyForceStiffness). +1 for solids and trusses. The
+    #: shell domain adds it with the opposite sign (see BrickDomain).
+    body_force_stiffness_sign: float = 1.0
     #: Number of 3x3 blocks the term contributes to the tangent. Fixed for
     #: the life of the system, with fixed (row, column) pairs.
     block_count: int = 0
@@ -135,6 +150,13 @@ class Term:
         pressure stiffness; `tangent_scale` on a material). With exact=True a
         term must return the true derivative, which is what the adjoint
         needs. A term whose tangent is always exact ignores the flag."""
+        return None
+
+    def mass_coefficients(self) -> np.ndarray | None:
+        """Consistent mass of the term, one number per stiffness block in the
+        order of its blocks: the block of a node pair is that number times
+        the identity (FEBio: MassMatrix of the domain). None for a term
+        without mass (a load, springs: FEDiscreteElasticDomain adds none)."""
         return None
 
     def commit(self, trial_history: Any) -> None:
@@ -176,6 +198,45 @@ def _constrain_blocks(
         out_vals[k] = wp.diag(free[rows[k]]) * vals[k] * wp.diag(free[cols[k]])
     else:
         out_vals[k] = wp.diag(vec3d(1.0, 1.0, 1.0) - free[k - count])
+
+
+@wp.kernel
+def _apply_scalar_blocks(
+    rows: wp.array(dtype=wp.int32),
+    cols: wp.array(dtype=wp.int32),
+    coefficient: wp.array(dtype=wp.float64),
+    x: wp.array(dtype=vec3d),
+    alpha: wp.float64,
+    y: wp.array(dtype=vec3d),
+):
+    """y += alpha M x for blocks that are a number times the identity (mass,
+    mass damping). Reads x and adds to y only, so a tape passes through it."""
+    k = wp.tid()
+    c = coefficient[k]
+    if c != wp.float64(0.0):
+        wp.atomic_add(y, rows[k], (alpha * c) * x[cols[k]])
+
+
+@wp.kernel
+def _add_scalar_blocks(
+    mass: wp.array(dtype=wp.float64),
+    damping: wp.array(dtype=wp.float64),
+    mass_scale: wp.float64,
+    damping_scale: wp.float64,
+    vals: wp.array(dtype=mat33d),
+):
+    """vals += (mass_scale mass + damping_scale damping) I, block by block."""
+    k = wp.tid()
+    c = mass_scale * mass[k] + damping_scale * damping[k]
+    if c != wp.float64(0.0):
+        vals[k] = vals[k] + wp.diag(vec3d(c, c, c))
+
+
+@wp.kernel
+def _scalar_to_blocks(coefficient: wp.array(dtype=wp.float64), vals: wp.array(dtype=mat33d)):
+    k = wp.tid()
+    c = coefficient[k]
+    vals[k] = wp.diag(vec3d(c, c, c))
 
 
 @wp.kernel
@@ -226,11 +287,56 @@ class System:
             offset = end
         self._A = warp.sparse.bsr_zeros(n, n, mat33d, device=device)
         self._map = None  # triplet-to-block map, built at the first assembly
+        self._blocks_placed = False  # the terms have written their (row, column) pairs
+        # Dynamics (analysis/dynamics.py): None for a static model.
+        self.time_integration = None
+        #: The stiffness Newton uses for mass damping (decision D4):
+        #:   "febio"       C / dt per unit mass, with FEBio's sign per domain
+        #:                 (added for solids and trusses, subtracted for shells)
+        #:   "consistent"  C / dt per unit mass, added for every domain
+        #:   "exact"       the derivative of the damping force, C gamma / (beta dt)
+        #: The adjoint always uses the derivative (exact=True).
+        self.damping_tangent = DAMPING_TANGENT
+        self.mass = None  # (total,) consistent mass per block
+        self.damping = None  # (total,) C times the mass, on damped parts
+        self.has_damping = False
+
+    def set_dynamics(self, time_integration, damping_by_term: dict | None = None) -> None:
+        """Make the system dynamic: collect every term's mass, one number per
+        block of the buffer, and the mass damping coefficients.
+
+        The mass couples the node pairs the stiffness blocks couple, so it
+        needs no pattern of its own and is computed once (decision D1:
+        consistent mass, as FEBio). damping_by_term: {term name: C} for the
+        parts under a `mass damping` load; its force is C M v on those parts.
+        """
+        damping_by_term = damping_by_term or {}
+        mass = np.zeros(self.block_count)
+        damping = np.zeros(self.block_count)
+        newton = np.zeros(self.block_count)
+        offset = 0
+        for term in self.terms:
+            end = offset + term.block_count
+            m = term.mass_coefficients()
+            if m is not None:
+                mass[offset:end] = m
+                damping[offset:end] = damping_by_term.get(term.name, 0.0) * np.asarray(m)
+                newton[offset:end] = term.body_force_stiffness_sign * damping[offset:end]
+            offset = end
+        self.time_integration = time_integration
+        self.mass = wp.array(mass, dtype=wp.float64, device=self.device)
+        self.damping = wp.array(damping, dtype=wp.float64, device=self.device)
+        # The same with FEBio's sign per domain, for the Newton tangent.
+        self.damping_newton = wp.array(newton, dtype=wp.float64, device=self.device)
+        self.has_damping = bool(np.any(damping != 0.0))
 
     def state(self, requires_grad: bool = False) -> State:
         """A zero state. The call mirrors Newton's `Model.state(requires_grad=...)`."""
         u = wp.zeros(self.n, dtype=vec3d, device=self.device, requires_grad=requires_grad)
-        return State(time=0.0, u=u)
+        if self.time_integration is None:
+            return State(time=0.0, u=u)
+        zeros = lambda: wp.zeros(self.n, dtype=vec3d, device=self.device, requires_grad=requires_grad)
+        return State(time=0.0, u=u, v=zeros(), a=zeros(), a_mass=zeros())
 
     # -- the three passes of an iteration -----------------------------------
 
@@ -248,7 +354,25 @@ class System:
         R = wp.zeros(self.n, dtype=vec3d, device=self.device, requires_grad=requires_grad)
         for term in self.terms:
             term.residual(state, None, R)
+        if self.time_integration is not None and state.a_mass is not None:
+            self._dynamic_residual(state, R)
         return R
+
+    def _dynamic_residual(self, state: State, R: wp.array) -> None:
+        """R -= M (alpha_m a + (1 - alpha_m) a_n) + C M v: FEBio's inertial
+        forces (InertialForces of the elastic domains) and the `mass damping`
+        body force, both through the mass blocks."""
+        if not self._blocks_placed:
+            # The mass goes through the block positions, which the terms
+            # write when they first linearize. A run does that before any
+            # residual; a caller that starts with a residual gets it here.
+            self.tangent(state)
+        total = self.block_count
+        args = dict(dim=total, outputs=[R], device=self.device)
+        rows, cols = self.rows[:total], self.cols[:total]
+        wp.launch(_apply_scalar_blocks, inputs=[rows, cols, self.mass, state.a_mass, -1.0], **args)
+        if self.has_damping:
+            wp.launch(_apply_scalar_blocks, inputs=[rows, cols, self.damping, state.v, -1.0], **args)
 
     def tangent(self, state: State, exact: bool = False) -> None:
         """Every term writes its blocks of K at the last `update` into the
@@ -257,6 +381,26 @@ class System:
         for term in self.terms:
             if term.linearize(state, None, exact) is None and term.block_count:
                 term.vals.zero_()
+        self._blocks_placed = True
+        if self.time_integration is not None and state.dt > 0.0:
+            # FESolidSolver2::StiffnessMatrix: the mass scaled by
+            # alpha_m / (beta dt^2). Mass damping: FEBio's stiffness is C / dt
+            # per unit mass (FEMassDamping::stiffness), which is not the
+            # derivative of its force, C gamma / (beta dt), and its shell
+            # domain adds it with the opposite sign. Newton follows FEBio in
+            # both; exact=True gives the derivative (decision D4).
+            ti = self.time_integration
+            mass_scale = ti.alpha_m / (ti.beta * state.dt**2)
+            choice = "exact" if exact else self.damping_tangent
+            damping = self.damping_newton if choice == "febio" else self.damping
+            damping_scale = ti.gamma / (ti.beta * state.dt) if choice == "exact" else 1.0 / state.dt
+            wp.launch(
+                _add_scalar_blocks,
+                dim=self.block_count,
+                inputs=[self.mass, damping, mass_scale, damping_scale],
+                outputs=[self.vals],
+                device=self.device,
+            )
 
     # -- matrices ------------------------------------------------------------
 
@@ -284,6 +428,22 @@ class System:
         else:
             warp.sparse.bsr_set_from_mapped_values(self._A, self._map, self.constrained_vals)
         return self._A
+
+    def mass_matrix(self):
+        """The constrained mass matrix, for the initial accelerations. It
+        goes through the block buffer, so a `tangent` must follow before the
+        buffer is used as a stiffness again; every Newton iteration starts
+        with one."""
+        if not self._blocks_placed:
+            raise RuntimeError("mass_matrix needs the block positions: call update and tangent once first")
+        wp.launch(
+            _scalar_to_blocks,
+            dim=self.block_count,
+            inputs=[self.mass],
+            outputs=[self.vals],
+            device=self.device,
+        )
+        return self.constrained_matrix()
 
     def apply_tangent(self, x: wp.array, y: wp.array, alpha: float = 1.0) -> None:
         """y += alpha K x with the unconstrained K of the last `tangent`."""

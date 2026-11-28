@@ -105,8 +105,20 @@ def solve_step(
     say = say or (lambda *_: None)
     device, n, fields = system.device, system.n, system.fields
     inner = wp.utils.array_inner
-    u = wp.clone(state0.u)
-    state = State(time, u)
+    dynamic = system.time_integration is not None and state0.v is not None
+    if dynamic:
+        # Velocity and acceleration follow the displacement after every
+        # change of it (FESolidSolver2::UpdateKinematics), starting with the
+        # displacement unchanged (PrepStep).
+        from ...analysis.dynamics import new_dynamic_state, update_kinematics
+
+        state = new_dynamic_state(system, state0, time)
+        u = state.u
+        kinematics = lambda: update_kinematics(system, state, state0)
+    else:
+        u = wp.clone(state0.u)
+        state = State(time, u)
+        kinematics = lambda: None
 
     # Prescribed components: target values at this time, and their increment.
     target = wp.array(fields.prescribed_values(system.model, time), dtype=vec3d, device=device)
@@ -122,6 +134,7 @@ def solve_step(
     any_prescribed = bool(fields.prescribed)
 
     Ui = wp.zeros(n, dtype=vec3d, device=device)  # total increment of this step
+    kinematics()
     system.update(state)
     R = system.residual(state)
     normRi = normEi = 0.0
@@ -141,6 +154,7 @@ def solve_step(
         _apply_increment(system, u, du)
         _apply_increment(system, Ui, du)
 
+        kinematics()
         system.update(state)
         R = system.residual(state)
         R1 = wp.clone(R)

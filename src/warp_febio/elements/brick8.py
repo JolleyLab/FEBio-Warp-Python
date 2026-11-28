@@ -74,6 +74,29 @@ NODE_RST = np.array(
 )
 
 
+def shape_values(points=GAUSS_POINTS):
+    """N_i at each point: array of shape (points, 8)."""
+    r, s, t = (np.asarray(points)[:, None, k] for k in range(3))
+    return 0.125 * (1 + NODE_RST[None, :, 0] * r) * (1 + NODE_RST[None, :, 1] * s) * (1 + NODE_RST[None, :, 2] * t)
+
+
+def consistent_mass(X, density: float) -> np.ndarray:
+    """Consistent mass of each element as (E, 8, 8) numbers:
+    m_ab = density * sum over points of N_a N_b det(J0) w, the block of a node
+    pair being m_ab times the identity.
+
+    FEElasticSolidDomain::MassMatrix for a hex8, and
+    FEElasticShellDomain::ElementMassMatrix for a quad4 shell, whose shape
+    functions M_i (1 +- eta) / 2 for the two faces are the eight of the brick
+    the shell is run as here.
+    """
+    N = shape_values()  # (Q, 8)
+    dN = shape_derivatives()  # (Q, 8, 3)
+    J = np.einsum("eia,qib->eqab", np.asarray(X, dtype=np.float64), dN)
+    w = np.linalg.det(J) * GAUSS_WEIGHTS[None, :]  # (E, Q)
+    return density * np.einsum("eq,qa,qb->eab", w, N, N)
+
+
 def shape_derivatives(points=GAUSS_POINTS):
     """dN_i/d(r,s,t) at each point: array of shape (points, 8, 3)."""
     out = np.zeros((len(points), 8, 3))

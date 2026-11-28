@@ -53,7 +53,12 @@ PLOT_VARIABLES = {"displacement", "stress"}
 
 
 def inspect(
-    model: Model, load_support=None, domain_support=None, line_support=None, discrete_support=None
+    model: Model,
+    load_support=None,
+    domain_support=None,
+    line_support=None,
+    discrete_support=None,
+    dynamic_support=None,
 ) -> CoverageReport:
     """Coverage report for a Model. Allocates nothing on the device.
 
@@ -68,6 +73,9 @@ def inspect(
     not a solid material.
     discrete_support: optional function (model) -> list of report rows for the
     Discrete section (springs). Without it the section is not supported.
+    dynamic_support: optional function (control record) -> (status, note), by
+    which a run path says whether it can run a DYNAMIC step with that step's
+    time integration settings. Without it a dynamic step is not supported.
     """
     rep = CoverageReport()
     for issue in model.issues:
@@ -147,12 +155,15 @@ def inspect(
                 issue.note,
             )
         if mat.params.child("density") is not None:
+            dynamic = dynamic_support is not None and any(
+                str(s.control.get("analysis", "STATIC")).upper() == "DYNAMIC" for s in model.steps
+            )
             rep.add(
                 "material parameter",
                 "density",
-                NO_EFFECT,
+                IMPLEMENTED if dynamic else NO_EFFECT,
                 f"material {mat.name}",
-                "static analysis",
+                "" if dynamic else "static analysis",
             )
 
     # Shells that share nodes with solid elements. FEBio then ties the solid to
@@ -210,7 +221,7 @@ def inspect(
             note="one step only in this draft",
         )
     for step in model.steps:
-        _inspect_control(step.control, rep, f"step {step.id}")
+        _inspect_control(step.control, rep, f"step {step.id}", dynamic_support)
         for r in step.loads + step.contact + step.other:
             rep.add(r.tag, r.type or r.tag, NOT_SUPPORTED, f"step {step.id}")
     for r in model.boundary + [b for s in model.steps for b in s.boundary]:
@@ -268,11 +279,19 @@ def inspect(
     return rep
 
 
-def _inspect_control(control, rep, where):
+TIME_INTEGRATION_SETTINGS = ("rhoi", "alpha", "beta", "gamma")
+
+
+def _inspect_control(control, rep, where, dynamic_support=None):
+    dynamic = str(control.get("analysis", "STATIC")).upper() == "DYNAMIC"
     for c in control.children:
         if c.tag == "analysis":
-            ok = str(c.value).upper() == "STATIC"
-            rep.add("analysis", c.value, IMPLEMENTED if ok else NOT_SUPPORTED, where)
+            if dynamic and dynamic_support is not None:
+                status, note = dynamic_support(control)
+                rep.add("analysis", c.value, status, where, note)
+            else:
+                ok = str(c.value).upper() == "STATIC"
+                rep.add("analysis", c.value, IMPLEMENTED if ok else NOT_SUPPORTED, where)
         elif c.tag == "plot_range":
             ok = list(np.atleast_1d(c.value)) == [0, -1]
             rep.add(
@@ -292,6 +311,8 @@ def _inspect_control(control, rep, where):
             for s in c.children:
                 if s.tag in SOLVER_IMPLEMENTED:
                     rep.add("solver setting", s.tag, IMPLEMENTED, where)
+                elif dynamic and dynamic_support is not None and s.tag in TIME_INTEGRATION_SETTINGS:
+                    rep.add("solver setting", s.tag, IMPLEMENTED, where, "time integration")
                 elif s.tag == "arc_length" and s.value != 0:
                     rep.add("solver setting", "arc_length", NOT_SUPPORTED, where)
                 elif s.tag in SOLVER_NO_EFFECT:
