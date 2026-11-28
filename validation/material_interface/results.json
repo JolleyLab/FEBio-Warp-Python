@@ -1,0 +1,137 @@
+{
+  "warp": "1.19.0",
+  "device": "cpu",
+  "precision": "FP64 unless stated",
+  "states": 66,
+  "note": "Relative errors, normalized by the largest reference magnitude over the batch.",
+  "models": {
+    "hgo_unconstrained": {
+      "febio_type": "HGO unconstrained",
+      "authored": "spatial",
+      "parameters": {
+        "c": 200.0,
+        "k1": 13480.0,
+        "k2": 1.06,
+        "kappa": 0.33,
+        "gamma": 18.85,
+        "k": 1500.0
+      },
+      "source": "https://github.com/febiosoftware/FEBio/blob/develop/FEBioMech/FEHolzapfelUnconstrained.cpp",
+      "metrics": {
+        "states": 66,
+        "rest_energy": 4.471613386864243e-36,
+        "rest_stress": 2.7352019447099645e-18,
+        "cauchy_asymmetry": 0.0,
+        "objectivity_energy": 2.1511600582353217e-15,
+        "objectivity_stress": 2.0897085224096207e-15,
+        "stress_vs_energy_fd": 3.082495388071439e-10,
+        "tangent_vs_stress_fd": 1.8155362476334813e-10,
+        "pk1_vs_cauchy": 2.4258058514588645e-16,
+        "pk1_tangent_vs_fd": 2.134869548092717e-10,
+        "fp32_vs_fp64_stress": 4.827393183023426e-07,
+        "tangent_asymmetry": 7.971270540288506e-17,
+        "combined_vs_actions": 7.971270540288506e-17,
+        "cauchy_vs_febio": 9.790707150630034e-16,
+        "tangent_vs_febio": 6.377016432230805e-16,
+        "parameter_gradient_vs_fd": 5.436979869615773e-10,
+        "stress_parameter_gradient_vs_fd": 9.637568220050219e-11,
+        "stress_deformation_gradient_vs_fd": 3.947871312448174e-10,
+        "geometry_gradient_vs_fd": 1.6930898749657865e-09
+      }
+    },
+    "neo_hookean": {
+      "febio_type": "neo-Hookean",
+      "authored": "spatial",
+      "parameters": {
+        "E": 1000000.0,
+        "v": 0.45
+      },
+      "source": "https://github.com/febiosoftware/FEBio/blob/develop/FEBioMech/FENeoHookean.cpp",
+      "metrics": {
+        "states": 66,
+        "rest_energy": 0.0,
+        "rest_stress": 4.3818547204171536e-18,
+        "cauchy_asymmetry": 0.0,
+        "objectivity_energy": 1.229896014278228e-15,
+        "objectivity_stress": 9.689826126894338e-16,
+        "stress_vs_energy_fd": 3.4988286459165115e-10,
+        "tangent_vs_stress_fd": 3.189110023154689e-10,
+        "pk1_vs_cauchy": 3.481377466544455e-16,
+        "pk1_tangent_vs_fd": 2.005220561688024e-10,
+        "fp32_vs_fp64_stress": 3.4769426849307745e-07,
+        "tangent_asymmetry": 0.0,
+        "combined_vs_actions": 0.0,
+        "cauchy_vs_febio": 8.817791340007581e-16,
+        "tangent_vs_febio": 7.364546209706022e-16,
+        "parameter_gradient_vs_fd": 3.8620269076743334e-11,
+        "stress_parameter_gradient_vs_fd": 1.8777757135027315e-11,
+        "stress_deformation_gradient_vs_fd": 1.181323572280828e-10,
+        "previous_stress": 1.1604591555148184e-16,
+        "previous_tangent": 3.967033839029014e-16
+      }
+    },
+    "isotropic_elastic": {
+      "febio_type": "isotropic elastic",
+      "authored": "reference",
+      "parameters": {
+        "E": 1000000.0,
+        "v": 0.3
+      },
+      "source": "https://github.com/febiosoftware/FEBio/blob/develop/FEBioMech/FEIsotropicElastic.cpp",
+      "metrics": {
+        "states": 66,
+        "rest_energy": 3.8368227440897195e-33,
+        "rest_stress": 8.289898317912768e-17,
+        "cauchy_asymmetry": 7.116989765427661e-17,
+        "objectivity_energy": 6.531548035805402e-16,
+        "objectivity_stress": 4.754073343310218e-16,
+        "stress_vs_energy_fd": 2.738738188498936e-10,
+        "tangent_vs_stress_fd": 2.85897562583476e-10,
+        "pk1_vs_cauchy": 2.5592593569094886e-16,
+        "pk1_tangent_vs_fd": 2.4345510468742883e-10,
+        "fp32_vs_fp64_stress": 2.892519657411919e-07,
+        "tangent_asymmetry": 7.959655191636909e-17,
+        "cauchy_vs_febio": 5.693591812342132e-16,
+        "tangent_vs_febio": 3.1838620766547627e-16,
+        "parameter_gradient_vs_fd": 3.61493022678733e-10,
+        "stress_parameter_gradient_vs_fd": 1.1023205020597454e-10,
+        "stress_deformation_gradient_vs_fd": 1.10428898157535e-10,
+        "previous_stress": 0.0,
+        "previous_tangent": 0.0
+      }
+    },
+    "lee_sacks_isotropic": {
+      "febio_type": "isotropic Lee-Sacks",
+      "authored": "spatial",
+      "parameters": {
+        "c0": 200.0,
+        "c1": 2968.4,
+        "c2": 0.2661,
+        "k": 5000.0
+      },
+      "source": "https://github.com/febiosoftware/FEBio/blob/develop/FEBioMech/FEIsotropicLeeSacks.cpp",
+      "metrics": {
+        "states": 66,
+        "rest_energy": 0.0,
+        "rest_stress": 1.182964196603623e-18,
+        "cauchy_asymmetry": 0.0,
+        "objectivity_energy": 1.292910512478219e-15,
+        "objectivity_stress": 9.738042721868843e-16,
+        "stress_vs_energy_fd": 2.344018796642291e-10,
+        "tangent_vs_stress_fd": 2.0253263888234374e-10,
+        "pk1_vs_cauchy": 2.8594450052289e-16,
+        "pk1_tangent_vs_fd": 2.5427248570996007e-10,
+        "fp32_vs_fp64_stress": 2.0778389438230156e-07,
+        "tangent_asymmetry": 4.949890821772398e-17,
+        "combined_vs_actions": 4.949890821772398e-17,
+        "cauchy_vs_febio": 1.0020410241727865e-15,
+        "tangent_vs_febio": 6.929847150481353e-16,
+        "parameter_gradient_vs_fd": 1.9783710746633817e-10,
+        "stress_parameter_gradient_vs_fd": 6.8084251911573e-09,
+        "stress_deformation_gradient_vs_fd": 1.132657965377287e-10,
+        "previous_stress": 4.289167507843351e-16,
+        "previous_tangent": 4.397192369196509e-16
+      }
+    }
+  }
+}
