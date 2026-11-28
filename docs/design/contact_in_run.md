@@ -1,6 +1,20 @@
 # Contact in the run
 
-First template for discussion, November 26, 2026 (v0.2). Design only: there is no code for this note. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
+Template for discussion, November 28, 2026 (v0.3). Nothing here is settled.
+
+**What changed from v0.2.** That version was design only. Three of the four connections of section 1 now exist as a first template (`contact/in_run.py`): points from the model's `SurfacePair`, the interface as a term, and its blocks in a matrix of their own, with the rule that no node moves farther than `R_out` in one iterate. Activation by step, the projected tangent as a fallback, and FEBio's element-pair form of `w_tol` are not built. The rest of the note is as it was.
+
+**First results** (double precision, CPU and a Quadro RTX 8000; FEBio results stored before this code existed):
+
+| Case | What it exercises | Agreement with FEBio |
+| --- | --- | --- |
+| `bk_contact_potential_patch` | Two hex8 blocks with surface meshes that do not match, pressed together, static, 20 steps | Reaction force and stress to 4e-13 |
+| `sh_self_contact_fold` | A quad4 shell surface folded onto itself, static, 30 steps, with the contact settings of the open mitral input (`kc` 2, `R_out` 0.5, `w_tol` 0.6) | Reaction force to 4e-11, displacements to 6e-12. The point-pair and element-pair forms of `w_tol` give the same result on this case |
+| The open mitral input, as it is | 7,200 quad4 shells, 100 chord springs, pressure, mass damping, dynamic (`rhoi` 0), leaflet self-contact | The coverage report accepts it. The run goes to time 0.005 of 0.02 and then stops converging as the leaflets close (3,400 active pairs), with the step cut to its minimum. With the contact removed it runs all 200 steps |
+
+Two details of the template that follow FEBio: the initial accelerations of a dynamic step are solved with the mass alone, without the contact stiffness, and contact forces are not counted in the nodal reaction forces.
+
+What the mitral run lacks, as far as this shows: a line search and FEBio's `tangent_scale` (10 in this input, there to make Newton more robust), neither of which exists here; the projected contact tangent; and possibly the element-pair `w_tol`. Which of these matters is not yet known. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
 
 **Scope.** How the contact potential of pull request 1 ([contact.md](contact.md)) joins a run: where its points come from, how it sits among the terms, where its tangent goes, and when it is switched on. The law, the search and the gradients are in the contact note and are not restated. This closes open items 1 and 2 of the [integration note](integration.md).
 

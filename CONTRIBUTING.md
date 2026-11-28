@@ -132,13 +132,13 @@ Every contribution that changes numerical behavior needs evidence that it is cor
 Tests use `unittest` and live in `tests/`.
 
 ```bash
-# quick tier on CPU (the default): one representative case per area, about 15 s
+# quick tier on CPU (the default): one representative case per area, about 50 s
 uv run -m unittest discover -s tests -v
 
 # the same on a GPU
 WARP_FEBIO_TEST_DEVICE=cuda:0 uv run -m unittest discover -s tests -v
 
-# full tier, before merging to main: about 8 minutes on CPU, 1 minute on a GPU
+# full tier, before merging to main: about 9 minutes on CPU, 3 to 5 minutes on a GPU
 WARP_FEBIO_TEST_LEVEL=full uv run -m unittest discover -s tests -v
 WARP_FEBIO_TEST_LEVEL=full WARP_FEBIO_TEST_DEVICE=cuda:0 uv run -m unittest discover -s tests -v
 
@@ -147,7 +147,15 @@ CUDA_VISIBLE_DEVICES= uv run -m unittest discover -s tests -v
 
 # a subset
 uv run -m unittest discover -s tests -p 'test_material*.py' -v
+
+# with the FEBio test suite problems (skipped without it): a checkout of
+# https://github.com/febiosoftware/TestSuite, whose stored values the tests read
+FEBIO_TEST_SUITE=/path/to/TestSuite uv run -m unittest discover -s tests -v
 ```
+
+- Some tests need something that is not a dependency and are skipped without it, with the reason in the skip count: the FEBio test suite problems need `FEBIO_TEST_SUITE`; the `cudss` linear solver needs `nvmath-python` and CuPy on a machine with a GPU (`uv pip install "nvmath-python[cu12]" cupy-cuda12x`, about 4 GB; keep it out of the project environment unless you need it); the large shell patches run on a GPU only.
+- On a machine with many cores, set `OMP_NUM_THREADS` to a small number (4, say) for CPU runs. The small dense solves of the tests are slowed down, not sped up, by a BLAS that starts a thread per core.
+- A FEBio reference is made with FEBio built by `tools/build_febio.sh` (see the script for its options). State the FEBio version and commit with every reference, and where a comparison is to FEBio's convergence tolerance and not to round-off, say so in the test.
 
 - Run kernel tests on CPU and, where available, on CUDA. Pass the device explicitly, through `wp.ScopedDevice(device)` or `device=device`, instead of relying on the default device. On a machine with a GPU, Warp's default device is `cuda:0`, so a test that relies on it runs on the GPU even in a CPU run.
 - Two environment variables, read in [`tests/support.py`](tests/support.py): `WARP_FEBIO_TEST_DEVICE` names the device (`cpu` by default, `cuda:0` for a GPU), and `WARP_FEBIO_TEST_LEVEL` the tier (`quick` by default, or `full`).

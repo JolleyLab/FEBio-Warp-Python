@@ -59,6 +59,7 @@ def inspect(
     line_support=None,
     discrete_support=None,
     dynamic_support=None,
+    contact_support=None,
 ) -> CoverageReport:
     """Coverage report for a Model. Allocates nothing on the device.
 
@@ -237,7 +238,9 @@ def inspect(
         status, note = known if known is not None else (NOT_SUPPORTED, "")
         rep.add("load", r.type or r.tag, status, r.name or "", note)
     for r in model.contact:
-        rep.add("contact", r.type or r.tag, NOT_SUPPORTED, r.name or "")
+        # contact_support: optional function (record, model) -> (status, note).
+        status, note = contact_support(r, model) if contact_support is not None else (NOT_SUPPORTED, "")
+        rep.add("contact", r.type or r.tag, status, r.name or "", note)
     for r in model.other_sections:
         if r.tag == "Discrete" and discrete_support is not None:
             for row in discrete_support(model):

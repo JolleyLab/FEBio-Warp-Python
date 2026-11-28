@@ -76,6 +76,13 @@ def _prescribed_increment(
 
 
 @wp.kernel
+def _largest_move(du: wp.array(dtype=vec3d), largest: wp.array(dtype=wp.float64)):
+    """largest[0] = max over entries of |du|^2, on the device."""
+    i = wp.tid()
+    wp.atomic_max(largest, 0, wp.length_sq(du[i]))
+
+
+@wp.kernel
 def _add(u: wp.array(dtype=vec3d), du: wp.array(dtype=vec3d)):
     """The "add" update rule of the field table (displacements)."""
     i = wp.tid()
@@ -134,6 +141,8 @@ def solve_step(
     any_prescribed = bool(fields.prescribed)
 
     Ui = wp.zeros(n, dtype=vec3d, device=device)  # total increment of this step
+    moves = [t.max_move for t in system.terms if hasattr(t, "max_move")]
+    max_move = min(moves) if moves else None
     kinematics()
     system.update(state)
     R = system.residual(state)
@@ -148,6 +157,16 @@ def solve_step(
         A = system.constrained_matrix()
         du, linear_iterations = solve(A, rhs, linear_solver)
         system.mask(du)
+        if max_move is not None:
+            # A rule of the contact potential made a rule of the step: no
+            # node moves farther than R_out in one iterate, or a point could
+            # pass through a surface unseen. The step is rejected and cut.
+            # One number comes back to the host, not the increment.
+            moved = wp.zeros(1, dtype=wp.float64, device=device)
+            wp.launch(_largest_move, dim=n, inputs=[du], outputs=[moved], device=device)
+            largest = float(np.sqrt(moved.numpy()[0]))
+            if largest > max_move:
+                raise SolveError(f"a node moved {largest:.3g} in one iterate, more than R_out {max_move:g}")
         if it == 0:
             normRi, normEi = inner(rhs, rhs), abs(inner(du, rhs))
             _apply_increment(system, u, du_p)

@@ -24,10 +24,11 @@ Exclusion (self-contact):
 * different bodies: never excluded;
 * same body and reference distance below ``r_self``: excluded (FEBio ``R0_min``);
 * same body and, depending on ``exclusion``: ``"element"`` drops points of the
-  same source element (FEBio's default: only an element against itself is
-  skipped, neighbors are left to ``w_tol`` and ``R0_min``); ``"neighbors"``
-  drops points whose source elements share a node (FEBio
-  ``exclude_neighbors``); ``"none"`` applies the reference distance only.
+  same source element (FEBio with ``exclude_neighbors`` set to 0: only an
+  element against itself is skipped, neighbors are left to ``w_tol`` and
+  ``R0_min``); ``"neighbors"`` drops points whose source elements share a
+  node (FEBio's default, ``exclude_neighbors`` 1); ``"none"`` applies the
+  reference distance only.
   Element ids are per builder call, so give each builder call its own body
   when using ``"element"``.
 

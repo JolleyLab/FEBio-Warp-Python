@@ -2,7 +2,7 @@
 
 GPU-accelerated, differentiable finite element mechanics for cardiovascular simulation,
 written in Python on [Warp](https://github.com/NVIDIA/warp) and built in concert with the
-[FEBio](https://febio.org) team to support the P3CHD project. The formulations follow FEBio, but deviate where it makes sense for warp. The architecture is designed
+[FEBio](https://febio.org) team to support the [P3 CHD](https://mussallemchdalliance.org/news/the-mussallem-chd-alliance-introduces-p3-chd-a-new-precision-procedural-planning-collaborative-with-leading-academic-centers-in-chd/) project. The formulations follow FEBio, but deviate where it makes sense for warp. The architecture is designed
 for the GPU and for differentiation, follows the development conventions of Warp, and is
 meant to work with [Newton](https://github.com/newton-physics/newton),
 [3D Slicer](https://www.slicer.org) and [SlicerHeart](https://github.com/SlicerHeart/SlicerHeart).
@@ -53,17 +53,17 @@ flowchart LR
         direction TB
         mat["Materials"]:::done
         elem["Solids and shells<br/>hex8, tet4, quad4"]:::done
-        loads["Pressure, fixed and<br/>prescribed displacements"]:::done
+        loads["Pressure, nodal loads, mass damping,<br/>fixed and prescribed displacements"]:::done
         pot["Contact potential<br/>on its own"]:::done
-        chord["Trusses and springs<br/>for chordae, static"]:::done
-        inrun["Contact in a run"]:::todo
+        chord["Trusses and springs<br/>for chordae"]:::done
+        inrun["Contact in a run<br/>first template"]:::done
         beams["Beams, three-field solid,<br/>constraints"]:::todo
     end
     system --> run
     subgraph run["Run path"]
         direction TB
-        static["One static step, Newton,<br/>iterative linear solve"]:::done
-        dyn["Dynamics, several steps,<br/>line search, preconditioning"]:::todo
+        static["One static or dynamic step, Newton,<br/>iterative or direct linear solve"]:::done
+        dyn["Several steps, line search,<br/>quasi-Newton, preconditioning"]:::todo
     end
     run --> results([".xplt, VTKHDF"]):::done
     run -.-> grad["Gradients through<br/>one equilibrium solve"]:::done
@@ -84,14 +84,14 @@ points that are still open.
 |---|---|---|---|---|
 | Model, input and output | `model/`, `io/` | One model object for what a FEBio input defines. Reads and writes `.feb` (all 538 FEBio test suite inputs read and write back equal), reads and writes `.xplt`, writes VTKHDF, exchanges meshes with 3D Slicer. A coverage report and the command line say whether an input can run | Registry of plot and log variables; log file output | [Model and I/O](docs/design/model.md) ([diagram](docs/design/model.md#2-big-picture), [decisions](docs/design/model.md#9-decision-points)), [output](docs/design/output.md) ([diagram](docs/design/output.md#2-from-a-state-to-a-file)) |
 | Materials | `materials/` | FEBio's material structure, compiled into one Warp kernel per material tree, with gradients. Neo-Hookean, isotropic elastic, isotropic Lee-Sacks, HGO (unconstrained and uncoupled), solid mixtures; spring and linear truss laws for chordae. Effective-modulus nitinol: the device model of Zelonis et al. ([arXiv 2507.06337](https://arxiv.org/abs/2507.06337)) and Maheshwari et al. ([J Mech Behav Biomed Mater 2026](https://doi.org/10.1016/j.jmbbm.2026.107642), arXiv 2601.05410), an elastic frame whose Young's modulus steps between compression and release | Under redesign after review. Superelastic nitinol: only a shell of the interface exists (a simple uniaxial law, not for device results), and FEBio has no counterpart to verify against. Ogden, `tangent_scale`, per-element material axes | [Materials](docs/design/materials.md) ([diagram](docs/design/materials.md#at-a-glance), [decisions](docs/design/materials.md#decision-points)) |
-| Contact | `contact/` | Point-based contact potential: pair search on the device, force, tangent, gradients; reads FEBio's `contact potential` block. Tested on its own | Contact inside a run; sliding, sticky and tied contact | [Contact](docs/design/contact.md) ([diagram](docs/design/contact.md#at-a-glance), [decisions](docs/design/contact.md#decision-points)), [contact in a run](docs/design/contact_in_run.md) ([diagram](docs/design/contact_in_run.md#2-where-contact-sits-in-one-iteration)) |
-| Elements | `elements/` | hex8 and tet4 solids, quad4 shell. Draft: two-node trusses (regular and tension-only) and springs for chordae in static steps, with gradients of chord tension. Tested on CPU and on a GPU | Mass and dynamics for trusses; three-field solid, penta6, tri3 shell; beams | [Chordae](docs/design/chordae.md) ([diagram](docs/design/chordae.md#2-from-the-input-to-a-term)), [elements](docs/design/elements.md) ([diagram](docs/design/elements.md#3-selection)) |
+| Contact | `contact/` | Point-based contact potential: pair search on the device, force, tangent, gradients; reads FEBio's `contact potential` block. Tested on its own. First template of the potential as a term of a run, with its tangent in a matrix of its own; two small cases agree with FEBio | Leaflet closure of the open mitral input (the run stops converging there); FEBio's element-pair form of `w_tol`; activation by step; sliding, sticky and tied contact | [Contact](docs/design/contact.md) ([diagram](docs/design/contact.md#at-a-glance), [decisions](docs/design/contact.md#decision-points)), [contact in a run](docs/design/contact_in_run.md) ([diagram](docs/design/contact_in_run.md#2-where-contact-sits-in-one-iteration)) |
+| Elements | `elements/` | hex8 and tet4 solids, quad4 shell. Draft: two-node trusses (regular and tension-only) and springs for chordae, with gradients of chord tension and the chord force on a node set (a papillary tip) as an output. Consistent mass for hex8, quad4 shell and truss. Tested on CPU and on a GPU | Trusses in a dynamic run against FEBio (suite `dy16`, `dy17`); tet4 mass; three-field solid, penta6, tri3 shell; beams | [Chordae](docs/design/chordae.md) ([diagram](docs/design/chordae.md#2-from-the-input-to-a-term)), [elements](docs/design/elements.md) ([diagram](docs/design/elements.md#3-selection)) |
 | Unknowns and assembly | `discretization/`, `assembly/` | Unknowns by (node, variable); full assembly of residual and tangent into a block sparse matrix with a fixed pattern | Timing on a GPU at application size | [Run path](docs/design/run_path.md) ([diagram](docs/design/run_path.md#2-the-path), [decisions](docs/design/run_path.md#12-decision-points)), [assembly](docs/design/assembly.md) |
-| Loads and constraints | `loads/`, `constraints/` | Follower pressure; nodal loads; fixed and prescribed displacements | Body force, mass damping; normal-displacement and multipoint constraints | [Dynamics](docs/design/dynamics.md), [constraints](docs/design/constraints.md) ([diagram](docs/design/constraints.md#2-how-a-constrained-component-is-handled)) |
-| Solvers | `solvers/` | Full Newton; Warp's CG, BiCGSTAB and GMRES on the device; a dense direct solve for checks | Line search, quasi-Newton, preconditioning for shells, a direct solver on the device | [Run path](docs/design/run_path.md) ([one Newton iteration](docs/design/run_path.md#3-one-newton-iteration)), [linear solve](docs/design/linear_solve.md) ([diagram](docs/design/linear_solve.md#2-choosing-a-method)) |
-| Analysis | `analysis/` | One static step with FEBio's automatic time stepper | Implicit dynamics; several steps | [Run path](docs/design/run_path.md), [dynamics](docs/design/dynamics.md) ([one dynamic step](docs/design/dynamics.md#2-one-dynamic-step)) |
-| Sensitivity | `sensitivity/` | Adjoint gradients through one equilibrium solve, checked against finite differences and a closed form | Gradients over steps and trajectories | [Sensitivity](docs/design/sensitivity.md) ([diagram](docs/design/sensitivity.md#2-forward-run-and-reverse-sweep)) |
-| Verification | `tests/`, `references/` | Stored FEBio references for material points, single elements, small meshes and 22 small problems; agreement to about 1e-12. Tests in a quick and a full tier, on CPU and on a GPU | A runner for FEBio test suite problems; the application inputs | [Verification](docs/design/verification.md) ([diagram](docs/design/verification.md#at-a-glance), [decisions](docs/design/verification.md#decision-points)) |
+| Loads and constraints | `loads/`, `constraints/` | Follower pressure; nodal loads; mass damping on a whole part; fixed and prescribed displacements. With one step, loads written inside the step | Constant body force; mass damping on part of a part; activation by step; normal-displacement and multipoint constraints | [Dynamics](docs/design/dynamics.md), [constraints](docs/design/constraints.md) ([diagram](docs/design/constraints.md#2-how-a-constrained-component-is-handled)) |
+| Solvers | `solvers/` | Full Newton; Warp's CG, BiCGSTAB and GMRES on the device; a dense direct solve for checks and a sparse LU on the host; optionally NVIDIA cuDSS on the device (through nvmath-python, not a dependency), which took a shell patch from 20 s to 2 s | Line search, quasi-Newton, FEBio's `tangent_scale`, preconditioning for shells; the transpose solve from cuDSS factors for the adjoint | [Run path](docs/design/run_path.md) ([one Newton iteration](docs/design/run_path.md#3-one-newton-iteration)), [linear solve](docs/design/linear_solve.md) ([diagram](docs/design/linear_solve.md#2-choosing-a-method)) |
+| Analysis | `analysis/` | One static step, or one implicit dynamic step series as FEBio's solid solver takes it (alpha_f = 1: the defaults, `rhoi` 0 or -1), with FEBio's automatic time stepper | alpha_f below 1; several steps | [Run path](docs/design/run_path.md), [dynamics](docs/design/dynamics.md) ([one dynamic step](docs/design/dynamics.md#2-one-dynamic-step)) |
+| Sensitivity | `sensitivity/` | Adjoint gradients through one equilibrium solve or one dynamic step, checked against finite differences and a closed form | Gradients over steps and trajectories; contact in the adjoint of a run | [Sensitivity](docs/design/sensitivity.md) ([diagram](docs/design/sensitivity.md#2-forward-run-and-reverse-sweep)) |
+| Verification | `tests/`, `references/` | Stored FEBio references for material points, single elements, small meshes and 22 small problems; agreement to about 1e-12. Two dynamic cases, two contact cases and a shell patch on chord springs (static and dynamic) agree with FEBio. Tests in a quick and a full tier, on CPU and on a GPU | A runner for FEBio test suite problems; the application inputs | [Verification](docs/design/verification.md) ([diagram](docs/design/verification.md#at-a-glance), [decisions](docs/design/verification.md#decision-points)) |
 
 Where to read more:
 

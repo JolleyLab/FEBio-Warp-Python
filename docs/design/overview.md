@@ -75,27 +75,27 @@ flowchart TB
 | Unknowns | Variable names; free, fixed and prescribed states | Numbered by (node, variable) with 3x3 blocks; constrained components masked, not removed, so the matrix pattern never changes |
 | Domains and loads | What each computes, integration rules, node order, sign of the residual (external minus internal) | One contract for domains, loads and contact; flat point data; one kernel set per material tree |
 | Materials | Parameters, ranges, axes, mixtures, formulas checked against FEBio source and runs | Composition happens before compilation; failure is a status code per point, since a kernel cannot throw |
-| Contact potential | The law, its parameters, the default integration points | Gates applied per point pair; an optional radius offset per point; listed in the contact note |
-| Nonlinear solve | Prescribed displacements, convergence norms, `max_refs`, the time stepper and its retries | Full Newton to start; no line search or BFGS yet |
+| Contact potential | The law, its parameters, the default integration points, the exclusion of neighboring elements | Gates applied per point pair; an optional radius offset per point; in a run, the contact tangent in a matrix of its own. Listed in the contact notes and in [deviations.md](deviations.md) |
+| Nonlinear solve | Prescribed displacements, convergence norms, `max_refs`, the time stepper and its retries; in a dynamic step, FEBio's time integration and initial accelerations | Full Newton to start; no line search or BFGS yet. The mass damping stiffness is the derivative of its force by default, with FEBio's form as a setting |
 | State | What a converged step holds | A step maps one State to the next and does not modify the model, so a run can be differentiated |
 | Gradients | None in FEBio | Adjoint through equilibrium using the transpose of the tangent, and `wp.Tape` for the residual. An exact tangent is available where FEBio's is approximate (symmetrized pressure stiffness) |
 
 ## 5. First templates: nothing here is settled
 
-These areas have a first shape in the run path template, or only a placeholder. Each now has a short design note with a flow diagram, a proposed approach, what has been explored and the decision points for the team, and no code beyond the template. [remaining_areas.md](remaining_areas.md) orders them along the path to the first application runs.
+These areas have a first shape in the run path template, or only a placeholder. Each has a short design note with a flow diagram, a proposed approach, what has been explored and the decision points for the team. Since November 28 several have first template code on branches (trusses and springs, nodal loads, one dynamic step with mass damping, two direct linear solves, the contact potential in a run); the table below is updated for those, and [deviations.md](deviations.md) lists where that code differs from FEBio. [remaining_areas.md](remaining_areas.md) orders them along the path to the first application runs.
 
 | Area | First template | Not yet | Design note |
 | --- | --- | --- | --- |
-| Elements | hex8 and tet4 solids on `warp.fem`; hex8 and quad4 shell on a dedicated kernel | Trusses and springs for chordae (valve path, first); the three-field element, penta6 and tri3 shell (device path) | [chordae.md](chordae.md), [elements.md](elements.md) |
-| Loads | Follower pressure on quad4 facets | `mass damping`, nodal forces, pressure on tri3 facets | [dynamics.md](dynamics.md) for `mass damping` |
+| Elements | hex8 and tet4 solids on `warp.fem`; hex8 and quad4 shell on a dedicated kernel; two-node trusses and springs for chordae; consistent mass for hex8, quad4 shell and truss | tet4 mass; the three-field element, penta6 and tri3 shell (device path) | [chordae.md](chordae.md), [elements.md](elements.md) |
+| Loads | Follower pressure on quad4 facets; nodal loads; `mass damping` on a whole part | The constant body force; mass damping on part of a part; pressure on tri3 facets | [dynamics.md](dynamics.md) for `mass damping` |
 | Constraints | Fixed and prescribed displacements by masking | `normal displacement`, linear constraints, rigid bodies and joints | [constraints.md](constraints.md) |
-| Linear solve | Warp's CG, BiCGSTAB and GMRES with a Jacobi preconditioner | A stronger preconditioner or a direct solver on the device, which thin shells need (Warp's `FSAI` and block Jacobi, and cuDSS, are the options known to us); line search and quasi-Newton | [linear_solve.md](linear_solve.md) |
-| Steps | One static step with FEBio's time stepper | Dynamic analysis, several steps, activation by step | [dynamics.md](dynamics.md) |
-| Contact in the run | The contact draft's interface is planned to attach as a term | Its residual sign changed to FEBio's; contact points built from the model's surfaces; pair updates inside the Newton loop | [contact_in_run.md](contact_in_run.md) |
-| Sensitivity | Parameter gradients through one equilibrium solve; the solve as one step on a tape | History, dynamics, contact pairing, shape gradients | [sensitivity.md](sensitivity.md) |
+| Linear solve | Warp's CG, BiCGSTAB and GMRES with a Jacobi preconditioner; a sparse LU on the host; optionally cuDSS on the device, which took a shell patch from 20 s to 2 s | A stronger preconditioner for large solids; the transpose solve from cuDSS factors for the adjoint; line search and quasi-Newton | [linear_solve.md](linear_solve.md) |
+| Steps | One static step, or one dynamic step series with alpha_f = 1, with FEBio's time stepper | alpha_f below 1, several steps, activation by step | [dynamics.md](dynamics.md) |
+| Contact in the run | The contact potential as a term, with points from the model's surfaces, pairs found at every iterate and its tangent in a matrix of its own; small cases and suite `co62` agree with FEBio | Leaflet closure of the open mitral input, which needs a line search and a step limit; FEBio's element-pair `w_tol`; contact in the adjoint | [contact_in_run.md](contact_in_run.md) |
+| Sensitivity | Parameter gradients through one equilibrium solve or one dynamic step; the solve as one step on a tape; chord tension and chord force on a node set as objectives | History, several dynamic steps, contact pairing, shape gradients | [sensitivity.md](sensitivity.md) |
 | Output | Displacement, stress, reaction force | The registry of FEBio plot variables | [output.md](output.md) |
 | Newton (the physics library) | The step is functional and state is separate, as Newton's solvers expect | A wrapper with Newton's `step` signature; nodal forces in, positions out | [run_path.md](run_path.md), section 6 |
-| Performance | Double precision, checked for correctness on CPU and on a GPU | Timing on a GPU; single precision where it is adequate | [linear_solve.md](linear_solve.md), section 6 |
+| Performance | Double precision, checked for correctness on CPU and on a GPU; first whole-run timings on a GPU with four linear solves | Timing at application size; single precision where it is adequate | [linear_solve.md](linear_solve.md), section 6 |
 
 Design shells, kept in view so that nothing built now closes them off: beam elements for device frames, a superelastic nitinol law for those beams, rigid bodies and joints, sliding and sticky contact.
 

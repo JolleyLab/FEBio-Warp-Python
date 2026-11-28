@@ -15,7 +15,9 @@ from support import DEVICE, setUpModule, tearDownModule  # noqa: F401  (device f
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "references")
 PRESSURE = os.path.join(ROOT, "single_element", "hex8_pressure.feb")
-MITRAL = os.path.join(ROOT, "febio", "originals", "cardiofem", "valve_pressurization", "mitral_p2prolapse.feb")
+# An input the run path cannot run: a prescribed deformation is not supported.
+# (The open mitral input served here until dynamics and contact were templated.)
+NOT_RUNNABLE = os.path.join(ROOT, "small_problems", "inputs", "bk_ring_in_tube.feb")
 
 try:
     import warp as wp
@@ -44,14 +46,14 @@ class CommandLine(unittest.TestCase):
         self.assertIn("Verdict: runnable", text)
 
     def test_inspect_reports_an_input_that_cannot_run(self):
-        code, text = call(["inspect", MITRAL])
+        code, text = call(["inspect", NOT_RUNNABLE])
         self.assertEqual(code, 1)
         self.assertIn("Verdict: not yet runnable", text)
 
     def test_run_refuses_an_input_that_cannot_run(self):
         with tempfile.TemporaryDirectory() as tmp:
-            out = os.path.join(tmp, "mitral.xplt")
-            code, text = call(["run", MITRAL, "-o", out, "--device", DEVICE])
+            out = os.path.join(tmp, "refused.xplt")
+            code, text = call(["run", NOT_RUNNABLE, "-o", out, "--device", DEVICE])
             self.assertEqual(code, 1)
             self.assertIn("Verdict: not yet runnable", text)
             self.assertFalse(os.path.exists(out))

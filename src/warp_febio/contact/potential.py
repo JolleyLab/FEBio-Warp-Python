@@ -192,7 +192,9 @@ def from_febio_block(block, scale: float = 1.0):
     higher = rule in ("higher-order", "1")
     contact_kwargs = {
         "w_tol": get("w_tol", 0.0),
-        "exclusion": ("neighbors" if int(get("exclude_neighbors", 0)) == 1 else "element"),
+        # FEContactPotential: m_excludeNeighbors = true unless the input says
+        # otherwise (before FEBio 4.12 neighbors were always excluded).
+        "exclusion": ("neighbors" if int(get("exclude_neighbors", 1)) == 1 else "element"),
         "weight_mode": "current",
     }
     point_rule = {
