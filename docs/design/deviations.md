@@ -69,3 +69,4 @@ Points a reviewer might expect to differ, and that were checked against the sour
 2. Would the derivative of the mass damping force, C gamma/(beta dt), be welcome as FEBio's stiffness for it?
 3. Would a tension-only truss, and an axial force plot variable for trusses, be of use in FEBio (rows 10 and 12)?
 4. Is the per-element-pair form of `w_tol` essential to the contact potential's results on valve models, or a cost saving (row 5)?
+5. With the normal test `w_tol`, about a fifth of the contact area of the open mitral input at closure comes from pairs between nearby points of the same leaflet, not from one leaflet meeting another ([contact_in_run.md](contact_in_run.md), section 6). FEBio's contact area agrees with the one computed here to one percent, so the same is presumably true there. Is that known, and is the contact area used as a measure of coaptation? Excluding pairs by reference distance (`R0_min`) removes it.
