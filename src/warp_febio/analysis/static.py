@@ -352,7 +352,7 @@ def solve_step(cm, u0, time, settings, linear_solver, say):
     du_p[pdofs] = pvals - u[pdofs]
     Ui = np.zeros(cm.ndof)  # total increment of the free equations in this step
     free = cm.free
-    for it in range(max_refs + 1):
+    for it in range(max_refs):
         residual, triplets = evaluate(cm, State(time, wp.array(u, dtype=wp.float64, device=device)))
         rhs = residual
         if it == 0 and len(pdofs):
@@ -459,7 +459,7 @@ def run(cm: CompiledModel, log=None, linear_solver: str = "cg") -> Results:
         if controller is not None:
             controller.retries = 0
             if time + eps < tend:
-                # FEBio passes its iteration counter, which is one less than
-                # the number of solves in the converged step.
-                dt = controller.auto(iterations - 1, time, dt)
+                # FEBio passes m_niter, the number of Newton iterations of
+                # the converged step (FEAnalysis.cpp, AutoTimeStep call).
+                dt = controller.auto(iterations, time, dt)
     return results
