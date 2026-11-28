@@ -222,7 +222,13 @@ def inspect(
         )
     for step in model.steps:
         _inspect_control(step.control, rep, f"step {step.id}", dynamic_support)
-        for r in step.loads + step.contact + step.other:
+        for r in step.loads:
+            # With one step, a load of the step acts for the whole analysis,
+            # as a load of the model does. Activation by step is reserved.
+            known = load_support(r, model) if load_support is not None and len(model.steps) == 1 else None
+            status, note = known if known is not None else (NOT_SUPPORTED, "")
+            rep.add("load", r.type or r.tag, status, f"step {step.id}: {r.name or ''}", note)
+        for r in step.contact + step.other:
             rep.add(r.tag, r.type or r.tag, NOT_SUPPORTED, f"step {step.id}")
     for r in model.boundary + [b for s in model.steps for b in s.boundary]:
         _inspect_bc(r, model, rep)

@@ -310,11 +310,14 @@ class Coverage(unittest.TestCase):
         model = read_feb(os.path.join(ORIGINALS, "cardiofem", "valve_pressurization", "mitral_p2prolapse.feb"))
         report = inspect(model)
         missing = {e.febio_name for e in report.missing()}
-        # The material layer has isotropic Lee-Sacks; what it lacks for this
-        # input is FEBio's tangent_scale parameter (10 here), which multiplies
-        # c0 in the tangent only (FEIsotropicLeeSacks::Tangent).
+        # This is the fixture's report, without what the run path adds
+        # (springs, loads, dynamics, contact). FEBio's tangent_scale (10
+        # here) multiplies c0 in the tangent only
+        # (FEIsotropicLeeSacks::Tangent), so it is listed as having no effect
+        # on the solution and not as missing.
+        scale = next(e for e in report.entries if e.febio_name == "isotropic Lee-Sacks.tangent_scale")
+        self.assertEqual(scale.status, "no effect here")
         for name in (
-            "isotropic Lee-Sacks.tangent_scale",
             "contact potential",
             "nonlinear spring",
             "pressure",

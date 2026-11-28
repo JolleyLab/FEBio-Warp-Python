@@ -195,7 +195,8 @@ def build_system(model, device=None, solids: str = "dedicated") -> System:
     terms = [select_domain(model, b, fields, directors, device, solids) for b in model.mesh.blocks]
     # Springs of the Discrete section: one term per spring law in use.
     terms += build_discrete_domains(model, fields, device)
-    for record in model.loads:
+    # The loads of the model and, with one step, those of the step.
+    for record in model.loads + (model.steps[0].loads if len(model.steps) == 1 else []):
         if record.type == mass_damping.TYPE:
             continue  # not a term: applied through the mass blocks, below
         terms.append(select_load(record, model, fields, directors, device))
