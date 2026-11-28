@@ -36,6 +36,7 @@ import warp as wp
 
 from ..assembly.system import SolveError, State, System
 from ..compiled import inspect, shell_directors
+from ..contact.in_run import ContactPotentialInRun, inspect_contact
 from ..coverage import IMPLEMENTED, NO_EFFECT, NOT_SUPPORTED, CoverageError
 from ..discretization.fields import FIXED, PRESCRIBED, build_field_table
 from ..elements.brick_domain import BrickDomain
@@ -92,6 +93,7 @@ def inspect_model(model):
         line_support=line_support,
         discrete_support=discrete_support,
         dynamic_support=dynamic_support,
+        contact_support=inspect_contact,
     )
     if is_dynamic(model):
         for block in model.mesh.blocks:
@@ -200,8 +202,9 @@ def build_system(model, device=None, solids: str = "dedicated") -> System:
         if record.type == mass_damping.TYPE:
             continue  # not a term: applied through the mass blocks, below
         terms.append(select_load(record, model, fields, directors, device))
-    # Contact interfaces are appended here as further terms; not implemented
-    # in this template.
+    # Contact interfaces, after the domains and loads as in FEBio's solver.
+    for record in model.contact:
+        terms.append(ContactPotentialInRun(record, model, fields, device))
     system = System(model, fields, terms, device)
     system.report = report
     if is_dynamic(model):

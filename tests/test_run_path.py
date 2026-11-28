@@ -223,17 +223,26 @@ class RunPath(unittest.TestCase):
         from warp_febio.analysis.steps import build_system
         from warp_febio.coverage import CoverageError
 
-        path = os.path.join(
-            ROOT,
-            "references",
-            "febio",
-            "originals",
-            "cardiofem",
-            "valve_pressurization",
-            "mitral_p2prolapse.feb",
-        )
+        # A prescribed deformation is not supported.
+        path = os.path.join(ROOT, "references", "small_problems", "inputs", "bk_ring_in_tube.feb")
         with self.assertRaises(CoverageError):
             build_system(read_feb(path), device=DEVICE)
+
+    def test_open_mitral_input_is_reported_runnable(self):
+        """With springs, a pressure in the step, dynamics, mass damping and
+        the contact potential templated, the coverage report accepts the open
+        mitral input. That is a statement about features, not about results:
+        the run does not yet get through leaflet closure (work plan)."""
+        from warp_febio.analysis.steps import inspect_model
+
+        path = os.path.join(
+            ROOT, "references", "febio", "originals", "cardiofem", "valve_pressurization", "mitral_p2prolapse.feb"
+        )
+        report = inspect_model(read_feb(path))
+        self.assertTrue(report.runnable)
+        notes = " ".join(e.note for e in report.entries)
+        self.assertIn("w_tol is applied per point pair", notes)
+        self.assertIn("scales the Newton tangent only", notes)
 
 
 if __name__ == "__main__":

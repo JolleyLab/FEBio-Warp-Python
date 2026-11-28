@@ -404,7 +404,7 @@ class System:
 
     # -- matrices ------------------------------------------------------------
 
-    def constrained_matrix(self):
+    def constrained_matrix(self, with_contact: bool = True):
         """The matrix the linear solve uses, from the last `tangent`. The
         sparsity is analysed at the first call; later calls refill values."""
         total = self.block_count
@@ -427,7 +427,17 @@ class System:
             self._A.nnz_sync()
         else:
             warp.sparse.bsr_set_from_mapped_values(self._A, self._map, self.constrained_vals)
-        return self._A
+        # Terms whose pattern follows the solution (contact) keep their
+        # blocks in a matrix of their own. The structural matrix and its map
+        # stay as they are; the sum is a new matrix.
+        extra = [K for K in (t.contact_matrix(self.free) for t in self.terms if hasattr(t, "contact_matrix")) if K]
+        if not extra or not with_contact:
+            return self._A
+        total = warp.sparse.bsr_copy(self._A)
+        for K in extra:
+            warp.sparse.bsr_axpy(K, total)
+        total.nnz_sync()
+        return total
 
     def mass_matrix(self):
         """The constrained mass matrix, for the initial accelerations. It
@@ -443,7 +453,9 @@ class System:
             outputs=[self.vals],
             device=self.device,
         )
-        return self.constrained_matrix()
+        # The mass alone, as FESolidSolver2::InitAccelerations builds it: no
+        # contact stiffness, even if pairs are active at time zero.
+        return self.constrained_matrix(with_contact=False)
 
     def apply_tangent(self, x: wp.array, y: wp.array, alpha: float = 1.0) -> None:
         """y += alpha K x with the unconstrained K of the last `tangent`."""
