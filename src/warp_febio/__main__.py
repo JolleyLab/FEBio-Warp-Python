@@ -36,10 +36,9 @@ def main(argv=None):
     if args.command == "inspect":
         # Importing the run path imports Warp. The model and the file layers
         # above do not need it.
-        from .analysis.steps import domain_support, load_support
-        from .compiled import inspect
+        from .analysis.steps import inspect_model
 
-        report = inspect(model, load_support=load_support, domain_support=domain_support)
+        report = inspect_model(model)
         print(report.table())
         return 0 if report.runnable else 1
     from .analysis.steps import build_system, run

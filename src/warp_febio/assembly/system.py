@@ -313,9 +313,19 @@ class System:
         wp.launch(_mask_vector, dim=self.n, inputs=[x, self.free], device=self.device)
 
     def parameters(self) -> dict:
-        """All differentiable parameter arrays, keyed "term name.parameter set"."""
+        """All differentiable parameter arrays, keyed "term name.parameter set".
+
+        A term that holds several named groups gives full names itself (the
+        springs of a model: "discrete set name.material"); see
+        `qualified_parameters` on the term."""
         out = {}
         for term in self.terms:
+            qualified = getattr(term, "qualified_parameters", False)
             for key, array in term.parameters().items():
-                out[f"{term.name}.{key}"] = array
+                name = key if qualified else f"{term.name}.{key}"
+                if name in out:
+                    raise ValueError(
+                        f"two parameter arrays are named {name!r}; part and discrete set names must differ"
+                    )
+                out[name] = array
         return out

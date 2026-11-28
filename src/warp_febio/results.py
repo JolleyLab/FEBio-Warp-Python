@@ -22,6 +22,11 @@ class StateResult:
                         the plain mean over integration points, as FEBio's
                         plot variable "stress" (FEPlotElementStress).
     stress_points       part name -> (E, Q, 3, 3) stress at integration points
+    truss_stretch       truss part name -> (E,) FEBio's "truss stretch"
+    axial_force         truss part name -> (E,) axial force, tension positive.
+                        Not a FEBio plot variable; it is the chord tension
+    discrete            discrete set name -> {FEBio plot variable name: array}
+                        for the springs of that set
     """
 
     time: float
@@ -32,6 +37,9 @@ class StateResult:
     iterations: int = 0
     #: FEBio's nodal reaction forces (N, 3); set by the run path template.
     reaction_force: np.ndarray | None = None
+    truss_stretch: dict = field(default_factory=dict)
+    axial_force: dict = field(default_factory=dict)
+    discrete: dict = field(default_factory=dict)
 
 
 @dataclass

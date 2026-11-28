@@ -52,7 +52,9 @@ DOF_NAMES = ("x", "y", "z", "sx", "sy", "sz")
 PLOT_VARIABLES = {"displacement", "stress"}
 
 
-def inspect(model: Model, load_support=None, domain_support=None) -> CoverageReport:
+def inspect(
+    model: Model, load_support=None, domain_support=None, line_support=None, discrete_support=None
+) -> CoverageReport:
     """Coverage report for a Model. Allocates nothing on the device.
 
     load_support: optional function (record, model) -> (status, note) or None,
@@ -60,6 +62,12 @@ def inspect(model: Model, load_support=None, domain_support=None) -> CoverageRep
     load is reported as not supported, as this fixture has none.
     domain_support: optional function (kind, element type, domain type) ->
     bool, for element types a run path has beyond this fixture's two.
+    line_support: optional function (model, block, domain) -> list of report
+    rows or None, for parts of two-node elements (trusses). It reports the
+    domain, its settings and its material itself, since a truss material is
+    not a solid material.
+    discrete_support: optional function (model) -> list of report rows for the
+    Discrete section (springs). Without it the section is not supported.
     """
     rep = CoverageReport()
     for issue in model.issues:
@@ -91,6 +99,11 @@ def inspect(model: Model, load_support=None, domain_support=None) -> CoverageRep
             continue
         dtype = dom.params.attrs.get("type")
         where = f"part {block.name}"
+        rows = line_support(model, block, dom) if line_support is not None else None
+        if rows is not None:
+            for row in rows:
+                rep.add(*row)
+            continue
         if dom.kind == "SolidDomain" and block.febio_type == "hex8" and dtype in (None, "elastic-solid"):
             rep.add("domain", "elastic-solid, hex8", IMPLEMENTED, where)
         elif dom.kind == "ShellDomain" and block.febio_type == "quad4" and dtype in (None, "elastic-shell"):
@@ -153,7 +166,10 @@ def inspect(model: Model, load_support=None, domain_support=None) -> CoverageRep
         nodes = set(np.unique(block.connectivity).tolist())
         if kind == "ShellDomain":
             shell_nodes |= nodes
-        else:
+        elif kind == "SolidDomain":
+            # FindSSI looks at solid domains only. A truss or a spring that
+            # shares a node with a shell acts on the node's `displacement`
+            # degrees of freedom (the front face) and ties nothing.
             solid_nodes |= nodes
     if shell_nodes & solid_nodes:
         rep.add(
@@ -206,6 +222,10 @@ def inspect(model: Model, load_support=None, domain_support=None) -> CoverageRep
     for r in model.contact:
         rep.add("contact", r.type or r.tag, NOT_SUPPORTED, r.name or "")
     for r in model.other_sections:
+        if r.tag == "Discrete" and discrete_support is not None:
+            for row in discrete_support(model):
+                rep.add(*row)
+            continue
         if r.children:
             for c in r.children:
                 rep.add(r.tag, c.type or c.tag, NOT_SUPPORTED, c.name or "")
