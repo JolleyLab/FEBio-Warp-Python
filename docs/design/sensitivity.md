@@ -2,7 +2,7 @@
 
 First template for discussion, November 26, 2026 (v0.2). Design only: there is no code for this note beyond what the run path already has. Nothing here is settled. Part of the set introduced in [remaining_areas.md](remaining_areas.md).
 
-**Status, November 28, 2026.** One piece now exists beyond the run path: the gradient through one dynamic step that starts from a state independent of the parameters, checked against central differences on a shell patch with pressure and mass damping ([dynamics.md](dynamics.md), section 6). Newton's default tangent for mass damping is now the derivative of the damping force, so that case no longer needs a separate exact tangent (decision D4 there). Gradients of chord tension and of the chord force on a node set through a static solve are in [chordae.md](chordae.md). Contact in a run is not yet in the adjoint. The reverse sweep over steps described below is still design only.
+**Status, November 28, 2026.** One piece now exists beyond the run path: the gradient through one dynamic step that starts from a state independent of the parameters, checked against central differences on a shell patch with pressure and mass damping ([dynamics.md](dynamics.md), section 6). Newton's default tangent for mass damping is now the derivative of the damping force, so that case no longer needs a separate exact tangent (decision D4 there). Gradients of chord tension and of the chord force on a node set through a static solve are in [trusses_and_springs.md](trusses_and_springs.md). Contact in a run is not yet in the adjoint. The reverse sweep over steps described below is still design only.
 
 **Scope.** How the adjoint of the run path, which differentiates one equilibrium solve, extends to a dynamic run of many steps with history and contact, and which decisions the team needs to make for that to work.
 
@@ -64,7 +64,7 @@ Newton only needs a direction, so FEBio is free to use an approximate tangent. T
 | `tangent_scale` on `isotropic Lee-Sacks` | `c0` multiplied by the scale in the tangent only | The unscaled tangent | Integration note |
 | `mass damping` | C/dt | C gamma/(beta dt) | `FEMassDamping::stiffness`; found while writing [dynamics.md](dynamics.md) |
 
-Point 4 of the run path note asks Steve and Jeff whether there are others. The third row is one answer found in the source. One case found to be exact: the stiffness of FEBio's `linear-truss` domain is the derivative of its force ([chordae.md](chordae.md)). Not yet checked: the three-field solid.
+Point 4 of the run path note asks Steve and Jeff whether there are others. The third row is one answer found in the source. One case found to be exact: the stiffness of FEBio's `linear-truss` domain is the derivative of its force ([trusses_and_springs.md](trusses_and_springs.md)). Not yet checked: the three-field solid.
 
 ## 5. Initial explorations
 
@@ -118,8 +118,8 @@ Listed to show which parameters must be device arrays. None is implemented.
 
 | Application | Variable | Where it lives |
 | --- | --- | --- |
-| Valve | Chord cross-sectional area, modulus and rest length (truss chordae) | Per-element arrays of the truss domain ([chordae.md](chordae.md)) |
-| Valve | Chord slack length and stiffness (spring chordae) | Spring curve points and `scale` ([chordae.md](chordae.md)) |
+| Valve | Chord cross-sectional area, modulus and rest length (truss chordae) | Per-element arrays of the truss domain ([trusses_and_springs.md](trusses_and_springs.md)) |
+| Valve | Chord slack length and stiffness (spring chordae) | Spring curve points and `scale` ([trusses_and_springs.md](trusses_and_springs.md)) |
 | Valve | Leaflet material parameters | Material parameter arrays (pull request 2) |
 | Valve | Pressure | The pressure array of the run path |
 | Device | Vessel wall parameters, which are often unknown for a patient | Material parameter arrays |

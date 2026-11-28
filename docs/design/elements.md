@@ -6,7 +6,7 @@ First template for discussion, November 26, 2026 (v0.2). Design only: there is n
 
 ## 1. Summary
 
-- **Valve path: quad4 shells and trusses.** All of the lab's valve models in FEBio use quad4 shells, and the valve work stays on them. The quad4 shell exists in the run path. Chordae are trusses in current practice and springs in the open mitral input. The truss is therefore the first new element, and it is described in [chordae.md](chordae.md).
+- **Valve path: quad4 shells and trusses.** All of the lab's valve models in FEBio use quad4 shells, and the valve work stays on them. The quad4 shell exists in the run path. Chordae are trusses in current practice and springs in the open mitral input. The truss is therefore the first new element, and it is described in [trusses_and_springs.md](trusses_and_springs.md).
 - **Device path: what the TPVR input uses.** tri3 shells (the two crimping tubes), penta6 (part of the vessel wall) and the three-field solid on hex8 and penta6 (uncoupled HGO). tet4 for the device exists through `warp.fem`. These come after the valve path.
 - **One wedge kernel could serve penta6 and the tri3 shell**, as one brick kernel already serves hex8 and the quad4 shell. FEBio gives the two the same six integration points and weights.
 - **The three-field solid adds no unknowns and no matrix pattern.** Its pressure and dilatation are per-element values.
@@ -17,8 +17,8 @@ First template for discussion, November 26, 2026 (v0.2). Design only: there is n
 | Order | Element | Path | State | Note |
 | --- | --- | --- | --- | --- |
 | 0 | quad4 shell (`elastic-shell`) | Valve | Template in the run path, matches FEBio on single elements and small patches | Section 4 |
-| 1 | Two-node truss (`linear-truss`), with FEBio's `linear truss` or a tension-only law | Valve | Draft domain for static steps, matches FEBio on small inputs and on suite `bt01`; mass and dynamics not yet | [chordae.md](chordae.md) |
-| 2 | Two-node spring (`discrete`) | Valve (open mitral input) | Draft domain with FEBio's three spring laws, matches FEBio on small inputs and on suite `di01`, `di02` | [chordae.md](chordae.md) |
+| 1 | Two-node truss (`linear-truss`), with FEBio's `linear truss` or a tension-only law | Valve | Draft domain for static steps, matches FEBio on small inputs and on suite `bt01`; mass and dynamics not yet | [trusses_and_springs.md](trusses_and_springs.md) |
+| 2 | Two-node spring (`discrete`) | Valve (open mitral input) | Draft domain with FEBio's three spring laws, matches FEBio on small inputs and on suite `di01`, `di02` | [trusses_and_springs.md](trusses_and_springs.md) |
 | 3 | tet4, hex8 solids | Device | Template in the run path through `warp.fem` | Run path note |
 | 4 | Three-field solid on hex8 | Device (vessel) | Uncoupled HGO exists at a material point; no element | Section 5 |
 | 5 | penta6 solid and three-field penta6 | Device (vessel) | None | Section 5 |
@@ -62,7 +62,7 @@ The open mitral input declares `ShellDomain ... type="elastic-shell"` on quad4 e
 | Pressure on the front and back face | Template, with an exact tangent on request |
 | Nodal normals, thickness from element data | Read by the template |
 | Mass and inertia | Consistent mass for hex8, quad4 shell and truss, as one number per stiffness block ([dynamics.md](dynamics.md)). Not for tet4, which runs through warp.fem |
-| Trusses and springs sharing leaflet nodes | Draft, static: a quad4 patch held by truss chords matches FEBio to 4e-12 ([chordae.md](chordae.md)) |
+| Trusses and springs sharing leaflet nodes | Draft, static: a quad4 patch held by truss chords matches FEBio to 4e-12 ([trusses_and_springs.md](trusses_and_springs.md)) |
 | The linear solve at application size | Open; in [linear_solve.md](linear_solve.md) |
 
 FEBio also has two other quad shell domains, `elastic-shell-eas` and `elastic-shell-ans`, selected by the element types `q4eas` and `q4ans` or the control setting `shell_formulation`. The open mitral input does not use them. They are decision E1.
@@ -112,7 +112,7 @@ FEBio test suite first (commit `986005f`), then small inputs for what the suite 
 | Element | Suite problems | Gap, covered by a small input |
 | --- | --- | --- |
 | quad4 shell | `sh52` (one element, prescribed), `sh54` (one element, pressure), `sh02`, `sh06`, `sh05`, `sh56` (20 to 180 elements, nodal force or pressure), `dy13`, `dy14` (one element, dynamic) | Lee-Sacks on shells: the suite has no problem with that material. `sh_lee_sacks_pressure` |
-| Truss, spring | See [chordae.md](chordae.md) | |
+| Truss, spring | See [trusses_and_springs.md](trusses_and_springs.md) | |
 | Three-field solid | `ma34` (uncoupled HGO, but with a rigid body) | `bk_hgo_three_field` |
 | penta6 | `sh25` (mixed with hex8 and quad4, and a rigid wall) | One penta6 element; a small three-field penta6 block. To add |
 | tri3 shell | `sh65` (23,268 elements, bearing load) | One tri3 shell element. To add |

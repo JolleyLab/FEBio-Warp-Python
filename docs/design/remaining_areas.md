@@ -92,7 +92,7 @@ In the order of the path. Each note's decision points are linked.
 | # | Area | Note | Decisions | Needed by | Closes (open item in [integration.md](integration.md)) |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Dynamics, mass damping, steps | [dynamics.md](dynamics.md) | [D1 to D5](dynamics.md#7-decision-points) | Both | |
-| 2 | Chordae: truss and spring elements | [chordae.md](chordae.md) | [C1 to C10](chordae.md#7-decision-points) | Valve | 5 |
+| 2 | Chordae: truss and spring elements | [trusses_and_springs.md](trusses_and_springs.md) | [C1 to C10](trusses_and_springs.md#7-decision-points) | Valve | 5 |
 | 3 | Contact in the run | [contact_in_run.md](contact_in_run.md) | [K1 to K5](contact_in_run.md#7-decision-points) | Both | 1, 2 |
 | 4 | Linear solve, nonlinear strategy, GPU | [linear_solve.md](linear_solve.md) | [L1 to L6](linear_solve.md#7-decision-points) | Both | |
 | 5 | Output registry | [output.md](output.md) | [O1 to O4](output.md#5-decision-points) | Both | |
@@ -148,8 +148,8 @@ A selection. Every decision has an ID and sits in a table in its note with the o
 
 | ID | Decision | Note |
 | --- | --- | --- |
-| C1 | Chords in compression: FEBio's `linear truss` has no tension-only form | [chordae.md](chordae.md#7-decision-points) |
-| C2 | The route to a nonlinear chord material (follows question 7 of the materials note) | [chordae.md](chordae.md#7-decision-points) |
+| C1 | Chords in compression: FEBio's `linear truss` has no tension-only form | [trusses_and_springs.md](trusses_and_springs.md#7-decision-points) |
+| C2 | The route to a nonlinear chord material (follows question 7 of the materials note) | [trusses_and_springs.md](trusses_and_springs.md#7-decision-points) |
 | D3 | Whether to build stress at an interpolated deformation now, to use the suite's `rhoi` 1 problems | [dynamics.md](dynamics.md#7-decision-points) |
 | K3 | Contact gates per element pair, as FEBio, for the reference tier | [contact_in_run.md](contact_in_run.md#7-decision-points) |
 | O1 | How suite problems are compared: plot file, or a copy with log data added | [output.md](output.md#5-decision-points) |
@@ -196,7 +196,7 @@ A selection. Every decision has an ID and sits in a table in its note with the o
 
 | ID | Decision | Note |
 | --- | --- | --- |
-| C4, C5 | Trusses before springs; an open valve input with truss chordae | [chordae.md](chordae.md#7-decision-points) |
+| C4, C5 | Trusses before springs; an open valve input with truss chordae | [trusses_and_springs.md](trusses_and_springs.md#7-decision-points) |
 | L1 | Measure Warp's preconditioners and try cuDSS before choosing between an iterative and a direct solve | [linear_solve.md](linear_solve.md#7-decision-points) |
 | S4 | Which parameters are differentiable from the start | [sensitivity.md](sensitivity.md#6-decision-points) |
 | V3 | Where larger references live once fields are compared | [verification.md](verification.md#decision-points) |
@@ -258,8 +258,8 @@ Each is stated in the note named, with its source.
 
 | Finding | Note |
 | --- | --- |
-| The FEBio test suite has three truss problems, and one of them (`dy17`) is its only problem with mass damping. | [chordae.md](chordae.md), [dynamics.md](dynamics.md) |
-| FEBio's `linear truss` carries compression, and its stiffness is the exact derivative of its force. | [chordae.md](chordae.md) |
+| The FEBio test suite has three truss problems, and one of them (`dy17`) is its only problem with mass damping. | [trusses_and_springs.md](trusses_and_springs.md), [dynamics.md](dynamics.md) |
+| FEBio's `linear truss` carries compression, and its stiffness is the exact derivative of its force. | [trusses_and_springs.md](trusses_and_springs.md) |
 | Both application inputs use `rhoi` 0. No simple suite problem does; the suite's small dynamic problems use the defaults or `rhoi` 1. | [dynamics.md](dynamics.md) |
 | FEBio's `mass damping` stiffness is C/dt, not the derivative of its force. | [dynamics.md](dynamics.md), [sensitivity.md](sensitivity.md) |
 | On a surface with free edges the exact pressure tangent differs from FEBio's symmetrized form, so the adjoint solve is expected to be non-symmetric even for the mitral case. Not yet measured. | [linear_solve.md](linear_solve.md) |

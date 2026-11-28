@@ -36,7 +36,7 @@ from warp_febio.solvers.linear.warp_linear import dense
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CASES = ROOT / "references" / "small_problems"
-# A checkout of https://github.com/febiosoftware/TestSuite; see test_chordae_elements.py.
+# A checkout of https://github.com/febiosoftware/TestSuite; see test_truss_and_spring_elements.py.
 SUITE = os.environ.get("FEBIO_TEST_SUITE")
 
 
@@ -143,7 +143,7 @@ class DynamicPatchTests(unittest.TestCase):
 class SuiteTests(unittest.TestCase):
     """Dynamic problems of the FEBio test suite, against the suite's stored
     step count, iteration count and solution norm (code/linuxGoldStandards.py
-    at suite commit 986005f; see SuiteTests in test_chordae_elements.py).
+    at suite commit 986005f; see SuiteTests in test_truss_and_spring_elements.py).
 
         dy16   trusses with mass, nodal load
         dy07   40 hex8, prescribed displacement

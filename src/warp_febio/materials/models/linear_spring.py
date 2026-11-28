@@ -21,13 +21,13 @@ tension-only linear spring is FEBio's closed form of the same law: scale times
 the slope of the curve is E, and the knot is slack_length. As a parameter set
 it is the more direct one for gradients, since the slack length and the
 stiffness are the parameters themselves and not coordinates of curve points.
-The two are compared in tests/test_chordae_elements.py.
+The two are compared in tests/test_truss_and_spring_elements.py.
 
 A third law here is not FEBio's: the "smooth tension-only linear spring",
 the tension-only linear spring with its corner rounded over a band around the
 slack length. It is for optimization, where chords that sit at their slack
 length make the gradient of the FEBio law one-sided (decision C9 of
-docs/design/chordae.md). See smooth_tension_only_linear_spring_update.
+docs/design/trusses_and_springs.md). See smooth_tension_only_linear_spring_update.
 
 As uniaxial models their "strain" is the elongation and their "stress" is the
 spring force, as for the nonlinear spring (nonlinear_spring.py), so the same

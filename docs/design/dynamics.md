@@ -119,7 +119,7 @@ FEBio test suite first (commit `986005f`), then small inputs for what the suite 
 | `dy07` | Suite | 40 hex8, prescribed displacement. Passes (section 6) | Default |
 | `sh32` | Suite | One quad4 shell, constant body force | Default |
 | `sh34`, `sh58` | Suite | 40 quad4 shells, body force or nodal force. `sh58` passes with the line search (section 6); `sh34` needs the constant body force | Default |
-| `dy16`, `dy17` | Suite | Trusses; `dy17` has mass damping ([chordae.md](chordae.md)). `dy16` passes (section 6); `dy17` needs the constant body force | Default |
+| `dy16`, `dy17` | Suite | Trusses; `dy17` has mass damping ([trusses_and_springs.md](trusses_and_springs.md)). `dy16` passes (section 6); `dy17` needs the constant body force | Default |
 | `ms01`, `ms02`, `ms03`, `ms05` | Suite | Two steps, one static and one dynamic | Default |
 | `dy10`, `dy11`, `dy13`, `dy14` | Suite | One hex8 or one quad4 shell | `rhoi` 1 (needs D3) |
 | `bk_mass_damping`, `sh_lee_sacks_pressure` | `references/small_problems` | Mass damping on a solid and on Lee-Sacks shells with pressure. The suite has mass damping only on trusses | Default |

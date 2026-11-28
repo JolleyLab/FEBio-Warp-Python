@@ -86,7 +86,7 @@ These areas have a first shape in the run path template, or only a placeholder. 
 
 | Area | First template | Not yet | Design note |
 | --- | --- | --- | --- |
-| Elements | hex8 and tet4 solids on `warp.fem`; hex8 and quad4 shell on a dedicated kernel; two-node trusses and springs for chordae; consistent mass for hex8, quad4 shell and truss | tet4 mass; the three-field element, penta6 and tri3 shell (device path) | [chordae.md](chordae.md), [elements.md](elements.md) |
+| Elements | hex8 and tet4 solids on `warp.fem`; hex8 and quad4 shell on a dedicated kernel; two-node trusses and springs for chordae; consistent mass for hex8, quad4 shell and truss | tet4 mass; the three-field element, penta6 and tri3 shell (device path) | [trusses_and_springs.md](trusses_and_springs.md), [elements.md](elements.md) |
 | Loads | Follower pressure on quad4 facets; nodal loads; `mass damping` on a whole part | The constant body force; mass damping on part of a part; pressure on tri3 facets | [dynamics.md](dynamics.md) for `mass damping` |
 | Constraints | Fixed and prescribed displacements by masking | `normal displacement`, linear constraints, rigid bodies and joints | [constraints.md](constraints.md) |
 | Linear solve | Warp's CG, BiCGSTAB and GMRES with a Jacobi preconditioner; a sparse LU on the host; optionally cuDSS on the device, which took a shell patch from 20 s to 2 s | A stronger preconditioner for large solids; the transpose solve from cuDSS factors for the adjoint; quasi-Newton (BFGS) | [linear_solve.md](linear_solve.md) |

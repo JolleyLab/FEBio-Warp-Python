@@ -75,7 +75,7 @@ Read from the installed package.
 
 `FSAI` fits the structure of the run path. The structural pattern is fixed, so the supports can be chosen once and refit as the values change, which is the same idea as the pattern map used for assembly.
 
-Its documented preconditions are a symmetric positive definite matrix with both triangles stored. The Newton matrix of the mitral input is symmetric when FEBio's symmetrized pressure stiffness is used. Whether it stays positive definite through closure is not known. Three things work against it: contact, a scaled material tangent, and truss chordae in compression, whose geometric stiffness is negative across the axis ([chordae.md](chordae.md), decision C1). The mass term works for it.
+Its documented preconditions are a symmetric positive definite matrix with both triangles stored. The Newton matrix of the mitral input is symmetric when FEBio's symmetrized pressure stiffness is used. Whether it stays positive definite through closure is not known. Three things work against it: contact, a scaled material tangent, and truss chordae in compression, whose geometric stiffness is negative across the axis ([trusses_and_springs.md](trusses_and_springs.md), decision C1). The mass term works for it.
 
 ### A direct solver on the device: cuDSS
 
@@ -167,7 +167,7 @@ Recommended as the first code after these notes. Each is small. Cases from the F
 | 2 | How much does dynamics help ? | The same as a dynamic step at dt 1e-4 with the leaflet density | The same |
 | 3 | Does it hold on the GPU ? | The same two cases on a GPU | Time per Newton iteration, split into update, assembly, solve |
 | 4 | What does contact do to it ? | `sh_self_contact_fold` once contact is a term | Iterations with and without contact blocks in the preconditioner |
-| 5 | What do slack trusses do to it ? | A quad4 patch with a branched truss network ([chordae.md](chordae.md)) | Whether CG with `FSAI` still converges; the smallest eigenvalue on a small case |
+| 5 | What do slack trusses do to it ? | A quad4 patch with a branched truss network ([trusses_and_springs.md](trusses_and_springs.md)) | Whether CG with `FSAI` still converges; the smallest eigenvalue on a small case |
 | 6 | What does the adjoint solve cost ? | The pressure gradient case of the run path at patch size | Iterations of the transpose solve against the forward solve |
 | 7 | How does a factorization on the device compare ? | `sh11` and the pressure gradient case with cuDSS on a GPU | Time for analysis, factorization and solve against the best iterative result; the transpose solve reusing the factors |
 
