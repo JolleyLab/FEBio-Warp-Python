@@ -35,5 +35,8 @@ jobs:
         # versions from uv.lock. The dev extra carries Warp and the optional
         # file-format dependencies wherever the package makes them optional.
         run: uv sync --locked --extra dev
-      - name: Unit tests (CPU; tests that need a GPU or a missing optional dependency are skipped)
+      - name: Unit tests, full tier (CPU; tests that need a GPU or a missing optional dependency are skipped)
+        # GPU runs are made on a workstation with a GPU, as CONTRIBUTING describes.
+        env:
+          WARP_FEBIO_TEST_LEVEL: full
         run: uv run --no-sync -m unittest discover -s tests -v
